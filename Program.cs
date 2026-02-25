@@ -1,4 +1,4 @@
-using Blazorex.Samples.KeyAndMouse;
+using CMPE131Proj;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 

@@ -1,5 +1,5 @@
-namespace Blazorex.Samples.KeyAndMouse;
-
+namespace CMPE131Proj;
+using Blazorex;
 public class Player
 {
 

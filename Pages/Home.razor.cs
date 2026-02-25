@@ -1,7 +1,7 @@
-using Blazorex.Samples.KeyAndMouse.Layout;
 
-namespace Blazorex.Samples.KeyAndMouse.Pages;
 
+namespace CMPE131Proj.Pages;
+using Blazorex;
 public partial class Home
 {
     private CanvasManager? _canvasManager;

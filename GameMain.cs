@@ -1,7 +1,6 @@
+namespace CMPE131Proj;
 using System;
-
-namespace Blazorex.Samples.KeyAndMouse;
-
+using Blazorex;
 public  class GameMain
 {
 //Canvas size info. Determined in home.razor.cs, this is for reference only.
