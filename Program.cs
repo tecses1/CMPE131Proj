@@ -12,4 +12,3 @@ builder.Services.AddScoped(sp => new HttpClient
 });
 
 await builder.Build().RunAsync();
-//add commentto test commit.

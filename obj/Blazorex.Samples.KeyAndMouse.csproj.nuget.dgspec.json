@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\tecse\\Desktop\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj": {}
+    "C:\\Users\\tecse\\Documents\\GitHub\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj": {}
   },
   "projects": {
-    "C:\\Users\\tecse\\Desktop\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj": {
+    "C:\\Users\\tecse\\Documents\\GitHub\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tecse\\Desktop\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj",
+        "projectUniqueName": "C:\\Users\\tecse\\Documents\\GitHub\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj",
         "projectName": "Blazorex.Samples.KeyAndMouse",
-        "projectPath": "C:\\Users\\tecse\\Desktop\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj",
+        "projectPath": "C:\\Users\\tecse\\Documents\\GitHub\\CMPE131Proj\\Blazorex.Samples.KeyAndMouse.csproj",
         "packagesPath": "C:\\Users\\tecse\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tecse\\Desktop\\CMPE131Proj\\obj\\",
+        "outputPath": "C:\\Users\\tecse\\Documents\\GitHub\\CMPE131Proj\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -1,3 +1,5 @@
+using Blazorex.Samples.KeyAndMouse.Layout;
+
 namespace Blazorex.Samples.KeyAndMouse.Pages;
 
 public partial class Home
@@ -8,10 +10,17 @@ public partial class Home
     private const int CanvasWidth = 1024;
     private const int CanvasHeight = 768;
 
+    public InputWrapper inputWrapper;
+    public GameMain main;
     protected override void OnAfterRender(bool firstRender)
     {
         if (!firstRender)
             return;
+
+        //Initialize my stuff.
+        inputWrapper = new InputWrapper();
+        main = new GameMain();
+
 
         _canvasManager?.CreateCanvas(
             "keyrain",
@@ -25,7 +34,11 @@ public partial class Home
                 WillReadFrequently = false,
                 OnCanvasReady = OnCanvasReady,
                 OnFrameReady = OnFrameReady,
-                OnKeyDown = OnKeyPressed
+                OnKeyUp = OnKeyUp,
+                OnKeyDown = OnKeyDown,
+                OnMouseMove = OnMouseMove,
+                OnMouseDown = OnMouseDown
+
             }
         );
     }
@@ -33,30 +46,51 @@ public partial class Home
     private void OnCanvasReady(CanvasBase canvas)
     {
         _context = canvas.RenderContext;
+        
     }
-
+    
     private void OnFrameReady(float timestamp)
     {
+        
         if (_context is null)
             return;
 
-        KeyRainEngine.UpdateAndRender(_context);
+
+        //call update function in GameMain.cs to update game state each frame. Pass input over.
+        main.Update(inputWrapper);
+        //Render the stuff, provide the canvas. 
+        main.Render(_context);
     }
 
-    private void OnKeyPressed(KeyboardPressEvent e)
+    private void OnKeyDown(KeyboardPressEvent e)
     {
         if (_context is null)
             return;
-
-        // Ignore modifier keys and special keys
-        if (IsValidKey(e.Key))
-        {
-            KeyRainEngine.AddKey(e.Key);
-        }
+        //store the current event.
+        this.inputWrapper.loadKeysDown(e);
+        
+    }
+    private void OnKeyUp(KeyboardPressEvent e)
+    {
+        if (_context is null)
+            return;
+        //store the current event.
+        this.inputWrapper.loadKeysUp(e);
+        
+    }
+    private void OnMouseMove(MouseMoveEvent e)
+    {
+        if (_context is null)
+            return;
+        this.inputWrapper.cMouseMovementInput = e;
+    }
+ private void OnMouseDown(MouseClickEvent e)
+    {
+        if (_context is null)
+            return;
+        this.inputWrapper.cMouseClickInput = e;
+        
     }
 
-    /// <summary>Determines if a key should create a falling character</summary>
-    private static bool IsValidKey(string key) =>
-        key.Length == 1
-        && (char.IsLetterOrDigit(key[0]) || char.IsPunctuation(key[0]) || char.IsSymbol(key[0]));
+
 }
