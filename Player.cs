@@ -1,19 +1,16 @@
 namespace CMPE131Proj;
 using Blazorex;
+//Handles the local player controller.
 public class Player
 {
-
-//
-//Logic shit
-    int x = 1024 /2 ;
-    int y = 768 / 2;
-
- // Styling constants
-    private const string CanvasBackground = "#fff";
-    private const string KeyBackground = "#2c3e50";
-    private const string KeyBorder = "#34495e";
-    private const string KeyText = "#ecf0f1";
-    private const string KeyFont = "bold 12px 'Segoe UI', Arial, sans-serif";
+    Settings settings;
+    int x;
+    int y;
+    //pass by reference settigns object so all objects use the same one.
+    public Player(ref Settings s)
+    {
+        this.settings = s;
+    }
     public void Update(InputWrapper e)
     {
 
@@ -67,8 +64,8 @@ public class Player
         try
         {
             // Draw key background with rounded corners
-            ctx.FillStyle = KeyBackground;
-            ctx.StrokeStyle = KeyBorder;
+            ctx.FillStyle = settings.KeyBackground;
+            ctx.StrokeStyle = settings.KeyBorder;
             ctx.LineWidth = 2;
 
             var keyLeft = this.x;
@@ -80,8 +77,8 @@ public class Player
             ctx.Stroke();
 
             // Draw character text
-            ctx.Font = KeyFont;
-            ctx.FillStyle = KeyText;
+            ctx.Font = settings.KeyFont;
+            ctx.FillStyle = settings.KeyText;
             ctx.TextAlign = TextAlign.Center;
             ctx.TextBaseline = TextBaseline.Middle;
 

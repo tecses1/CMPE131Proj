@@ -12,6 +12,11 @@ public partial class Home
 
     public InputWrapper inputWrapper;
     public GameMain main;
+    public Settings settings;
+
+    //This is called on first frame All intializing logic goes here..
+    //For simplity's sake, I've added a "GameMain" that will be called
+    //from this file, to make it more familiar.
     protected override void OnAfterRender(bool firstRender)
     {
         if (!firstRender)
@@ -19,25 +24,29 @@ public partial class Home
 
         //Initialize my stuff.
         inputWrapper = new InputWrapper();
-        main = new GameMain();
+        settings = Settings.Load();
+        main = new GameMain(ref settings);
 
+        
 
+        //create the canvas and events.
         _canvasManager?.CreateCanvas(
             "keyrain",
             new CanvasCreationOptions
             {
                 Hidden = false,
-                Width = CanvasWidth,
-                Height = CanvasHeight,
-                Alpha = false,
-                Desynchronized = true, // Better performance for animations
-                WillReadFrequently = false,
+                Width = settings.CanvasWidth,
+                Height = settings.CanvasHeight,
+                Alpha = settings.hasAlpha,
+                Desynchronized = settings.isDesyncronized, // Better performance for animations
+                WillReadFrequently = settings.willReadFrequently,
                 OnCanvasReady = OnCanvasReady,
                 OnFrameReady = OnFrameReady,
                 OnKeyUp = OnKeyUp,
                 OnKeyDown = OnKeyDown,
                 OnMouseMove = OnMouseMove,
                 OnMouseDown = OnMouseDown
+                
 
             }
         );
