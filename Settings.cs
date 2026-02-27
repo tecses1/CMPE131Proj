@@ -24,11 +24,20 @@ public static class Settings
     
 // Styling constants
     public const string CanvasBackground = "#1d1d1d";
+    public const string DefaultBackground = "#ffffff";
+    public const string DefaultBorder = "#575757";
     public const string ErrorBackground = "#ff0000";
     public const string ErrorBorder = "#fff700";
+
     public const string ErrorText = "#f6ff00";
     public const string KeyText = "#ffffff";
     public const string KeyFont = "bold 18px 'Segoe UI', Arial, sans-serif";
+    public const string DefaultFont = "bold 18px 'Segoe UI', Arial, sans-serif";
+    public const string DefaultFontColor = "#ffffff";
+    public const string DefaultTextBackground = "#ffffff00";
+    public const string DefaultTextBorder = "#ffffff00";
+
+
 
     public static bool isConst(FieldInfo fi)
     {

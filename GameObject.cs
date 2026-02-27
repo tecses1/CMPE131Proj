@@ -19,6 +19,24 @@ public class GameObject
 
     protected GameManager gm;
 
+    public GameObject(ref GameManager gm)
+    {
+        this.gm  = gm;
+    
+        GameAsset myImageAsset;
+        Console.WriteLine("NAME = " + this.GetType().Name);
+        if(AssetManager._assets.TryGetValue(this.GetType().Name, out myImageAsset))
+        {
+
+            myImage = myImageAsset.Image;
+        }
+        else
+        {
+            Console.WriteLine("Image returned null. " + this.GetType().Name + " was not able to find its image.");
+        }
+        
+        
+    }
     public bool CollideWith(GameObject two)
     {
         float[] myBounds = this.GetBounds();
@@ -42,81 +60,30 @@ public class GameObject
         return bounds;
 
     }
-    public GameObject(ref GameManager gm)
-    {
-        this.gm  = gm;
-        
-        GameAsset myImageAsset;
-        Console.WriteLine("NAME = " + this.GetType().Name);
-        if(AssetManager._assets.TryGetValue(this.GetType().Name, out myImageAsset))
-        {
 
-            myImage = myImageAsset.Image;
-        }
-        else
-        {
-            Console.WriteLine("Image returned null. " + this.GetType().Name + " was not able to find its image.");
-        }
-        
-        
-    }
 
     public virtual void Render(IRenderContext ctx)
     {
         //image failed to load.
         if (myImage.Id == null)
         {
-            //
-            var previousFillStyle = ctx.FillStyle;
-            var previousStrokeStyle = ctx.StrokeStyle;
-            var previousLineWidth = ctx.LineWidth;
-            var previousFont = ctx.Font;
-            var previousTextAlign = ctx.TextAlign;
-            var previousTextBaseline = ctx.TextBaseline;
 
-            try
+            Rect drawRect = new Rect(this.x, this.y, sizeX, sizeY);
+            drawRect.borderColor = Settings.ErrorBorder;
+            drawRect.fillColor = Settings.ErrorBackground;
+            drawRect.Draw(ctx);
+
+            Text drawText = new Text("Missing",this.x, this.y, this.sizeX,this.sizeY);
+            drawText.fontColor = Settings.ErrorText;
+            if (sizeX < 50)
             {
-                // Draw key background with rounded corners
-                ctx.FillStyle = Settings.ErrorBackground;
-                ctx.StrokeStyle = Settings.ErrorBorder;
-                ctx.LineWidth = 2;
-
-
-                ctx.BeginPath();
-                ctx.RoundRect(this.x-sizeX/2, this.y-sizeY/2, sizeX, sizeY, 45);
-                ctx.Fill();
-                ctx.Stroke();
-
-                // Draw character text
-                ctx.Font = Settings.KeyFont;
-                ctx.FillStyle = Settings.KeyText;
-                ctx.TextAlign = TextAlign.Center;
-                ctx.TextBaseline = TextBaseline.Middle;
-
-                var textX = this.x;
-                var textY = this.y;
-                if (sizeX > 50)
-                {
-                    ctx.FillText("MISSING", textX, textY);
-                }
-                else
-                {
-                    ctx.FillText("!", textX, textY);
-                }
-                
-                return;
+                drawText.text = "!";
             }
-            finally
-            {
-                // Restore state manually for better performance
-                ctx.FillStyle = previousFillStyle;
-                ctx.StrokeStyle = previousStrokeStyle;
-                ctx.LineWidth = previousLineWidth;
-                ctx.Font = previousFont;
-                ctx.TextAlign = previousTextAlign ?? TextAlign.Center;
-                ctx.TextBaseline = previousTextBaseline ?? TextBaseline.Middle;
-                
-            }
+
+            drawText.Draw(ctx);
+            return;
+        
+
         }
 
         AssetManager.DrawRotatedImage(ctx, myImage, x, y, sizeX,sizeY, rotation);
