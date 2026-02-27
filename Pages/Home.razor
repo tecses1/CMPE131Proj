@@ -1,14 +1,67 @@
-﻿
+﻿@using Blazored.LocalStorage
+@inject ILocalStorageService LocalStorage
 @page "/"
+
+
+@*Load resources defined in dictionary from asset manager*@
+<!--<img @ref="_myImage" src="./spaceship.png" hidden /> -->
+<div style="display:none">
+    @foreach (var asset in AssetManager._assets.Values)
+    {
+        <img @ref="asset.Image" src="@asset.Url" />
+    }
+</div>
+
 <PageTitle>Home</PageTitle>
+<h3>CMPE131 Proj (Game thing idk)</h3>
+
+<!-- The @bind attribute links the HTML value to the C# variable 'userInput' -->
+<input type="text" @bind="userInput" class="form-control" placeholder="Enter text here..." />
+
+<button @onclick="SaveToStorage" class="btn btn-primary mt-2">Confirm & Save</button>
+
+<p>Current value in settings: @Settings.name</p>
+
 
 <div class="canvas">
     <CanvasManager @ref="_canvasManager" />
     <div class="status">
-        CMPE 131 Project |
-        Benjamin Schnittker | Sofia Nguyen | Kekoa Sarmiento | Dylan Quach | Siddarth Kota
+        CMPE 131 Project | Benjamin Schnittker | Sofia Nguyen | Kekoa Sarmiento | Dylan Quach | Siddarth Kota
     </div>
 </div>
 
+@code {
+    //Intialze C# variable fields for HTML elements above.
+    private string userInput = Settings.name;
+
+
+
+    //Called on start of program.
+    protected override async Task OnInitializedAsync()
+    {
+        bool worked = Settings.Load(await LocalStorage.GetItemAsync<string>("settingsSaveKey"));
+        if (!worked){
+            await Save();
+        }
+
+
+    }
+    //Called when button is pressed, see above.
+    private async Task SaveToStorage()
+    {
+        if (!string.IsNullOrWhiteSpace(userInput))
+        {
+            // Saves the current value of 'userInput' to local storage
+            Settings.name = userInput;
+            await Save();
+        }
+    }
+    //Reference method. Called from OnIntializedAsync().
+    async Task Save(){
+        await LocalStorage.SetItemAsStringAsync("settingsSaveKey",Settings.Save());
+
+    }
+
+}
 
 

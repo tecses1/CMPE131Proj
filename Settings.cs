@@ -1,10 +1,10 @@
 namespace CMPE131Proj;
 using System;
-using Blazorex;
-using System.IO;
-using System.Xml.Serialization;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
+using System.Text;
+using Blazored.LocalStorage.StorageOptions;
 
 //CONST variables will be static across the whole project. Access with Settings.x
 //CONST variables will also be IGNORED For saving a settings file.
@@ -14,17 +14,17 @@ public static class Settings
 {
 
     //only public vars save.
-
+    public static string name = "Player";
    // --- Your Settings ---
     public const int CanvasWidth = 1024;
-    public const int CanvasHeight = 768;
-    public const bool hasAlpha = false;
+    public const int CanvasHeight = 576;
+    public const bool hasAlpha = true;
     public const bool isDesyncronized = true; //better performance w animations
     public const bool willReadFrequently = false;
     
 // Styling constants
     public const string CanvasBackground = "#1d1d1d";
-    public const string KeyBackground = "#2c3e50";
+    public const string KeyBackground = "#0dff00";
     public const string KeyBorder = "#34495e";
     public const string KeyText = "#ecf0f1";
     public const string KeyFont = "bold 18px 'Segoe UI', Arial, sans-serif";
@@ -39,10 +39,12 @@ public static class Settings
     {
         return fi.IsLiteral && !fi.IsInitOnly;
     }
-    public static void Save()
+    public static string Save()
     {
+        
         Console.WriteLine("Beginning save...");
-        Stream fs = File.Open(path, FileMode.OpenOrCreate);
+        //write to stream to store is JS local data instead.
+        MemoryStream fs = new MemoryStream() ;//File.Open(path, FileMode.OpenOrCreate);
         BinaryWriter bf = new BinaryWriter(fs);        
         FieldInfo[] staticFields = typeof(Settings).GetFields(BindingFlags.Static | BindingFlags.Public);
         Console.WriteLine("Found field info, it is " + staticFields.Length + " many");
@@ -71,19 +73,37 @@ public static class Settings
             
         }
         bf.Close();
+        byte[] array = fs.ToArray();
+        
         fs.Close();
+
+        return Encoding.ASCII.GetString(array);
+
+        
     }
-    public static void Load()
+    public static bool Load(string s)
     {
+        if (s == null)
+        {
+            Console.WriteLine("s returned is null. First save?");
+            return false;
+        }
+        /*
         if (!File.Exists(path))
         {
             //save defaults if the file isn't found.
             Console.WriteLine("Creating new default settings save...");
             Save();
             return;
-        }
+        }*/
         Console.WriteLine("Beginning load...");
-        Stream fs = File.Open(path, FileMode.Open);
+
+        Console.WriteLine("Converting local string to bytes.");
+        byte[] bytes = Encoding.ASCII.GetBytes(s);
+        Console.WriteLine("Loaded " + bytes.Length + " bytes.");
+        MemoryStream fs = new MemoryStream(bytes);//File.Open(path, FileMode.Open);
+        Console.WriteLine("converted to memory stream...");
+
         BinaryReader br = new BinaryReader(fs); 
         FieldInfo[] staticFields = typeof(Settings).GetFields(BindingFlags.Static | BindingFlags.Public);
         Console.WriteLine("Found field info, it is " + staticFields.Length + " many");
@@ -96,9 +116,9 @@ public static class Settings
                 Console.WriteLine("[ERROR] Settings file mismatch (" + fieldName + "," + readName + "). Saving new.");
                 br.Close();
                 fs.Close();
-                Console.WriteLine("Creating new default settings save...");
-                Save();
-                return;
+                Console.WriteLine("Returning false for save call...");
+                //Save();
+                return false;
 
             }
             if (isConst(fi))
@@ -125,12 +145,15 @@ public static class Settings
                 Console.WriteLine("[ERROR] EOF prematurely. IS the file corrupted or missing?");
                 br.Close();
                 fs.Close();
-                Save();
-                return;
+                Console.WriteLine("Returning false for save call...");
+                //Save();
+                return false;
             }
         }
         br.Close();
         fs.Close();
+
+        return true;
     }
 
 

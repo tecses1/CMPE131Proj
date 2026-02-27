@@ -5,6 +5,7 @@ using Blazorex;
 public partial class Home
 {
     private CanvasManager? _canvasManager;
+
     private IRenderContext? _context;
 
     private const int CanvasWidth = 1024;
@@ -13,6 +14,8 @@ public partial class Home
     public InputWrapper inputWrapper;
     public static GameMain main;
 
+
+    
     //This is called on first frame All intializing logic goes here..
     //For simplity's sake, I've added a "GameMain" that will be called
     //from this file, to make it more familiar.
@@ -23,7 +26,7 @@ public partial class Home
 
         //Initialize my stuff.
         inputWrapper = new InputWrapper();
-        Settings.Load();
+        //Settings.Load();
         main = new GameMain();
 
         
@@ -55,6 +58,9 @@ public partial class Home
     {
         _context = canvas.RenderContext;
         
+        
+
+        
     }
     
     private void OnFrameReady(float timestamp)
@@ -68,6 +74,8 @@ public partial class Home
         main.Update(inputWrapper);
         //Render the stuff, provide the canvas. 
         main.Render(_context);
+        
+        //_context.DrawImage(_myImage, 50, 50, 200, 150);
     }
 
     private void OnKeyDown(KeyboardPressEvent e)
