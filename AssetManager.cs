@@ -7,7 +7,8 @@ public static class AssetManager
     //I'm sorry- there's no better way.
 
     public static Dictionary<string, GameAsset> _assets = new() {
-        { "Player", new GameAsset { Name = "Player", Url = "images/spaceship.png" } }
+        { "Player", new GameAsset { Name = "Player", Url = "images/spaceship.png" } },
+        { "Projectile", new GameAsset { Name = "Projectile", Url = "images/projectile.png" } }
     };
     //I wont pretend to understand how or why this works.
     public static void DrawRotatedImage(IRenderContext ctx, ElementReference img, float x, float y, float width, float height, float degrees)

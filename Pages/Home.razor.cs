@@ -47,8 +47,8 @@ public partial class Home
                 OnKeyUp = OnKeyUp,
                 OnKeyDown = OnKeyDown,
                 OnMouseMove = OnMouseMove,
-                OnMouseDown = OnMouseDown
-                
+                OnMouseDown = OnMouseDown,
+                OnMouseUp = OnMouseUp
 
             }
         );
@@ -74,7 +74,7 @@ public partial class Home
         main.Update(inputWrapper);
         //Render the stuff, provide the canvas. 
         main.Render(_context);
-        
+        inputWrapper.Clear();
         //_context.DrawImage(_myImage, 50, 50, 200, 150);
     }
 
@@ -94,19 +94,29 @@ public partial class Home
         this.inputWrapper.loadKeysUp(e);
         
     }
-    private void OnMouseMove(MouseMoveEvent e)
+    private void OnMouseMove(Blazorex.MouseMoveEvent e)
     {
         if (_context is null)
             return;
-        this.inputWrapper.cMouseMovementInput = e;
-    }
- private void OnMouseDown(MouseClickEvent e)
-    {
-        if (_context is null)
-            return;
-        this.inputWrapper.cMouseClickInput = e;
-        
+
+        // store the coords in our InputWrapper (MouseMoveEvent.OffsetX/Y are double)
+        inputWrapper.loadMouseMove(e.OffsetX, e.OffsetY);
     }
 
+    private void OnMouseDown(Blazorex.MouseClickEvent e)
+    {
+        if (_context is null)
+            return;
+
+        // Most canvas mouse events let you know which button; if you want to branch
+        // by button you can inspect 'e' here. For now assume left button press:
+        inputWrapper.loadMouseDown(true);
+    }
+    private void OnMouseUp(Blazorex.MouseClickEvent e)
+    {
+        if (_context is null) return;
+
+        inputWrapper.loadMouseUp(true);
+    }
 
 }
