@@ -65,22 +65,22 @@ public class Player
             x += 3;
         }
 
-        if (x > Settings.CanvasWidth)
+        if (x > Settings.CanvasWidth + sizeX / 2)
         {
-            x = -sizeX;
+            x = -sizeX /2 ;
         }
-        if (x < -sizeX)
+        if (x < -sizeX / 2)
         {
-            x = Settings.CanvasWidth + sizeX;
+            x = Settings.CanvasWidth + sizeX / 2;
         }
 
-        if (y > Settings.CanvasHeight)
+        if (y > Settings.CanvasHeight + sizeY / 2)
         {
-            y = -sizeY;
+            y = -sizeY / 2;
         }
-        if (y < -sizeY)
+        if (y < -sizeY / 2)
         {
-            y = Settings.CanvasHeight + sizeY;
+            y = Settings.CanvasHeight + sizeY / 2;
         }
     }
 
