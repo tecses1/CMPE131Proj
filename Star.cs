@@ -1,10 +1,14 @@
 namespace CMPE131Proj;
 
-public class Star 
+public class Star : GameObject 
 {
     
-    int x;
-    int y;
+    public Star (GameManager gm) : base(ref gm)
+    {
+        this.sizeX = 1;
+        this.sizeY = 1;
+    }
 
+    
 
 }

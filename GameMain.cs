@@ -4,16 +4,14 @@ using Blazorex;
 
 //The "MAIN" File of the game. Should stay pretty simple as we use mostly
 //classes for all sub functioanlities. But this is where it all starts (kind of)
+//We can add functioanlity here for quitting the game, etdc.
 public class GameMain
 {
-    Player localPlayer;
     GameManager gameManager;
     
-
     //Called on intial startup of the game. Put all starting logic here!
     public GameMain()
     {
-        localPlayer = new Player();
         gameManager = new GameManager();
     }
     //Called on each frame rendered in the game! 
@@ -22,7 +20,8 @@ public class GameMain
         //Update game logic goes here.
 
         gameManager.Update();
-        localPlayer.Update(e);
+        gameManager.UpdatePlayer(e);
+        
 
 
     }
@@ -33,6 +32,5 @@ public class GameMain
     {
 
         gameManager.Render(ctx); 
-        localPlayer.Render(ctx);
     }
 }

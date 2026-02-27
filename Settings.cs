@@ -24,17 +24,12 @@ public static class Settings
     
 // Styling constants
     public const string CanvasBackground = "#1d1d1d";
-    public const string KeyBackground = "#0dff00";
-    public const string KeyBorder = "#34495e";
-    public const string KeyText = "#ecf0f1";
+    public const string ErrorBackground = "#ff0000";
+    public const string ErrorBorder = "#fff700";
+    public const string ErrorText = "#f6ff00";
+    public const string KeyText = "#ffffff";
     public const string KeyFont = "bold 18px 'Segoe UI', Arial, sans-serif";
 
-    //use private for class objects that we don't want to save (serialize)
-    private static string path = "./settings";
-    /// <summary>
-    /// Grabs all static properties via Reflection and saves them to a JSON file.
-    /// </summary>
-    /// 
     public static bool isConst(FieldInfo fi)
     {
         return fi.IsLiteral && !fi.IsInitOnly;
