@@ -6,17 +6,15 @@ using Blazorex;
 //classes for all sub functioanlities. But this is where it all starts (kind of)
 public class GameMain
 {
-    public Settings settings;
     Player localPlayer;
     GameManager gameManager;
     
 
     //Called on intial startup of the game. Put all starting logic here!
-    public GameMain(ref Settings s)
+    public GameMain()
     {
-        this.settings = s;
-        localPlayer = new Player(ref s);
-        gameManager = new GameManager(ref s);
+        localPlayer = new Player();
+        gameManager = new GameManager();
     }
     //Called on each frame rendered in the game! 
     public void Update(InputWrapper e)

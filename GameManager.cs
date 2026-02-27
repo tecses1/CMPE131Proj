@@ -4,15 +4,18 @@ namespace CMPE131Proj;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 public class GameManager
 {
-    public Settings settings;
-
     //pass by reference settigns object so all objects use the same one.
-    public GameManager(ref Settings s)
+    public GameManager()
     {
-        this.settings = s;
+
     }
     //Add update function to call from main thread.
     public void Update()
+    {
+        
+    }
+
+    void Stars(IRenderContext ctx)
     {
         
     }
@@ -20,7 +23,9 @@ public class GameManager
     public void Render(IRenderContext ctx)
     {
                 //fil bg.
-        ctx.FillStyle = settings.CanvasBackground;
-        ctx.FillRect(0, 0, settings.CanvasWidth, settings.CanvasHeight);
+        ctx.FillStyle = Settings.CanvasBackground;
+        ctx.FillRect(0, 0, Settings.CanvasWidth, Settings.CanvasHeight);
+
+        
     }
 }

@@ -11,8 +11,7 @@ public partial class Home
     private const int CanvasHeight = 768;
 
     public InputWrapper inputWrapper;
-    public GameMain main;
-    public Settings settings;
+    public static GameMain main;
 
     //This is called on first frame All intializing logic goes here..
     //For simplity's sake, I've added a "GameMain" that will be called
@@ -24,8 +23,8 @@ public partial class Home
 
         //Initialize my stuff.
         inputWrapper = new InputWrapper();
-        settings = Settings.Load();
-        main = new GameMain(ref settings);
+        Settings.Load();
+        main = new GameMain();
 
         
 
@@ -35,11 +34,11 @@ public partial class Home
             new CanvasCreationOptions
             {
                 Hidden = false,
-                Width = settings.CanvasWidth,
-                Height = settings.CanvasHeight,
-                Alpha = settings.hasAlpha,
-                Desynchronized = settings.isDesyncronized, // Better performance for animations
-                WillReadFrequently = settings.willReadFrequently,
+                Width = Settings.CanvasWidth,
+                Height = Settings.CanvasHeight,
+                Alpha = Settings.hasAlpha,
+                Desynchronized = Settings.isDesyncronized, // Better performance for animations
+                WillReadFrequently = Settings.willReadFrequently,
                 OnCanvasReady = OnCanvasReady,
                 OnFrameReady = OnFrameReady,
                 OnKeyUp = OnKeyUp,

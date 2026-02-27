@@ -3,13 +3,11 @@ using Blazorex;
 //Handles the local player controller.
 public class Player
 {
-    Settings settings;
     int x;
     int y;
     //pass by reference settigns object so all objects use the same one.
-    public Player(ref Settings s)
+    public Player()
     {
-        this.settings = s;
     }
     public void Update(InputWrapper e)
     {
@@ -64,8 +62,8 @@ public class Player
         try
         {
             // Draw key background with rounded corners
-            ctx.FillStyle = settings.KeyBackground;
-            ctx.StrokeStyle = settings.KeyBorder;
+            ctx.FillStyle = Settings.KeyBackground;
+            ctx.StrokeStyle = Settings.KeyBorder;
             ctx.LineWidth = 2;
 
             var keyLeft = this.x;
@@ -77,8 +75,8 @@ public class Player
             ctx.Stroke();
 
             // Draw character text
-            ctx.Font = settings.KeyFont;
-            ctx.FillStyle = settings.KeyText;
+            ctx.Font = Settings.KeyFont;
+            ctx.FillStyle = Settings.KeyText;
             ctx.TextAlign = TextAlign.Center;
             ctx.TextBaseline = TextBaseline.Middle;
 
