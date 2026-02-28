@@ -2,6 +2,8 @@
 
 namespace CMPE131Proj.Pages;
 using Blazorex;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 public partial class Home
 {
     private CanvasManager? _canvasManager;
@@ -12,7 +14,7 @@ public partial class Home
     private const int CanvasHeight = 768;
 
     public InputWrapper inputWrapper;
-    public static GameMain main;
+    public GameManager main;
 
 
     
@@ -27,7 +29,7 @@ public partial class Home
         //Initialize my stuff.
         inputWrapper = new InputWrapper();
         //Settings.Load();
-        main = new GameMain();
+        main = new GameManager(JS);
 
         
 
@@ -56,6 +58,8 @@ public partial class Home
 
     private void OnCanvasReady(CanvasBase canvas)
     {
+
+        main.SetMainCanvas(canvas);
         _context = canvas.RenderContext;
         
         
@@ -69,13 +73,16 @@ public partial class Home
         if (_context is null)
             return;
 
-
+        
         //call update function in GameMain.cs to update game state each frame. Pass input over.
-        main.UpdatePlayerInput(inputWrapper);
+        main.UpdatePlayer(inputWrapper);
+        main.Update();
         //Render the stuff, provide the canvas. 
+
+
         main.Render(_context);
         inputWrapper.Clear();
-        //_context.DrawImage(_myImage, 50, 50, 200, 150);
+        
     }
 
     private void OnKeyDown(KeyboardPressEvent e)

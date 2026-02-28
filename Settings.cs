@@ -15,7 +15,13 @@ public static class Settings
 
     //only public vars save.
     public static string name = "Player";
-   // --- Your Settings ---
+
+    // Star Settings
+    public const float Sparseness = 0.2f;
+    public const int minSize = 1;
+    public const int maxSize = 10;
+
+   // --- Canvas Settings ---
     public const int CanvasWidth = 1024;
     public const int CanvasHeight = 576;
     public const bool hasAlpha = true;
@@ -36,6 +42,7 @@ public static class Settings
     public const string DefaultFontColor = "#ffffff";
     public const string DefaultTextBackground = "#ffffff00";
     public const string DefaultTextBorder = "#ffffff00";
+
 
 
 

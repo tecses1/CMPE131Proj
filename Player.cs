@@ -123,11 +123,9 @@ public class Player : GameObject
         barrel = !barrel;
     }
     
-    public override void UpdateAndRender(IRenderContext ctx)
+    public override void Render(IRenderContext ctx)
     {
-        //game object has built in default rendering.
-        base.UpdateAndRender(ctx);
-        
+
         playerName.Draw(ctx);
 
 

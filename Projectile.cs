@@ -17,7 +17,7 @@ namespace CMPE131Proj
             LifetimeFrames = lifetime;
         }
 
-        public override void UpdateAndRender(IRenderContext ctx)
+        public override void Update()
         {
             transform.position += Velocity;
 
@@ -31,7 +31,7 @@ namespace CMPE131Proj
                 }
             }
 
-            base.UpdateAndRender(ctx);
+            
 
         }
     }

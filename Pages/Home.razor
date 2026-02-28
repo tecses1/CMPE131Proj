@@ -1,7 +1,7 @@
 ﻿@using Blazored.LocalStorage
 @inject ILocalStorageService LocalStorage
 @page "/"
-
+@inject IJSRuntime JS 
 
 @*Load resources defined in dictionary from asset manager*@
 <!--<img @ref="_myImage" src="./spaceship.png" hidden /> -->
@@ -35,6 +35,13 @@
     private string userInput = Settings.name;
 
 
+    protected override void OnInitialized()
+    {
+        // Now you hand that reference to your GameManager
+        
+    }
+
+
 
     //Called on start of program.
     protected override async Task OnInitializedAsync()
@@ -44,8 +51,8 @@
             await Save();
         }
 
-
     }
+
     //Called when button is pressed, see above.
     private async Task SaveToStorage()
     {

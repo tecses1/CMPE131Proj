@@ -10,7 +10,7 @@ public class GameObject
 
 
     //sizing
-    protected Transform transform;
+    public Transform transform;
 
     private ElementReference myImage;
 
@@ -54,6 +54,10 @@ public class GameObject
         
         
     }
+    public ElementReference getImage()
+    {
+        return this.myImage;
+    }
     public bool CollideWith(GameObject two)
     {//Collid with other gameobject.
         float[] myBounds = this.GetBounds();
@@ -88,26 +92,26 @@ public class GameObject
 
     }
 
-    public virtual void UpdateAndRender(IRenderContext ctx)
+    // Instead of drawing, it just packs its data into the array
+    public void PackData(float[] buffer, int offset)
+    {
+        buffer[offset] = transform.position.X;
+        buffer[offset + 1] = transform.position.Y;
+        buffer[offset + 2] = transform.size.X;
+        buffer[offset + 3] = transform.size.Y;
+        buffer[offset + 4] = transform.rotation * (float)Math.PI / 180f; // Convert to radians here
+    }
+    public virtual void Update()
     {
 
-        //image failed to load.
-        if (!hasImage)
-        {
-            //Console.WriteLine("atempting draw for rect at " + drawRect.x + "," + drawRect.y);
-            drawRect.Draw(ctx);
-            drawText.Draw(ctx);
-
-
-            return;
-        
-
-        }
-
-        AssetManager.DrawRotatedImage(ctx, myImage, transform);
         
     }
+    //used for procedual rendering, or alternate rendering other then image cacheing.
+    public virtual void Render(IRenderContext ctx)
+    {
 
+        
+    }
     public void Kill()
     {
         gm.RemoveGameObject(this);
