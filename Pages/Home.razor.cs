@@ -74,13 +74,14 @@ public partial class Home
             return;
 
         
+
+        //Render the stuff, provide the canvas. 
+        main.Render(_context);
+
         //call update function in GameMain.cs to update game state each frame. Pass input over.
         main.UpdatePlayer(inputWrapper);
         main.Update();
-        //Render the stuff, provide the canvas. 
-
-
-        main.Render(_context);
+        
         inputWrapper.Clear();
         
     }

@@ -24,40 +24,11 @@ public class GameObject
     {
         this.gm  = gm;
         this.transform = transform;
-        GameAsset myImageAsset;
-        hasImage = AssetManager._assets.TryGetValue(this.GetType().Name, out myImageAsset);
-        Console.WriteLine("NAME = " + this.GetType().Name);
-
-        
-        if(hasImage)
-        {
-            myImage = myImageAsset.Image;
-        }else
-        {
-            Console.WriteLine("Image returned null. " + this.GetType().Name + " was not able to find its image.");
-
-            
-            this.drawRect = new Rect(ref transform);
-            drawRect.borderColor = Settings.ErrorBorder;
-            drawRect.fillColor = Settings.ErrorBackground;
-
-            this.drawText = new Text("Missing", ref transform);
-            drawText.fontColor = Settings.ErrorText;
-            if (transform.size.X < 50)
-            {
-                drawText.text = "!";
-            }
-
-            Console.WriteLine("Procedual error images generated...");
-        }
 
         
         
     }
-    public ElementReference getImage()
-    {
-        return this.myImage;
-    }
+
     public bool CollideWith(GameObject two)
     {//Collid with other gameobject.
         float[] myBounds = this.GetBounds();
@@ -92,15 +63,6 @@ public class GameObject
 
     }
 
-    // Instead of drawing, it just packs its data into the array
-    public void PackData(float[] buffer, int offset)
-    {
-        buffer[offset] = transform.position.X;
-        buffer[offset + 1] = transform.position.Y;
-        buffer[offset + 2] = transform.size.X;
-        buffer[offset + 3] = transform.size.Y;
-        buffer[offset + 4] = transform.rotation * (float)Math.PI / 180f; // Convert to radians here
-    }
     public virtual void Update()
     {
 

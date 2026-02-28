@@ -11,7 +11,6 @@ window.batchDrawMulti = (canvasId, imgArray, data) => {
         const imgIndex = data[i+5]; // The magic index
 
         const img = imgArray[imgIndex]; // Grab the specific image for this object
-        console.log("Drawing image:", img, "image array number: ", imgIndex);
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(rad);

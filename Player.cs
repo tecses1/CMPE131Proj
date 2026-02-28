@@ -125,9 +125,6 @@ public class Player : GameObject
     
     public override void Render(IRenderContext ctx)
     {
-
         playerName.Draw(ctx);
-
-
     }
 }

@@ -84,10 +84,13 @@ public class GameManager
             _renderBuffer[offset+3] = obj.transform.size.Y;
             _renderBuffer[offset+4] = obj.transform.rotation * (float)Math.PI / 180f;
             _renderBuffer[offset+5] = getCacheIndex(obj.GetType().Name); // Tell JS which image to use
+
         }
 
         // Send all images and all data in one go
         await js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , imageCache, _renderBuffer);
+        _renderBuffer = null;
+        
     }
     void GeneateStars()
     {
@@ -133,6 +136,8 @@ public class GameManager
         await RenderGroup(activeObjects);
         await RenderGroup(player);
 
+        player[0].Render(ctx);
+
     }
     public void UpdatePlayer(InputWrapper e)
     {
@@ -140,9 +145,15 @@ public class GameManager
     }
     public void Update()
     {
+
+        foreach (GameObject go in objsToRemove)
+        {
+            activeObjects.Remove(go);
+        }
         foreach (GameObject go in activeObjects)
         {
             go.Update();
+            
         }
     }
     public void AddNewGameObject(GameObject o)
