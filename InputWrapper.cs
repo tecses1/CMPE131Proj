@@ -5,7 +5,7 @@ using Blazorex;
 public class InputWrapper
 {
     // WASD keys
-    public bool[] keys = { false, false, false, false };
+    public bool[] keys = { false, false, false, false, false };
 
     // store mouse state ourselves (Event args from Blazorex are read-only / double)
     public double MouseX { get; private set; } = 0.0;
@@ -27,6 +27,7 @@ public class InputWrapper
             case "a": keys[1] = true; break;
             case "s": keys[2] = true; break;
             case "d": keys[3] = true; break;
+            case "r": keys[4] = true; break;
         }
     }
 
@@ -38,6 +39,7 @@ public class InputWrapper
             case "a": keys[1] = false; break;
             case "s": keys[2] = false; break;
             case "d": keys[3] = false; break;
+            case "r": keys[4] = false; break;
         }
     }
 
@@ -51,6 +53,7 @@ public class InputWrapper
     // Call when mouse button pressed; "left" identifies left button
     public void loadMouseDown(bool left)
     {
+        this.LeftDown = true;
         if (left)
         {
             LeftDown = true;
@@ -64,6 +67,8 @@ public class InputWrapper
 
     public void loadMouseUp(bool left)
     {
+        this.LeftDown = false;
+        
         if (left)
         {
             LeftDown = false;

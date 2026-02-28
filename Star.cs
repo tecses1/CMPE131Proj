@@ -5,14 +5,12 @@ namespace CMPE131Proj;
 public class Star : GameObject 
 {
     
-    public Star (GameManager gm) : base(ref gm)
+    public Star (GameManager gm, Transform t) : base(ref gm,t )
     {
-        Random r = new Random();
-        this.sizeX = (int)(4 * r.NextDouble());
-        this.sizeY = sizeX;
+
     }
 
-    public override void Render(IRenderContext ctx)
+    public override void UpdateAndRender(IRenderContext ctx)
     {
         
     }

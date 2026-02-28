@@ -1,6 +1,8 @@
 namespace CMPE131Proj;
 using Microsoft.AspNetCore.Components;
 using Blazorex;
+using System.Numerics;
+
 public static class AssetManager
 {
     //dictionary of all assets to load. When we add an image, we need a new dict.
@@ -11,15 +13,15 @@ public static class AssetManager
         { "Projectile", new GameAsset { Name = "Projectile", Url = "images/projectile.png" } }
     };
     //I wont pretend to understand how or why this works.
-    public static void DrawRotatedImage(IRenderContext ctx, ElementReference img, float x, float y, float width, float height, float degrees)
+    public static void DrawRotatedImage(IRenderContext ctx, ElementReference img, Transform t)
     {
         ctx.Save();
         //add width/2 and height/2 for traditonal non center rendering. Fucks up everything though if you try to center it after or before.
-        ctx.Translate(x, y);
+        ctx.Translate(t.position.X, t.position.Y);
 
-        double radians = degrees * Math.PI / 180.0;
+        double radians = t.rotation * Math.PI / 180.0;
         ctx.Rotate((float)radians);
-        ctx.DrawImage(img, -width/2, -height/2, width, height);
+        ctx.DrawImage(img, -t.size.X/2, -t.size.Y/2, t.size.X, t.size.Y);
         ctx.Restore();
     
     }

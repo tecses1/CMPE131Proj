@@ -9,33 +9,29 @@ namespace CMPE131Proj
         //public float X;
         //public float Y;
         public Vector2 Velocity;
-        public int LifetimeFrames = 180; 
-        public bool Dead => LifetimeFrames <= 0;
+        public int LifetimeFrames = 30; 
 
-        public Projectile(ref GameManager gm, float x, float y, Vector2 velocity, float rotation = 0f, int lifetime = 180) : base(ref gm)
+        public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime = 30) : base(ref gm, transform)
         {
-            
-            this.x = x;
-            this.y = y;
             Velocity = velocity;
-            this.rotation = rotation;
             LifetimeFrames = lifetime;
-
-            this.sizeX = 30;
-            this.sizeY = 30;
         }
 
-        public void Update()
+        public override void UpdateAndRender(IRenderContext ctx)
         {
-            x += Velocity.X;
-            y += Velocity.Y;
-            LifetimeFrames--;
-        }
+            transform.position += Velocity;
 
-        public override void Render(IRenderContext ctx)
-        {
+            if (!this.CollideWith(gm.GetBounds())) //We are outside of bounds. Start counting down for kill.
+            {
+                Console.WriteLine("OUT OF BOUNDS");
+                LifetimeFrames--;
+                if (LifetimeFrames < 0)
+                {
+                    this.Kill();
+                }
+            }
 
-            base.Render(ctx);
+            base.UpdateAndRender(ctx);
 
         }
     }

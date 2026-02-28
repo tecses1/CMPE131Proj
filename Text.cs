@@ -1,6 +1,7 @@
 namespace CMPE131Proj;
 
 using System.ComponentModel;
+using System.Numerics;
 using Blazorex;
 public class Text
 {
@@ -13,30 +14,26 @@ public class Text
     public int borderWidth = 2;
 
 
-    public float x;
-    public float y;
-    public int sizeX;
-    public int sizeY;
+    public Transform transform;
 
-    public Text(string text, float x, float y, int sizex, int sizeY)
+    public float offsetX;
+    public float offsetY;
+
+
+    //for procedual cacheing.
+    public Text(string text, ref Transform t, float offsetX = 0, float offsetY = 0)
     {
+        this.transform = t;
         this.text = text;
-        this.x = x;
-        this.y = y;
-        this.sizeX = sizex;
-        this.sizeY = sizeY;
-    }
-    //HUGE PERFORMANCE HIT. Idk why yet.
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
 
+    }
+    //HUGE PERFORMANCE HItransform. Idk why yetransform. [FIXED]
     public void Draw(IRenderContext ctx)
     {
 
-            var previousFillStyle = ctx.FillStyle;
-            var previousStrokeStyle = ctx.StrokeStyle;
-            var previousLineWidth = ctx.LineWidth;
-            var previousFont = ctx.Font;
-            var previousTextAlign = ctx.TextAlign;
-            var previousTextBaseline = ctx.TextBaseline;
+            ctx.Save();
 
             try
             {
@@ -47,31 +44,26 @@ public class Text
 
 
                 ctx.BeginPath();
-                ctx.RoundRect(this.x-sizeX/2, this.y-sizeY/2, sizeX, sizeY, 0);
+                ctx.RoundRect(this.transform.position.X-transform.size.X/2+offsetX, 
+                                this.transform.position.Y-transform.size.Y/2+offsetY, 
+                                transform.size.X, transform.size.Y, 0);
                 ctx.Fill();
                 ctx.Stroke();
 
                 // Draw character text
                 ctx.Font = this.font;
                 ctx.FillStyle = this.fontColor;
-                //ctx.TextAlign = TextAlign.Center;
+                ctx.TextAlign = TextAlign.Center;
                 ctx.TextBaseline = TextBaseline.Middle;
 
-                var textX = this.x;
-                var textY = this.y;
-                ctx.FillText(text,x,y);
+                ctx.FillText(text,transform.position.X+offsetX,transform.position.Y+offsetY);
                 
                 return;
             }
             finally
             {
                 // Restore state manually for better performance
-                ctx.FillStyle = previousFillStyle;
-                ctx.StrokeStyle = previousStrokeStyle;
-                ctx.LineWidth = previousLineWidth;
-                ctx.Font = previousFont;
-                ctx.TextAlign = previousTextAlign ?? TextAlign.Center;
-                ctx.TextBaseline = previousTextBaseline ?? TextBaseline.Middle;
+                ctx.Restore();
                 
             }
     }

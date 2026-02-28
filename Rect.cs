@@ -1,6 +1,8 @@
 namespace CMPE131Proj;
 using Microsoft.AspNetCore.Components;
 using Blazorex;
+using System.Numerics;
+
 public class Rect
 {
     public string fillColor  = Settings.DefaultBackground;
@@ -9,24 +11,18 @@ public class Rect
     public int borderWidth = 2;
 
 
-    public float x;
-    public float y;
-    public int sizeX;
-    public int sizeY;
+    public Transform transform;
 
-    public Rect(float x, float y, int sizex, int sizeY)
+
+    //for procedual cacheing
+    public Rect(ref Transform t)
     {
-        this.x = x;
-        this.y = y;
-        this.sizeX = sizex;
-        this.sizeY = sizeY;
+        this.transform = t;
     }
     //HUGE PERFORMANCE HIT. Idk why yet.
     public void Draw(IRenderContext ctx)
     {
-            var previousFillStyle = ctx.FillStyle;
-            var previousStrokeStyle = ctx.StrokeStyle;
-            var previousLineWidth = ctx.LineWidth;
+            ctx.Save();
 
             try
             {
@@ -37,7 +33,9 @@ public class Rect
 
 
                 ctx.BeginPath();
-                ctx.RoundRect(this.x-this.sizeX/2, this.y-this.sizeY/2, this.sizeX, this.sizeY, 0);
+                ctx.RoundRect(this.transform.position.X-this.transform.size.X/2, 
+                                this.transform.position.Y-this.transform.size.Y/2, 
+                                this.transform.size.X, this.transform.size.Y, 10);
                 ctx.Fill();
                 ctx.Stroke();
 
@@ -45,9 +43,7 @@ public class Rect
             finally
             {
                 // Restore state manually for better performance
-                ctx.FillStyle = previousFillStyle;
-                ctx.StrokeStyle = previousStrokeStyle;
-                ctx.LineWidth = previousLineWidth;
+                ctx.Restore();
                 
             }
     }

@@ -15,14 +15,9 @@ public class GameMain
         gameManager = new GameManager();
     }
     //Called on each frame rendered in the game! 
-    public void Update(InputWrapper e)
+    public void UpdatePlayerInput(InputWrapper e)
     {
-        //Update game logic goes here.
-
-        gameManager.Update();
         gameManager.UpdatePlayer(e);
-        
-
 
     }
 
