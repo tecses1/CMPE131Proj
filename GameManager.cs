@@ -25,6 +25,7 @@ public class GameManager
     private List<GameObject> objsToRemove = new List<GameObject>();
     public List<GameObject> objsToRender = new List<GameObject>();
     public List<Text> textsToRender = new List<Text>();
+    public List<Rect> rectsToRender = new List<Rect>();
 
     //JS crap for batch drawing
     private GameAsset[] assetCache;
@@ -53,8 +54,9 @@ public class GameManager
             assetCache[i] = assets[i].Value;
             imageCache[i] = assets[i].Value.Image;
         }
-        Transform tTransform = new Transform(10,10,0,0);
-        t = new Text("FPS: " + fps, ref tTransform, 25,10);
+        Transform tTransform = new Transform(50,25,100,50);
+        t = new Text("FPS: " + fps, ref tTransform);
+        t.textAlpha = 150;
 
         this.GeneateStars();
 
@@ -68,6 +70,10 @@ public class GameManager
     {
         this.textsToRender.Add(text);
     }
+    public void AddRectToRender(Rect rect)
+    {
+        this.rectsToRender.Add(rect);
+    }
     int getCacheIndex(string name)
     {
         for (int i = 0; i < assetCache.Length; i++)
@@ -79,25 +85,41 @@ public class GameManager
         }
         return -1;
     }
-    //Add update function to call from main thread.
+    public async Task RenderRects()
+    {
+        var rectToRender = rectsToRender.Select(r => new {
+            fillColor = r.fillColor,
+            alpha = ((float)r.alpha)/255f,
+            sizeX = r.transform.size.X, // The box width
+            sizeY = r.transform.size.Y, // The box height
+            x = r.transform.position.X,
+            y = r.transform.position.Y,
+            borderWidth = r.borderWidth,
+            borderColor = r.borderColor
+        }).ToArray();
+        await js.InvokeVoidAsync("drawRectBatch", mainCanvas.Id, rectToRender);
+        
+        rectsToRender.Clear();
+    }
     public async Task RenderTexts()
     {
-
-            var textToRender = textsToRender.Select(t => new {
-                text = t.text,
-                font = t.font,
-                fontColor = t.fontColor,
-                borderColor = t.borderColor,
-                borderWidth = t.borderWidth,
-                sizeX = t.transform.size.X,
-                sizeY = t.transform.size.Y,
-                fillcolor = t.fillColor,
-                x = t.transform.position.X,
-                y = t.transform.position.Y,
-                offX = t.offsetX,
-                offY = t.offsetY
-            }).ToArray();
-            await js.InvokeVoidAsync("drawTextBatch", mainCanvas.Id, textToRender);
+        var textToRender = textsToRender.Select(t => new {
+            text = t.text,
+            fontFamily = "Arial", // Pass just the name, JS handles the size
+            fillColor = t.fillColor,
+            fontColor = t.fontColor,
+            textAlpha = ((float)t.textAlpha)/255f,
+            rectAlpha = ((float)t.rectAlpha)/255f,
+            sizeX = t.transform.size.X, // The box width
+            sizeY = t.transform.size.Y, // The box height
+            x = t.transform.position.X,
+            y = t.transform.position.Y,
+            offX = t.offsetX,
+            offY = t.offsetY,
+            borderWidth = t.borderWidth,
+            borderColor = t.borderColor
+        }).ToArray();
+        await js.InvokeVoidAsync("drawTextBatch", mainCanvas.Id, textToRender);
         
         textsToRender.Clear();
     }
@@ -125,7 +147,7 @@ public class GameManager
 
         // Send all images and all data in one go
         await js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , imageCache, _renderBuffer);
-        _renderBuffer = null;
+        objectList.Clear();
         
     }
     //Returns offset trasnform, what we actually see relative to canvas view.
@@ -209,7 +231,8 @@ public class GameManager
         //Render the "objsToRender" group. This group is modified to only include on screen GameObjects.
         await RenderGroup(objsToRender);
         await RenderTexts();
-        objsToRender.Clear();
+        await RenderRects();
+       
 
         
 

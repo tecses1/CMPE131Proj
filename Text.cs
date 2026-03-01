@@ -1,9 +1,7 @@
 namespace CMPE131Proj;
 
-using System.ComponentModel;
-using System.Dynamic;
-using System.Numerics;
-using Blazorex;
+using System.Drawing;
+
 public class Text
 {
     public string fillColor  = Settings.DefaultTextBackground;
@@ -14,7 +12,8 @@ public class Text
     public string text = "Placeholder";
     public int borderWidth = 2;
 
-
+    public int rectAlpha = 0;
+    public int textAlpha = 255;
     public Transform transform;
 
     public float offsetX;
@@ -30,7 +29,6 @@ public class Text
         this.offsetY = offsetY;
 
     }
-    //HUGE PERFORMANCE HItransform. Idk why yetransform. [FIXED]
     public void Draw(GameManager gm)
     {
         gm.AddTextToRender(this);

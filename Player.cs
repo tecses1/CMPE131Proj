@@ -20,25 +20,29 @@ public class Player : GameObject
     //UI elements
     Text playerName;
     Text outOfBoundsText;
+    Rect oobScreenFlashRect;
     
     int guntype = 1;
     bool barrel = true;
     bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
     bool[] centered = {false, false}; //x, y
 
-    Color redFlash = Color.FromArgb(0,255,0,0);//.Red;
     int alpha = 0;
     int direction = 1;
 
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
-        Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth,Settings.CanvasHeight);
+        Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth/2,Settings.CanvasHeight/2);
         outOfBoundsText = new Text(Settings.OutOfBoundsMessage, ref oobTransform, 0,0);
         outOfBoundsText.fontColor = Settings.ErrorText;
 
 
-        outOfBoundsText.fillColor = GetColorString(redFlash);
+        Transform oobScreenFlashT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight /2,Settings.CanvasWidth,Settings.CanvasHeight);
+        oobScreenFlashRect = new Rect(ref oobScreenFlashT);
+        oobScreenFlashRect.borderColor = ColorTranslator.ToHtml(Color.Red);
+        oobScreenFlashRect.borderWidth = 50;
+
     }
     public string GetColorString(Color c)
     {
@@ -101,22 +105,24 @@ public class Player : GameObject
 
         if(!this.CollideWith(gm.GetWorldBounds())){
             outOfBoundsText.Draw(gm);
-            if (alpha <= 0)
+            if (alpha <= 25)
             {
                 direction = 1;
             }
-            else if (alpha >= 255)
+            else if (alpha >= 75)
             {
                 direction = -1;
             }
             alpha += direction;
+            //oobScreenFlashRect.fillColor = ColorTranslator.ToHtml(Color.Red);
+            oobScreenFlashRect.borderColor = ColorTranslator.ToHtml(Color.Red);
+            oobScreenFlashRect.borderWidth = 100;
+            oobScreenFlashRect.alpha = alpha;
+            oobScreenFlashRect.Draw(gm);
 
-            redFlash = Color.FromArgb(alpha, 255, 0, 0);
-            outOfBoundsText.fillColor = GetColorString(redFlash);
         }
         else
         {
-            outOfBoundsText.fillColor = GetColorString(Color.FromArgb(0,0,0,0));
             alpha = 0;
         }
 
