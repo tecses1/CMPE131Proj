@@ -48,19 +48,24 @@ public class Player : GameObject
         Vector2 mousePos = new Vector2(mouseX, mouseY);
             transform.RotateTo(mousePos);      //we're inside the bounds.
         
+
+        if (this.CollideWith(gm.GetWorldBounds()))
+        {
+                    
+            if (e.keys[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
+
+            if (e.keys[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
+
+            if (e.keys[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
+
+            if (e.keys[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
+        }
         if (e.keys[0]) transform.position.Y = transform.position.Y - 3;
         if (e.keys[1]) transform.position.X = transform.position.X - 3;
         if (e.keys[2]) transform.position.Y = transform.position.Y + 3;
         if (e.keys[3]) transform.position.X = transform.position.X + 3;
         
-        
-        if (e.keys[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
 
-        if (e.keys[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
-
-        if (e.keys[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
-
-        if (e.keys[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
         
     
         
