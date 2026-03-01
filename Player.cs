@@ -1,6 +1,8 @@
 namespace CMPE131Proj;
 
+using System.Drawing;
 using System.Numerics;
+
 
 //Handles the local player controller.
 public class Player : GameObject
@@ -24,15 +26,24 @@ public class Player : GameObject
     bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
     bool[] centered = {false, false}; //x, y
 
+    Color redFlash = Color.FromArgb(0,255,0,0);//.Red;
+    int alpha = 0;
+    int direction = 1;
 
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
-        Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 200, 50);
+        Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth,Settings.CanvasHeight);
         outOfBoundsText = new Text(Settings.OutOfBoundsMessage, ref oobTransform, 0,0);
         outOfBoundsText.fontColor = Settings.ErrorText;
-    }
 
+
+        outOfBoundsText.fillColor = GetColorString(redFlash);
+    }
+    public string GetColorString(Color c)
+    {
+        return $"#{c.R:X2}{c.G:X2}{c.B:X2}{c.A:X2}";
+    }
     public override void Update() {
         Render();
         playerName.Draw(gm);
@@ -54,24 +65,16 @@ public class Player : GameObject
 
         bool[] boundsCollided = gm.GetBoundCollided(this);
         float[] center = gm.GetCanvasCenter();
-        if (e.keys[0])
-        {
-            if (this.transform.position.Y > center[1])
-            {
-                transform.position.Y -= 3;
-            }
+        if (e.keys[0]) {
+            if (this.transform.position.Y > center[1]) transform.position.Y -= 3;
             else
             {
                 transform.position.Y -= 3;
                 if (!boundsCollided[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
             }
         }
-        if (e.keys[2])
-        {
-            if (this.transform.position.Y < center[1])
-            {
-                transform.position.Y += 3;
-            }
+        if (e.keys[2]) {
+            if (this.transform.position.Y < center[1]) transform.position.Y += 3;
             else
             {
                 transform.position.Y += 3;
@@ -79,24 +82,16 @@ public class Player : GameObject
             }
         }
 
-        if (e.keys[1])
-        {
-            if (this.transform.position.X > center[0])
-            {
-                transform.position.X -= 3;
-            }
+        if (e.keys[1]) {
+            if (this.transform.position.X > center[0]) transform.position.X -= 3;
             else
             {
                 transform.position.X -= 3;
                 if (!boundsCollided[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
             }
         }
-        if (e.keys[3])
-        {
-            if (this.transform.position.X < center[0])
-            {
-                transform.position.X += 3;
-            }
+        if (e.keys[3]) {
+            if (this.transform.position.X < center[0])  transform.position.X += 3;
             else
             {
                 transform.position.X += 3;
@@ -106,6 +101,23 @@ public class Player : GameObject
 
         if(!this.CollideWith(gm.GetWorldBounds())){
             outOfBoundsText.Draw(gm);
+            if (alpha <= 0)
+            {
+                direction = 1;
+            }
+            else if (alpha >= 255)
+            {
+                direction = -1;
+            }
+            alpha += direction;
+
+            redFlash = Color.FromArgb(alpha, 255, 0, 0);
+            outOfBoundsText.fillColor = GetColorString(redFlash);
+        }
+        else
+        {
+            outOfBoundsText.fillColor = GetColorString(Color.FromArgb(0,0,0,0));
+            alpha = 0;
         }
 
 

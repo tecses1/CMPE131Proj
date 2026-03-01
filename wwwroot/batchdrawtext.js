@@ -11,6 +11,10 @@ window.drawTextBatch = (canvasId, textData) => {
         const x = t.x + t.offX;
         const y = t.y + t.offY;
 
+        if (t.fillColor) {
+            ctx.fillStyle = t.fillColor;
+            ctx.fillRect(t.x - t.sizeX / 2, t.y - t.sizeY / 2, t.sizeX,t.sizeY);
+        }
         // 1. Draw the Border (Stroke)
         if (t.borderWidth > 0) {
             ctx.strokeStyle = t.borderColor;
