@@ -16,6 +16,8 @@ public partial class Home
     public InputWrapper inputWrapper;
     public GameManager main;
 
+    private float _lastTime = 0;
+    private const float TargetFrameTime = 1000f / 30f; // 16.66ms
 
     
     //This is called on first frame All intializing logic goes here..
@@ -73,15 +75,25 @@ public partial class Home
         if (_context is null)
             return;
 
-        
+
+        // Calculate elapsed time since the last successful frame
+        float elapsed = timestamp - _lastTime;
+
+        // IF not enough time has passed, ABORT (don't update or render)
+        if (elapsed < TargetFrameTime)
+            return;
+
+        // We are now locked to roughly 60fps
+        // Subtract a tiny bit of the remainder to keep it steady (Jitter correction)
+        _lastTime = timestamp - (elapsed % TargetFrameTime);
 
         //Render the stuff, provide the canvas. 
-        main.Render(_context);
+
 
         //call update function in GameMain.cs to update game state each frame. Pass input over.
         main.UpdatePlayer(inputWrapper);
         main.Update();
-        
+        main.Render(_context);
         inputWrapper.Clear();
         
     }

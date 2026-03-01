@@ -13,6 +13,7 @@ public class Player : GameObject
     //move comonly defined fields for classes to the GameObject class.
     //Game object class may be able to handle default rending, image fetching by name, etc.
 
+    public InputWrapper cInput;
     private readonly List<Projectile> projectiles = new();
     private float bulletSpeed = 12f;
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
@@ -25,25 +26,47 @@ public class Player : GameObject
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform )
     {
         
-        
-        playerName = new Text(Settings.name, ref transform, 0,-transform.size.Y/2*1.25f);
+        Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
+        playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
     }
-    public void Update(InputWrapper e)
+    public override void Update()
     {
+        Render();
+        playerName.Draw(gm);
+
+        InputWrapper e = cInput;
+        if (e == null){
+            return;
+        }
         //WORSHIP THY ROTATION
         //THIS WAS THE HARDEST THING I'VE HAD TO DO SO FAR ON THIS PROJECT
-        float mouseX = (float)e.MouseX;
-        float mouseY = (float)e.MouseY;
+        //don't really like offsetting the mouse, because then its not pointing where it actually is.
+        //would rather offset objects, but that hurts my brain.
+        float mouseX = (float)e.MouseX + gm.worldOffsetX;
+        float mouseY = (float)e.MouseY - gm.worldOffsetY;
 
         Vector2 mousePos = new Vector2(mouseX, mouseY);
-        transform.RotateTo(mousePos);
-
-
+            transform.RotateTo(mousePos);      //we're inside the bounds.
+        
         if (e.keys[0]) transform.position.Y = transform.position.Y - 3;
         if (e.keys[1]) transform.position.X = transform.position.X - 3;
         if (e.keys[2]) transform.position.Y = transform.position.Y + 3;
         if (e.keys[3]) transform.position.X = transform.position.X + 3;
         
+        
+        if (e.keys[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
+
+        if (e.keys[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
+
+        if (e.keys[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
+
+        if (e.keys[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
+        
+    
+        
+        
+        
+
         if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
         {
             guntype++;
@@ -53,11 +76,12 @@ public class Player : GameObject
             }
             lastChange = DateTime.Now;
         }
+        /*
         if (transform.position.X > Settings.CanvasWidth + transform.size.X / 2) transform.position.X = -transform.size.X / 2;
         if (transform.position.X  < -transform.size.X / 2) transform.position.X  = Settings.CanvasWidth + transform.size.X / 2;
         if (transform.position.Y > Settings.CanvasHeight + transform.size.Y / 2) transform.position.Y = -transform.size.Y / 2;
         if (transform.position.Y < -transform.size.Y / 2) transform.position.Y = Settings.CanvasHeight + transform.size.Y / 2;
-    
+        */
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
 
@@ -76,6 +100,7 @@ public class Player : GameObject
             
             lastShotTime = DateTime.UtcNow;
         }
+
 
 
     }
@@ -98,7 +123,7 @@ public class Player : GameObject
         var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 30);
         var proj2 = new Projectile(ref gm, proj2t, velocity,  lifetime: 30);
         gm.AddNewGameObject(proj);
-         gm.AddNewGameObject(proj2);
+        gm.AddNewGameObject(proj2);
     }
     private void SpawnGuntype2(Vector2 target)
     {
@@ -121,10 +146,7 @@ public class Player : GameObject
         var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 30);
         gm.AddNewGameObject(proj);
         barrel = !barrel;
+
     }
     
-    public override void Render(IRenderContext ctx)
-    {
-        playerName.Draw(ctx);
-    }
 }

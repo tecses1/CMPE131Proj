@@ -5,6 +5,8 @@ using System.Numerics;
 
 public static class AssetManager
 {
+    //global variable.
+    public static int fps;
     //dictionary of all assets to load. When we add an image, we need a new dict.
     //I'm sorry- there's no better way.
 

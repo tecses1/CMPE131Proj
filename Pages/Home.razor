@@ -20,7 +20,7 @@
 
 <button @onclick="SaveToStorage" class="btn btn-primary mt-2">Confirm & Save</button>
 
-<p>Current value in settings: @Settings.name</p>
+<p>Current value in settings: @AssetManager.fps</p>
 
 
 <div class="canvas">
@@ -33,7 +33,6 @@
 @code {
     //Intialze C# variable fields for HTML elements above.
     private string userInput = Settings.name;
-
 
     protected override void OnInitialized()
     {

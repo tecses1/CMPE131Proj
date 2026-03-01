@@ -1,6 +1,7 @@
 namespace CMPE131Proj;
 
 using System.ComponentModel;
+using System.Dynamic;
 using System.Numerics;
 using Blazorex;
 public class Text
@@ -30,41 +31,9 @@ public class Text
 
     }
     //HUGE PERFORMANCE HItransform. Idk why yetransform. [FIXED]
-    public void Draw(IRenderContext ctx)
+    public void Draw(GameManager gm)
     {
-
-            ctx.Save();
-
-            try
-            {
-                // Draw key background with rounded corners
-                ctx.FillStyle = this.fillColor;
-                ctx.StrokeStyle = this.borderColor;
-                ctx.LineWidth = 2;
-
-
-                ctx.BeginPath();
-                ctx.RoundRect(this.transform.position.X-transform.size.X/2+offsetX, 
-                                this.transform.position.Y-transform.size.Y/2+offsetY, 
-                                transform.size.X, transform.size.Y, 0);
-                ctx.Fill();
-                ctx.Stroke();
-
-                // Draw character text
-                ctx.Font = this.font;
-                ctx.FillStyle = this.fontColor;
-                ctx.TextAlign = TextAlign.Center;
-                ctx.TextBaseline = TextBaseline.Middle;
-
-                ctx.FillText(text,transform.position.X+offsetX,transform.position.Y+offsetY);
-                
-                return;
-            }
-            finally
-            {
-                // Restore state manually for better performance
-                ctx.Restore();
-                
-            }
+        gm.AddTextToRender(this);
+           
     }
 }

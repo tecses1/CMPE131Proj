@@ -12,14 +12,7 @@ public class GameObject
     //sizing
     public Transform transform;
 
-    private ElementReference myImage;
-
     protected GameManager gm;
-
-    protected Rect drawRect;
-    protected Text drawText;
-
-    protected bool hasImage;
     public GameObject(ref GameManager gm, Transform transform)
     {
         this.gm  = gm;
@@ -62,18 +55,19 @@ public class GameObject
         return bounds;
 
     }
-
+    public void Render()
+    {
+        if (this.CollideWith(gm.GetCanvasBounds()))
+        {
+            gm.objsToRender.Add(this);
+        }
+    }
     public virtual void Update()
     {
+        //if we can SEE the object, add it to render pipeline.
 
-        
     }
     //used for procedual rendering, or alternate rendering other then image cacheing.
-    public virtual void Render(IRenderContext ctx)
-    {
-
-        
-    }
     public void Kill()
     {
         gm.RemoveGameObject(this);
