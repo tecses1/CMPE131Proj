@@ -14,19 +14,35 @@ public class Player : GameObject
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
+    
+    //UI elements
     Text playerName;
+    Text outOfBoundsText;
     
     int guntype = 1;
     bool barrel = true;
     bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
-    
-    public Player(ref GameManager gm, Transform transform) : base(ref gm,transform )
+    bool[] centered = {false, false}; //x, y
+
+     public float[] GetCanvasBounds()
     {
+        float[] bounds = new float[4];
+        bounds[0] = 0 - worldOffsetX; //Top left corner X
+        bounds[1] = 0 + worldOffsetY; //Top left corner Y
+        bounds[2] = Settings.CanvasWidth - worldOffsetX; //Bottom right corner X
+        bounds[3] = Settings.CanvasHeight - worldOffsetY; //Bottom right corner Y
+
+        return bounds;
+    }
+    
+    public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
+        Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 200, 50);
+        outOfBoundsText = new Text(Settings.OutOfBoundsMessage, ref oobTransform, 0,0);
+        outOfBoundsText.fontColor = Settings.ErrorText;
     }
-    public override void Update()
-    {
+    public override void Update() {
         Render();
         playerName.Draw(gm);
 
@@ -44,23 +60,21 @@ public class Player : GameObject
         Vector2 mousePos = new Vector2(mouseX, mouseY);
             transform.RotateTo(mousePos);      //we're inside the bounds.
         
+
         bool[] boundsCollided = gm.GetBoundCollided(this); //top, left, bottom, right
-        if(boundsCollided.Contains(true))
-        {
+        if(boundsCollided.Contains(true)) {
             if(boundsCollided[0]) allowedMove[0] = false;
             if(boundsCollided[1]) allowedMove[1] = false;
             if(boundsCollided[2]) allowedMove[2] = false;
             if(boundsCollided[3]) allowedMove[3] = false;
-        }
-        else
-        {
+        } 
+        else {
             allowedMove[0] = true;
             allowedMove[1] = true;
             allowedMove[2] = true;
             allowedMove[3] = true;
         }
-        if (this.CollideWith(gm.GetWorldBounds()))
-        {    
+        if (this.CollideWith(gm.GetWorldBounds())) {    
             //Move Camera
             if (e.keys[1] && allowedMove[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
             if (e.keys[3] && allowedMove[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
@@ -68,18 +82,19 @@ public class Player : GameObject
             if (e.keys[0] && allowedMove[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
         }
         //Move Player
-        if (e.keys[0] && allowedMove[0]) transform.position.Y = transform.position.Y - 3;
-        if (e.keys[1] && allowedMove[1]) transform.position.X = transform.position.X - 3;
-        if (e.keys[2] && allowedMove[2]) transform.position.Y = transform.position.Y + 3;
-        if (e.keys[3] && allowedMove[3]) transform.position.X = transform.position.X + 3;
+        if (e.keys[0]) transform.position.Y = transform.position.Y - 3;
+        if (e.keys[1]) transform.position.X = transform.position.X - 3;
+        if (e.keys[2]) transform.position.Y = transform.position.Y + 3;
+        if (e.keys[3]) transform.position.X = transform.position.X + 3;
         
+        if(!this.CollideWith(gm.GetWorldBounds())){
+            outOfBoundsText.Draw(gm);
+        }
 
-        
+
+
+
     
-        
-        
-        
-
         if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
         {
             guntype++;

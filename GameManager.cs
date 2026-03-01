@@ -164,7 +164,15 @@ public class GameManager
         bounds[3] = Settings.CanvasHeight - worldOffsetY;
 
         return bounds;
+    }
 
+    public float[] GetCanvasCenter()
+    {
+        float[] center = new float[2];
+        center[0] = Settings.CanvasWidth/2 + worldOffsetX;
+        center[1] = Settings.CanvasHeight/2 - worldOffsetY;
+
+        return center;
     }
     public float[] GetWorldBounds()
     {

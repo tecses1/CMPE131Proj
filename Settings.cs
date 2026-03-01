@@ -15,6 +15,7 @@ public static class Settings
 
     //only public vars save.
     public static string name = "Player";
+    public const string OutOfBoundsMessage = "You are out of bounds!";
 
     // Star Settings
     public const float Sparseness = 0.2f;
@@ -35,7 +36,7 @@ public static class Settings
     public const string ErrorBackground = "#ff0000";
     public const string ErrorBorder = "#fff700";
 
-    public const string ErrorText = "#f6ff00";
+    public const string ErrorText = "#d23118";
     public const string KeyText = "#ffffff";
     public const string KeyFont = "bold 18px 'Segoe UI', Arial, sans-serif";
     public const string DefaultFont = "bold 18px 'Segoe UI', Arial, sans-serif";
