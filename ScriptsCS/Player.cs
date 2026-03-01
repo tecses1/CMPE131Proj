@@ -48,7 +48,6 @@ public class Player : GameObject
         return $"#{c.R:X2}{c.G:X2}{c.B:X2}{c.A:X2}";
     }
     public override void Update() {
-        Render();
         playerName.text = Settings.name;
         playerName.Draw(gm);
 

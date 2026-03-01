@@ -19,7 +19,6 @@ namespace CMPE131Proj
 
         public override void Update()
         {
-            Render();
             transform.position += Velocity;
 
             if (!this.CollideWith(gm.GetWorldBounds())) //We are outside of bounds. Start counting down for kill.

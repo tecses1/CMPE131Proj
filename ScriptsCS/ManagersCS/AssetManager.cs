@@ -1,7 +1,5 @@
 namespace CMPE131Proj;
 using Microsoft.AspNetCore.Components;
-using Blazorex;
-using System.Numerics;
 
 public static class AssetManager
 {
@@ -15,7 +13,8 @@ public static class AssetManager
         { "Projectile", new GameAsset { Name = "Projectile", Url = "images/projectile.png" } },
         { "Star", new GameAsset { Name = "Star", Url = "images/star.png" } }
     };
-    //I wont pretend to understand how or why this works.
+    //Deprecated. Too slow, moved to custom JS REnder pipeline. See GameManager.Render()
+    /*
     public static void DrawImage(IRenderContext ctx, ElementReference img, Transform t)
     {
 
@@ -35,11 +34,6 @@ public static class AssetManager
         ctx.Restore();
     
     }
-    
+    */
 }
 
-public class GameAsset {
-    public string Name { get; set; }
-    public string Url { get; set; }
-    public ElementReference Image { get; set; } // Blazor will fill this
-}

@@ -1,6 +1,4 @@
-using System.Numerics;
-using Blazorex;
-using Microsoft.AspNetCore.Components;
+using System.Drawing;
 
 namespace CMPE131Proj;
 
@@ -11,15 +9,19 @@ public class GameObject
 
     //sizing
     public Transform transform;
-
+    //game manager reference. This class makes many frequent callbacks.
     protected GameManager gm;
+
+    public Text missingText;
     public GameObject(ref GameManager gm, Transform transform)
     {
         this.gm  = gm;
         this.transform = transform;
 
-        
-        
+        this.missingText = new Text("MISSING",ref transform);
+        this.missingText.setFillColor(Color.LightYellow,255);
+        this.missingText.setBorderColor(Color.Red);
+        this.missingText.borderWidth = 5;
     }
 
     public bool CollideWith(GameObject two)
@@ -55,19 +57,10 @@ public class GameObject
         return bounds;
 
     }
-    public void Render()
-    {
-        if (this.CollideWith(gm.GetCanvasBounds()))
-        {
-            gm.objsToRender.Add(this);
-        }
-    }
     public virtual void Update()
     {
-        //if we can SEE the object, add it to render pipeline.
 
     }
-    //used for procedual rendering, or alternate rendering other then image cacheing.
     public void Kill()
     {
         gm.RemoveGameObject(this);

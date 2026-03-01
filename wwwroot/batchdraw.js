@@ -9,16 +9,20 @@ window.batchDrawMulti = (canvasId, imgArray, data) => {
         const h = data[i+3];
         const rad = data[i+4];
         const imgIndex = data[i+5]; // The magic index
+        
+        if (imgIndex != -1){ // if an image exists, we can display it.
+            const img = imgArray[imgIndex];
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rad);
 
-        const img = imgArray[imgIndex]; // Grab the specific image for this object
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rad);
 
+            // Then the original draw image
 
-        // Then the original draw image
+            ctx.drawImage(img, -w/2, -h/2, w, h);
+            ctx.restore();
+        }
+        
 
-        ctx.drawImage(img, -w/2, -h/2, w, h);
-        ctx.restore();
     }
 };
