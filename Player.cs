@@ -50,6 +50,7 @@ public class Player : GameObject
     }
     public override void Update() {
         Render();
+        playerName.text = Settings.name;
         playerName.Draw(gm);
 
         InputWrapper e = cInput;
