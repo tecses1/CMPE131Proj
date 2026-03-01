@@ -56,7 +56,7 @@ public class Player : GameObject
         float[] center = gm.GetCanvasCenter();
         if (e.keys[0])
         {
-            if (this.transform.position.Y < center[1])
+            if (this.transform.position.Y > center[1])
             {
                 transform.position.Y -= 3;
             }
@@ -68,7 +68,7 @@ public class Player : GameObject
         }
         if (e.keys[2])
         {
-            if (this.transform.position.Y > center[1])
+            if (this.transform.position.Y < center[1])
             {
                 transform.position.Y += 3;
             }
@@ -81,7 +81,7 @@ public class Player : GameObject
 
         if (e.keys[1])
         {
-            if (this.transform.position.X < center[0])
+            if (this.transform.position.X > center[0])
             {
                 transform.position.X -= 3;
             }
@@ -93,7 +93,7 @@ public class Player : GameObject
         }
         if (e.keys[3])
         {
-            if (this.transform.position.X > center[0])
+            if (this.transform.position.X < center[0])
             {
                 transform.position.X += 3;
             }
@@ -103,38 +103,10 @@ public class Player : GameObject
                 if (!boundsCollided[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
             }
         }
-        /*
-        bool[] boundsCollided = gm.GetBoundCollided(this); //top, left, bottom, right
-        if(boundsCollided.Contains(true)) {
-            if(boundsCollided[0]) allowedMove[0] = false;
-            if(boundsCollided[1]) allowedMove[1] = false;
-            if(boundsCollided[2]) allowedMove[2] = false;
-            if(boundsCollided[3]) allowedMove[3] = false;
-        } 
-        else {
-            allowedMove[0] = true;
-            allowedMove[1] = true;
-            allowedMove[2] = true;
-            allowedMove[3] = true;
-        }
-        if (this.CollideWith(gm.GetWorldBounds())) {    
-            //Move Camera
-            if (e.keys[1] && allowedMove[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
-            if (e.keys[3] && allowedMove[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
-            if (e.keys[2] && allowedMove[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
-            if (e.keys[0] && allowedMove[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
-        }
-        //Move Player
-        if (e.keys[0]) transform.position.Y = transform.position.Y - 3;
-        if (e.keys[1]) transform.position.X = transform.position.X - 3;
-        if (e.keys[2]) transform.position.Y = transform.position.Y + 3;
-        if (e.keys[3]) transform.position.X = transform.position.X + 3;
-        
+
         if(!this.CollideWith(gm.GetWorldBounds())){
             outOfBoundsText.Draw(gm);
         }
-
-        */
 
 
     
