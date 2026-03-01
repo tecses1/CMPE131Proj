@@ -34,4 +34,19 @@ public class Text
         gm.AddTextToRender(this);
            
     }
+
+    public void setTextColor(Color c,int alpha)
+    {
+        this.fontColor = ColorTranslator.ToHtml(c);
+        this.textAlpha = alpha;
+    }
+    public void setBorderColor(Color c)
+    {
+        this.borderColor = ColorTranslator.ToHtml(c);
+    }
+    public void setFillColor(Color c, int alpha)
+    {
+        this.fillColor = ColorTranslator.ToHtml(c);
+        this.rectAlpha = alpha;
+    }
 }

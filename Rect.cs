@@ -24,4 +24,22 @@ public class Rect
         gm.AddRectToRender(this);
            
     }
+    public void setBorderColor(Color c)
+    {
+        this.borderColor = ColorTranslator.ToHtml(c);
+    }
+    public void setBorderColor(Color c, int alpha)
+    {
+        this.borderColor = ColorTranslator.ToHtml(c);
+        this.alpha = alpha;
+    }
+    public void setFillColor(Color c)
+    {
+        this.fillColor = ColorTranslator.ToHtml(c);
+    }
+    public void setFillColor(Color c, int alpha)
+    {
+        this.fillColor = ColorTranslator.ToHtml(c);
+        this.alpha = alpha;
+    }
 }

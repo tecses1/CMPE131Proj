@@ -40,7 +40,6 @@ public class Player : GameObject
 
         Transform oobScreenFlashT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight /2,Settings.CanvasWidth,Settings.CanvasHeight);
         oobScreenFlashRect = new Rect(ref oobScreenFlashT);
-        oobScreenFlashRect.borderColor = ColorTranslator.ToHtml(Color.Red);
         oobScreenFlashRect.borderWidth = 50;
 
     }
@@ -115,11 +114,10 @@ public class Player : GameObject
                 direction = -1;
             }
             alpha += direction;
-            //oobScreenFlashRect.fillColor = ColorTranslator.ToHtml(Color.Red);
-            oobScreenFlashRect.borderColor = ColorTranslator.ToHtml(Color.Red);
-            oobScreenFlashRect.borderWidth = 100;
-            oobScreenFlashRect.alpha = alpha;
+            
+            oobScreenFlashRect.setBorderColor(Color.Red, alpha);
             oobScreenFlashRect.Draw(gm);
+
 
         }
         else
