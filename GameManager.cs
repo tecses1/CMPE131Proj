@@ -169,13 +169,24 @@ public class GameManager
     public float[] GetWorldBounds()
     {
         float[] bounds = new float[4];
-        bounds[0] = 0;
-        bounds[1] = 0;
-        bounds[2] = worldSizeX;
-        bounds[3] = worldSizeY;
+        bounds[0] = 0; //Top left corner X
+        bounds[1] = 0; //Top left corner Y
+        bounds[2] = worldSizeX; //Bottom right corner X
+        bounds[3] = worldSizeY; //Bottom right corner Y
 
         return bounds;
+    }
 
+    public bool[] GetBoundCollided(Player obj)
+    {
+        bool[] collided = new bool[4]; //top, left, bottom, right
+        float[] bounds = GetWorldBounds();
+        collided[0] = obj.transform.position.Y < bounds[1];
+        collided[1] = obj.transform.position.X < bounds[0];
+        collided[2] = obj.transform.position.Y + obj.transform.size.Y > bounds[3];
+        collided[3] = obj.transform.position.X + obj.transform.size.X > bounds[2];
+
+        return collided;
     }
 
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.

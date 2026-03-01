@@ -1,12 +1,7 @@
 namespace CMPE131Proj;
 
-using System.Diagnostics;
-using System.Dynamic;
 using System.Numerics;
-using System.Runtime.Versioning;
-using System.Security.AccessControl;
-using Blazorex;
-using Microsoft.AspNetCore.Components;
+
 //Handles the local player controller.
 public class Player : GameObject
 {
@@ -23,9 +18,10 @@ public class Player : GameObject
     
     int guntype = 1;
     bool barrel = true;
+    bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
+    
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform )
     {
-        
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
     }
@@ -48,22 +44,34 @@ public class Player : GameObject
         Vector2 mousePos = new Vector2(mouseX, mouseY);
             transform.RotateTo(mousePos);      //we're inside the bounds.
         
-
-        if (this.CollideWith(gm.GetWorldBounds()))
+        bool[] boundsCollided = gm.GetBoundCollided(this); //top, left, bottom, right
+        if(boundsCollided.Contains(true))
         {
-                    
-            if (e.keys[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
-
-            if (e.keys[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
-
-            if (e.keys[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
-
-            if (e.keys[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
+            if(boundsCollided[0]) allowedMove[0] = false;
+            if(boundsCollided[1]) allowedMove[1] = false;
+            if(boundsCollided[2]) allowedMove[2] = false;
+            if(boundsCollided[3]) allowedMove[3] = false;
         }
-        if (e.keys[0]) transform.position.Y = transform.position.Y - 3;
-        if (e.keys[1]) transform.position.X = transform.position.X - 3;
-        if (e.keys[2]) transform.position.Y = transform.position.Y + 3;
-        if (e.keys[3]) transform.position.X = transform.position.X + 3;
+        else
+        {
+            allowedMove[0] = true;
+            allowedMove[1] = true;
+            allowedMove[2] = true;
+            allowedMove[3] = true;
+        }
+        if (this.CollideWith(gm.GetWorldBounds()))
+        {    
+            //Move Camera
+            if (e.keys[1] && allowedMove[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
+            if (e.keys[3] && allowedMove[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
+            if (e.keys[2] && allowedMove[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
+            if (e.keys[0] && allowedMove[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
+        }
+        //Move Player
+        if (e.keys[0] && allowedMove[0]) transform.position.Y = transform.position.Y - 3;
+        if (e.keys[1] && allowedMove[1]) transform.position.X = transform.position.X - 3;
+        if (e.keys[2] && allowedMove[2]) transform.position.Y = transform.position.Y + 3;
+        if (e.keys[3] && allowedMove[3]) transform.position.X = transform.position.X + 3;
         
 
         
