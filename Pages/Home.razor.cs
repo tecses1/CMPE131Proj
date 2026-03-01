@@ -17,7 +17,7 @@ public partial class Home
     public GameManager main;
 
     private float _lastTime = 0;
-    private const float TargetFrameTime = 1000f / 30f; // 16.66ms
+    private const float TargetFrameTime = 1000f / 60f; // 16.66ms, 120fps.
 
     
     //This is called on first frame All intializing logic goes here..
