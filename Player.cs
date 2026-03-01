@@ -24,17 +24,7 @@ public class Player : GameObject
     bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
     bool[] centered = {false, false}; //x, y
 
-     public float[] GetCanvasBounds()
-    {
-        float[] bounds = new float[4];
-        bounds[0] = 0 - worldOffsetX; //Top left corner X
-        bounds[1] = 0 + worldOffsetY; //Top left corner Y
-        bounds[2] = Settings.CanvasWidth - worldOffsetX; //Bottom right corner X
-        bounds[3] = Settings.CanvasHeight - worldOffsetY; //Bottom right corner Y
 
-        return bounds;
-    }
-    
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
@@ -42,6 +32,7 @@ public class Player : GameObject
         outOfBoundsText = new Text(Settings.OutOfBoundsMessage, ref oobTransform, 0,0);
         outOfBoundsText.fontColor = Settings.ErrorText;
     }
+
     public override void Update() {
         Render();
         playerName.Draw(gm);
@@ -58,9 +49,61 @@ public class Player : GameObject
         float mouseY = (float)e.MouseY - gm.worldOffsetY;
 
         Vector2 mousePos = new Vector2(mouseX, mouseY);
-            transform.RotateTo(mousePos);      //we're inside the bounds.
-        
+        transform.RotateTo(mousePos);      //we're inside the bounds.
 
+
+        bool[] boundsCollided = gm.GetBoundCollided(this);
+        float[] center = gm.GetCanvasCenter();
+        if (e.keys[0])
+        {
+            if (this.transform.position.Y < center[1])
+            {
+                transform.position.Y -= 3;
+            }
+            else
+            {
+                transform.position.Y -= 3;
+                if (!boundsCollided[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
+            }
+        }
+        if (e.keys[2])
+        {
+            if (this.transform.position.Y > center[1])
+            {
+                transform.position.Y += 3;
+            }
+            else
+            {
+                transform.position.Y += 3;
+                if (!boundsCollided[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
+            }
+        }
+
+        if (e.keys[1])
+        {
+            if (this.transform.position.X < center[0])
+            {
+                transform.position.X -= 3;
+            }
+            else
+            {
+                transform.position.X -= 3;
+                if (!boundsCollided[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
+            }
+        }
+        if (e.keys[3])
+        {
+            if (this.transform.position.X > center[0])
+            {
+                transform.position.X += 3;
+            }
+            else
+            {
+                transform.position.X += 3;
+                if (!boundsCollided[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
+            }
+        }
+        /*
         bool[] boundsCollided = gm.GetBoundCollided(this); //top, left, bottom, right
         if(boundsCollided.Contains(true)) {
             if(boundsCollided[0]) allowedMove[0] = false;
@@ -91,7 +134,7 @@ public class Player : GameObject
             outOfBoundsText.Draw(gm);
         }
 
-
+        */
 
 
     
