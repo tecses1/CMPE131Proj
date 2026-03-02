@@ -35,6 +35,7 @@ public class RenderManager
     int fps = 0;
     
     Text t;
+
     public RenderManager(IJSRuntime js)
      {
         this.js = js;
@@ -71,6 +72,7 @@ public class RenderManager
     {
         return new Vector2(v.X + worldOffsetX, v.Y + worldOffsetY);
     }
+    //Usually called from update funciton.
     public void CenterCameraOn(Transform t, bool constrainX = false, bool constrainY = false)
     {   
         if (!constrainX)

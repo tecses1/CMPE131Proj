@@ -138,16 +138,7 @@ public class Player : GameObject
         }
         this.transform.position += cVelocity;
 
-        //If we're in the world bounds.
-        bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
-        if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
-        {
-            gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
-        }
-        if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
-        {
-            gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
-        }
+
         
         
 
@@ -213,6 +204,18 @@ public class Player : GameObject
     {
         playerName.text = Settings.name;
         playerName.Draw(gm);
+
+        //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
+        //If we're in the world bounds.
+        bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
+        if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
+        {
+            gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
+        }
+        if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
+        {
+            gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
+        }
     }
 
     private void SpawnGuntype1(Vector2 target)
