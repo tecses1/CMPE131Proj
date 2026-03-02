@@ -13,6 +13,10 @@ public class GameObject
     protected GameManager gm;
 
     public Text missingText;
+
+    public int currentFrame = 0;
+
+    public bool disableCollision = false;
     public GameObject(ref GameManager gm, Transform transform)
     {
         this.gm  = gm;
@@ -23,25 +27,28 @@ public class GameObject
         this.missingText.setBorderColor(Color.Red);
         this.missingText.borderWidth = 5;
     }
-
-    public bool CollideWith(GameObject two)
-    {//Collid with other gameobject.
-        float[] myBounds = this.GetBounds();
-        float[] otherBounds = two.GetBounds();
-        return myBounds[0] < otherBounds[2] && // Rect1 Left < Rect2 Right
-           myBounds[2] > otherBounds[0] && // Rect1 Right > Rect2 Left
-           myBounds[1] < otherBounds[3] && // Rect1 Top < Rect2 Bottom
-           myBounds[3] > otherBounds[1];   // Rect1 Bottom > Rect2 Top
-    }
-    
-    public bool CollideWith(float[] rect)
-    {//Collide with rect
+    public bool InBounds(float[] rect)
+    {
         float[] myBounds = this.GetBounds();
         float[] otherBounds = rect;//.GetBounds();
         return myBounds[0] < otherBounds[2] && // Rect1 Left < Rect2 Right
            myBounds[2] > otherBounds[0] && // Rect1 Right > Rect2 Left
            myBounds[1] < otherBounds[3] && // Rect1 Top < Rect2 Bottom
            myBounds[3] > otherBounds[1];   // Rect1 Bottom > Rect2 Top
+    }
+    public bool CollideWith(GameObject two)
+    {//Collid with other gameobject.
+        return this.CollideWith(two.GetBounds());
+    }
+    
+    public bool CollideWith(float[] rect)
+    {//Collide with rect
+        if (disableCollision) {
+            return false;
+        }
+        //if (disableCollision) return false;
+        return this.InBounds(rect);
+
     }
     //returns specific collision information.
     public bool[] GetCollisionSides(GameObject obj)
@@ -86,9 +93,15 @@ public class GameObject
     {
 
     }
-    public void Kill()
+
+    public virtual void Render()
+    {
+        
+    }
+    public virtual void Kill()
     {
         gm.RemoveGameObject(this);
+        
         
     }
 }

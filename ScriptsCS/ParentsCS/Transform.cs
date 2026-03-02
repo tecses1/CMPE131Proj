@@ -5,6 +5,7 @@ namespace CMPE131Proj;
 public class Transform
 {
     public Vector2 position;
+    public Vector2 previousPosition;
     public Vector2 size;
     public float rotation;
     public Transform(float x, float y, int sizeX, int sizeY)

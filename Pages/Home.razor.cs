@@ -2,8 +2,7 @@
 
 namespace CMPE131Proj.Pages;
 using Blazorex;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
+
 public partial class Home
 {
     private CanvasManager? _canvasManager;
@@ -16,13 +15,10 @@ public partial class Home
     public InputWrapper inputWrapper;
     public GameManager main;
 
-    private float _lastTime = 0;
-    private const float TargetFrameTime = 1000f / 60f; // 16.66ms, 120fps.
-
     
-    //This is called on first frame All intializing logic goes here..
-    //For simplity's sake, I've added a "GameMain" that will be called
-    //from this file, to make it more familiar.
+    private float _accumulator = 0f;
+    private float _lastTime = 0f;
+    private const float _fixedDeltaTime = 1f / 60f; // 0.01666... seconds
     protected override void OnAfterRender(bool firstRender)
     {
         if (!firstRender)
@@ -32,8 +28,6 @@ public partial class Home
         inputWrapper = new InputWrapper();
         //Settings.Load();
         main = new GameManager(JS);
-
-        
 
         //create the canvas and events.
         _canvasManager?.CreateCanvas(
@@ -56,6 +50,7 @@ public partial class Home
 
             }
         );
+        //JS.InvokeVoidAsync("initGameLoop");
     }
 
     private void OnCanvasReady(CanvasBase canvas)
@@ -64,37 +59,40 @@ public partial class Home
         main.SetMainCanvas(canvas);
         _context = canvas.RenderContext;
         
-        
-
-        
     }
-    
-    private void OnFrameReady(float timestamp)
+
+
+public async void OnFrameReady(float timestamp)
+{
+    float currentTime = timestamp / 1000f;
+    if (_lastTime == 0) _lastTime = currentTime;
+
+    float elapsed = currentTime - _lastTime;
+    _lastTime = currentTime;
+
+    // 1. Fill the bucket (cap it to 0.1s to prevent "Spiral of Death" lag)
+    _accumulator += Math.Min(elapsed, 0.1f);
+
+    // 2. The Fixed Update Loop
+    // This calls your physics exactly 60 times per "simulated" second
+    while (_accumulator >= _fixedDeltaTime)
     {
-        
-        if (_context is null)
-            return;
+        await FixedUpdate();
+        _accumulator -= _fixedDeltaTime;
+    }
 
+    // 3. Render whenever the browser is ready
+     await main.Render();
+}
 
-        // Calculate elapsed time since the last successful frame
-        float elapsed = timestamp - _lastTime;
-
-        // IF not enough time has passed, ABORT (don't update or render)
-        if (elapsed < TargetFrameTime)
-            return;
-
-        // We are now locked to roughly 60fps
-        // Subtract a tiny bit of the remainder to keep it steady (Jitter correction)
-        _lastTime = timestamp - (elapsed % TargetFrameTime);
-
-        //Render the stuff, provide the canvas. 
-
-
-        //call update function in GameMain.cs to update game state each frame. Pass input over.
+    private async Task FixedUpdate()
+    {
+        // All physics logic goes here!
         main.UpdatePlayer(inputWrapper);
-        main.Update();
-        inputWrapper.Clear();
+        await main.Update();
         
+        // Clear input only after it has been processed by the physics
+        inputWrapper.Clear();
     }
 
     private void OnKeyDown(KeyboardPressEvent e)

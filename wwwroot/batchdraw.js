@@ -1,4 +1,12 @@
-window.batchDrawMulti = (canvasId, imgArray, data) => {
+let globalImageCache = []; 
+
+// 2. This function receives the images from Blazor ONCE
+window.initializeCache = (imgArray) => {
+    globalImageCache = imgArray;
+    console.log("Image Cache Initialized with " + globalImageCache.length + " frames.");
+};
+
+window.batchDrawMulti = (canvasId, data) => {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
 
@@ -11,7 +19,7 @@ window.batchDrawMulti = (canvasId, imgArray, data) => {
         const imgIndex = data[i+5]; // The magic index
         
         if (imgIndex != -1){ // if an image exists, we can display it.
-            const img = imgArray[imgIndex];
+            const img = globalImageCache[imgIndex];
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(rad);

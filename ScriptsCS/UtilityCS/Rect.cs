@@ -1,7 +1,7 @@
 namespace CMPE131Proj;
 
 using System.Drawing;
-
+using System.Numerics;
 public class Rect
 {
     public string fillColor  = Settings.DefaultTextBackground;
@@ -12,6 +12,8 @@ public class Rect
 
     public Transform transform;
 
+    public bool worldSpace = true;
+
 
     //for procedual cacheing.
     public Rect(ref Transform t)
@@ -19,7 +21,7 @@ public class Rect
         this.transform = t;
 
     }
-    public void Draw(GameManager gm)
+    public virtual void Draw(GameManager gm)
     {
         gm.AddRectToRender(this);
            

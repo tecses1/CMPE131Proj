@@ -40,32 +40,33 @@ public class Player : GameObject
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
+        playerName.worldSpace = false;
         Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth/2,Settings.CanvasHeight/2);
         outOfBoundsText = new Text(Settings.OutOfBoundsMessage, ref oobTransform, 0,0);
         outOfBoundsText.fontColor = Settings.ErrorText;
-
+        outOfBoundsText.worldSpace = false;
 
         Transform oobScreenFlashT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight /2,Settings.CanvasWidth,Settings.CanvasHeight);
         oobScreenFlashRect = new Rect(ref oobScreenFlashT);
         oobScreenFlashRect.borderWidth = 50;
-
+        oobScreenFlashRect.worldSpace = false;
     }
     public string GetColorString(Color c)
     {
         return $"#{c.R:X2}{c.G:X2}{c.B:X2}{c.A:X2}";
     }
+    public static bool IsNearlyZero(float value, float epsilon = 0.0001f)
+    {
+        return Math.Abs(value) < epsilon;
+    }
     public override void Update() {
-        playerName.text = Settings.name;
-        playerName.Draw(gm);
+
+
 
         InputWrapper e = cInput;
         if (e == null){
             return;
         }
-        //WORSHIP THY ROTATION
-        //THIS WAS THE HARDEST THING I'VE HAD TO DO SO FAR ON THIS PROJECT
-        //don't really like offsetting the mouse, because then its not pointing where it actually is.
-        //would rather offset objects, but that hurts my brain.
 
         Vector2 mousePos = gm.CameraToWorldPos((float)e.MouseX, (float)e.MouseY);
         transform.RotateTo(mousePos);      //we're inside the bounds.
@@ -127,6 +128,14 @@ public class Player : GameObject
             cVelocity.Y += drag * Math.Abs(cVelocity.Y);
         }
 
+        if (IsNearlyZero(cVelocity.X))
+        {
+            cVelocity.X = 0;
+        }
+        if (IsNearlyZero(cVelocity.Y))
+        {
+            cVelocity.Y = 0;
+        }
         this.transform.position += cVelocity;
 
         //If we're in the world bounds.
@@ -176,12 +185,7 @@ public class Player : GameObject
             }
             lastChange = DateTime.Now;
         }
-        /*
-        if (transform.position.X > Settings.CanvasWidth + transform.size.X / 2) transform.position.X = -transform.size.X / 2;
-        if (transform.position.X  < -transform.size.X / 2) transform.position.X  = Settings.CanvasWidth + transform.size.X / 2;
-        if (transform.position.Y > Settings.CanvasHeight + transform.size.Y / 2) transform.position.Y = -transform.size.Y / 2;
-        if (transform.position.Y < -transform.size.Y / 2) transform.position.Y = Settings.CanvasHeight + transform.size.Y / 2;
-        */
+
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
 
@@ -205,6 +209,11 @@ public class Player : GameObject
 
     }
 
+    public override void Render()
+    {
+        playerName.text = Settings.name;
+        playerName.Draw(gm);
+    }
 
     private void SpawnGuntype1(Vector2 target)
     {
@@ -222,6 +231,8 @@ public class Player : GameObject
         Transform proj2t = new Transform(spawnPos.X+transform.Left().X*16,spawnPos.Y+transform.Left().Y*16, 7,7, transform.rotation);
         var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 30);
         var proj2 = new Projectile(ref gm, proj2t, velocity,  lifetime: 30);
+        proj.damage = 4;
+        proj2.damage = 4;
         gm.AddNewGameObject(proj);
         gm.AddNewGameObject(proj2);
     }
@@ -244,6 +255,7 @@ public class Player : GameObject
         Vector2 velocity = proj1t.Forward() * bulletSpeed;
 
         var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 30);
+        proj.damage = 16;
         gm.AddNewGameObject(proj);
         barrel = !barrel;
 

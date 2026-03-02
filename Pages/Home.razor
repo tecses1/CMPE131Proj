@@ -8,7 +8,13 @@
 <div style="display:none">
     @foreach (var asset in AssetManager._assets.Values)
     {
-        <img @ref="asset.Image" src="@asset.Url" />
+        @for (int i = 0; i < asset.Frames.Length; i++)
+        {
+            var index = i; 
+            <img @ref="asset.Frames[index]" 
+                 src="@asset.FrameRefs[index]" 
+                 alt="@asset.Name-@index" />
+        }
     }
 </div>
 
@@ -20,7 +26,7 @@
 
 <button @onclick="SaveToStorage" class="btn btn-primary mt-2">Confirm & Save</button>
 
-<p>Current value in settings: @AssetManager.fps</p>
+<p>Fps: @AssetManager.fps</p>
 
 
 <div class="canvas">
@@ -31,7 +37,6 @@
 </div>
 
 @code {
-    //Intialze C# variable fields for HTML elements above.
     private string userInput = Settings.name;
 
     protected override void OnInitialized()

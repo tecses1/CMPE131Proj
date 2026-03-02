@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Numerics;
 using Blazorex;
 using Microsoft.AspNetCore.Components;
@@ -13,6 +14,9 @@ public class RenderManager
     //World offset, for rendering.
     public float worldOffsetX = 0;
     public float worldOffsetY = 0;
+
+    protected float prevWorldOffsetX = 0;
+    protected float prevWorldOffsetY = 0;
 
     //pass by reference settigns object so all objects use the same one.
     //Objs to render
@@ -39,18 +43,34 @@ public class RenderManager
 
         //cache images for batch drawing to JS.
         assetCache = new GameAsset[AssetManager._assets.Count];
-        imageCache = new ElementReference[AssetManager._assets.Count];
+        List<ElementReference> imageCacheList = new List<ElementReference>();
         KeyValuePair<string, GameAsset>[] assets = AssetManager._assets.ToArray();
+        //Cache the images. 
         for (int i = 0; i < assetCache.Length; i++){
             assetCache[i] = assets[i].Value;
-            imageCache[i] = assets[i].Value.Image;
+            imageCacheList.AddRange(assets[i].Value.Frames);
+            Console.WriteLine("[RENDERMANAGER] Caching " + assets[i].Value.Frames.Length + " frames (Indexes: " + (imageCacheList.Count - assets[i].Value.Frames.Length) + " to " + (imageCacheList.Count - 1) + ") for asset: " + assets[i].Key);
         }
+        Console.WriteLine("[RENDERMANAGER] Cached " + imageCacheList.Count + " images for batch rendering.");
+        this.imageCache = imageCacheList.ToArray<ElementReference>();
+
+
         Transform tTransform = new Transform(50,25,100,50);
         t = new Text("FPS: " + fps, ref tTransform);
         t.textAlpha = 150;
-
+        t.worldSpace = false;
+        InitializeJSCache();
     }
 
+    public void InitializeJSCache()
+    {
+        js.InvokeVoidAsync("initializeCache", imageCache);
+    }
+
+    public Vector2 WorldToCameraPos(Vector2 v)
+    {
+        return new Vector2(v.X + worldOffsetX, v.Y + worldOffsetY);
+    }
     public void CenterCameraOn(Transform t, bool constrainX = false, bool constrainY = false)
     {   
         if (!constrainX)
@@ -87,26 +107,43 @@ public class RenderManager
         
         this.rectsToRender.Add(rect);
     }
-    int getCacheIndex(string name)
+    int getCacheIndex(GameObject o)
     {
+        int frameSkip = 0;
         for (int i = 0; i < assetCache.Length; i++)
         {
-            if (assetCache[i].Name == name)
+            if (assetCache[i].Name == o.GetType().Name)
             {
-                return i;
+                //Console.WriteLine(assetCache[i].Name + " found image index: " + (i + o.currentFrame));
+                int adjFrame = i + frameSkip + o.currentFrame;
+                //Console.WriteLine("[RENDERMANAGER] Debug: " + o.GetType().Name + " requested frame: " + adjFrame + ", rane in cache: " + (i + frameSkip) + " to " + (i + frameSkip + assetCache[i].Frames.Length - 1));
+                if (o.currentFrame > assetCache[i].Frames.Length-1)
+                {
+                    // Loop back to the first frame if we've exceeded the number of frames for this asset
+                    string assetFrameRange = i + frameSkip + " to " + (i + frameSkip + assetCache[i].Frames.Length - 1);
+
+                    Console.WriteLine("[RENDERMANAGER] Warning: " + o.GetType().Name + " currentFrame exceeded frame count. Clamping to last frame...("+ o.GetType().Name + " requested frame: " + adjFrame + ", available range: " + assetFrameRange + ", cache size: " + imageCache.Length+")");
+                    adjFrame = i + frameSkip + assetCache[i].Frames.Length - 1;
+                    
+
+                }
+                return adjFrame; // Return the index of the image in the cache, adjusted for animation frame
             }
+            frameSkip += assetCache[i].Frames.Length - 1; // Increment frameSkip by the number of frames in this asset minus one (since the first frame is at index i)
+            //Console.WriteLine("[RENDERMANAGER] Asset: " + assetCache[i].Name + ", frame range in cache: " + (i + frameSkip) + " to " + (i + frameSkip + assetCache[i].Frames.Length - 1) + ", skipping " + (assetCache[i].Frames.Length - 1) + " frames." );
         }
         return -1;
     }
     public async Task RenderRects()
     {
+
         var rectToRender = rectsToRender.Select(r => new {
             fillColor = r.fillColor,
             alpha = ((float)r.alpha)/255f,
             sizeX = r.transform.size.X, // The box width
             sizeY = r.transform.size.Y, // The box height
-            x = r.transform.position.X,
-            y = r.transform.position.Y,
+            x = r.worldSpace ? (r.transform.position.X - worldOffsetX) : r.transform.position.X,
+            y = r.worldSpace ? (r.transform.position.Y - worldOffsetY) : r.transform.position.Y,
             borderWidth = r.borderWidth,
             borderColor = r.borderColor
         }).ToArray();
@@ -116,6 +153,7 @@ public class RenderManager
     }
     public async Task RenderTexts()
     {
+
         var textToRender = textsToRender.Select(t => new {
             text = t.text,
             fontFamily = "Arial", // Pass just the name, JS handles the size
@@ -125,8 +163,8 @@ public class RenderManager
             rectAlpha = ((float)t.rectAlpha)/255f,
             sizeX = t.transform.size.X, // The box width
             sizeY = t.transform.size.Y, // The box height
-            x = t.transform.position.X,
-            y = t.transform.position.Y,
+            x = t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X,
+            y = t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y,
             offX = t.offsetX,
             offY = t.offsetY,
             borderWidth = t.borderWidth,
@@ -138,6 +176,10 @@ public class RenderManager
     }
     public async Task RenderText(Text t)
     {
+        if (!t.worldSpace)
+        {
+            t.transform.position = WorldToCameraPos(t.transform.position);
+        }
         var textToRender = new[] { new {
                 text = t.text,
                 fontFamily = "Arial",
@@ -147,8 +189,8 @@ public class RenderManager
                 rectAlpha = ((float)t.rectAlpha) / 255f,
                 sizeX = t.transform.size.X,
                 sizeY = t.transform.size.Y,
-                x = t.transform.position.X,
-                y = t.transform.position.Y,
+                x = t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X,
+                y = t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y,
                 offX = t.offsetX,
                 offY = t.offsetY,
                 borderWidth = t.borderWidth,
@@ -166,7 +208,7 @@ public class RenderManager
         for (int i = 0; i < objsToRender.Count; i++)
         {
             GameObject obj = objsToRender[i];//the gameobject.
-            int cacheIndex = getCacheIndex(obj.GetType().Name);
+            int cacheIndex = getCacheIndex(obj);
             int offset = i * 6;
             if (cacheIndex == -1)
             {
@@ -181,14 +223,14 @@ public class RenderManager
             _renderBuffer[offset+2] = obj.transform.size.X;
             _renderBuffer[offset+3] = obj.transform.size.Y;
             _renderBuffer[offset+4] = obj.transform.rotation * (float)Math.PI / 180f;
-            _renderBuffer[offset+5] = getCacheIndex(obj.GetType().Name); // Tell JS which image to use
+            _renderBuffer[offset+5] = cacheIndex; // Tell JS which image to use
 
 
 
         }
 
         // Send all images and all data in one go
-        await js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , imageCache, _renderBuffer);
+        await js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , _renderBuffer);
         objsToRender.Clear();
         
         
@@ -247,29 +289,19 @@ public class RenderManager
         newT.rotation = t.rotation;
         return newT;
     }
-
-    //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
-    public async virtual void Render()
-    {
-        //Clear the background in JS. Faster, and synced.
-        await js.InvokeVoidAsync("clearBackground",mainCanvas.Id ,Settings.CanvasBackground );
-
-        //Render the "objsToRender" group. This group is modified to only include on screen GameObjects.
-        await RenderGroup();
-        await RenderTexts();
-        await RenderRects();
-    }
     public void AddObjToRender(GameObject go)
     {
         //only render if in canvas camera view.
-        if (go.CollideWith(GetCanvasBounds()))
+        if (go.InBounds(GetCanvasBounds()))
         {
             this.objsToRender.Add(go);
         }
         
     }
-    public virtual void Update()
+    //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
+    public async virtual Task Render()
     {
+        AssetManager.fps = fps;
         //UPDATE FPS
         if ( (DateTime.Now-counter).Seconds > 1)
         {
@@ -283,6 +315,19 @@ public class RenderManager
             frames++;
         }
         //add text to render pipeline.
-        AddTextToRender(t);
+        t.Draw((GameManager)this);
+        //Clear the background in JS. Faster, and synced.
+        await js.InvokeVoidAsync("clearBackground",mainCanvas.Id ,Settings.CanvasBackground );
+
+        //Render the "objsToRender" group. This group is modified to only include on screen GameObjects.
+         await RenderGroup();
+         await RenderTexts();
+         await RenderRects();
+
+    }
+
+    public virtual async Task Update()
+    {
+
     }
 }
