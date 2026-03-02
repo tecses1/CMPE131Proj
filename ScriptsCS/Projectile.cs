@@ -23,7 +23,7 @@ namespace CMPE131Proj
 
             if (!this.CollideWith(gm.GetWorldBounds())) //We are outside of bounds. Start counting down for kill.
             {
-                Console.WriteLine("OUT OF BOUNDS");
+                //Console.WriteLine("OUT OF BOUNDS");
                 LifetimeFrames--;
                 if (LifetimeFrames < 0)
                 {

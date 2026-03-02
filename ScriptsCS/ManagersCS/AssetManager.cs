@@ -13,27 +13,6 @@ public static class AssetManager
         { "Projectile", new GameAsset { Name = "Projectile", Url = "images/projectile.png" } },
         { "Star", new GameAsset { Name = "Star", Url = "images/star.png" } }
     };
-    //Deprecated. Too slow, moved to custom JS REnder pipeline. See GameManager.Render()
-    /*
-    public static void DrawImage(IRenderContext ctx, ElementReference img, Transform t)
-    {
 
-        if (t.rotation == 0)
-        {
-            //no rotation required. just draw normally.
-            ctx.DrawImage(img, t.position.X-t.size.X / 2, t.position.Y-t.size.Y/2,t.size.X, t.size.Y);
-            return;
-        }
-        ctx.Save();
-        //add width/2 and height/2 for traditonal non center rendering. Fucks up everything though if you try to center it after or before.
-        ctx.Translate(t.position.X, t.position.Y);
-
-        double radians = t.rotation * Math.PI / 180.0;
-        ctx.Rotate((float)radians);
-        ctx.DrawImage(img, -t.size.X/2, -t.size.Y/2, t.size.X, t.size.Y);
-        ctx.Restore();
-    
-    }
-    */
 }
 

@@ -1,5 +1,6 @@
 namespace CMPE131Proj;
 
+using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 
@@ -17,6 +18,12 @@ public class Player : GameObject
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
     
+    //behavior
+    float maxSpeed = 5f;
+    float acceleration = 0.33f;
+
+    float drag = 0.05f;
+
     //UI elements
     Text playerName;
     Text outOfBoundsText;
@@ -26,7 +33,7 @@ public class Player : GameObject
     bool barrel = true;
     bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
     bool[] centered = {false, false}; //x, y
-
+    Vector2 cVelocity = new Vector2(0,0);
     int alpha = 0;
     int direction = 1;
 
@@ -59,48 +66,82 @@ public class Player : GameObject
         //THIS WAS THE HARDEST THING I'VE HAD TO DO SO FAR ON THIS PROJECT
         //don't really like offsetting the mouse, because then its not pointing where it actually is.
         //would rather offset objects, but that hurts my brain.
-        float mouseX = (float)e.MouseX + gm.worldOffsetX;
-        float mouseY = (float)e.MouseY - gm.worldOffsetY;
 
-        Vector2 mousePos = new Vector2(mouseX, mouseY);
+        Vector2 mousePos = gm.CameraToWorldPos((float)e.MouseX, (float)e.MouseY);
         transform.RotateTo(mousePos);      //we're inside the bounds.
 
 
-        bool[] boundsCollided = gm.GetBoundCollided(this);
-        float[] center = gm.GetCanvasCenter();
-        if (e.keys[0]) {
-            if (this.transform.position.Y > center[1]) transform.position.Y -= 3;
-            else
-            {
-                transform.position.Y -= 3;
-                if (!boundsCollided[0]) gm.worldOffsetY = gm.worldOffsetY + 3;
-            }
+
+        //Find what sides we're colliding with in closwise order from top. 
+        if (e.keys[0])
+        {
+            cVelocity.Y -= acceleration;
         }
-        if (e.keys[2]) {
-            if (this.transform.position.Y < center[1]) transform.position.Y += 3;
-            else
-            {
-                transform.position.Y += 3;
-                if (!boundsCollided[2]) gm.worldOffsetY = gm.worldOffsetY - 3;
-            }
+        
+        if (e.keys[2])
+        {
+            cVelocity.Y += acceleration;
+        }
+        if (e.keys[1])
+        {
+            cVelocity.X -= acceleration;
+        }
+        if (e.keys[3])
+        {
+            cVelocity.X += acceleration;
         }
 
-        if (e.keys[1]) {
-            if (this.transform.position.X > center[0]) transform.position.X -= 3;
-            else
-            {
-                transform.position.X -= 3;
-                if (!boundsCollided[1]) gm.worldOffsetX = gm.worldOffsetX - 3;
-            }
+        //clamp velocity.
+        if (cVelocity.X >= maxSpeed)
+        {
+            cVelocity.X = maxSpeed;
         }
-        if (e.keys[3]) {
-            if (this.transform.position.X < center[0])  transform.position.X += 3;
-            else
-            {
-                transform.position.X += 3;
-                if (!boundsCollided[3]) gm.worldOffsetX = gm.worldOffsetX + 3;
-            }
+        if (cVelocity.X <= -maxSpeed)
+        {
+            cVelocity.X = -maxSpeed;
         }
+        if (cVelocity.Y >= maxSpeed)
+        {
+            cVelocity.Y = maxSpeed;
+        }
+        if (cVelocity.Y <= -maxSpeed)
+        {
+            cVelocity.Y = -maxSpeed;
+        }
+        if (cVelocity.X > 0)
+        {
+            cVelocity.X -= drag * cVelocity.X;
+        }
+
+        if (cVelocity.X < 0)
+        {
+            cVelocity.X += drag * Math.Abs(cVelocity.X);
+        }
+
+        if (cVelocity.Y > 0)
+        {
+            cVelocity.Y -= drag * cVelocity.Y;
+        }
+        if (cVelocity.Y < 0)
+        {
+            cVelocity.Y += drag * Math.Abs(cVelocity.Y);
+        }
+
+        this.transform.position += cVelocity;
+
+        //If we're in the world bounds.
+        bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
+        if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
+        {
+            gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
+        }
+        if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
+        {
+            gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
+        }
+        
+        
+
 
         if(!this.CollideWith(gm.GetWorldBounds())){
             outOfBoundsText.Draw(gm);

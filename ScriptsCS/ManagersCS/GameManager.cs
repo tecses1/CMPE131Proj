@@ -74,17 +74,7 @@ public class GameManager : RenderManager
         }
         
     }
-    public bool[] GetBoundCollided(Player obj)
-    {
-        bool[] collided = new bool[4]; //top, left, bottom, right
-        float[] bounds = GetWorldBounds();
-        collided[0] = obj.transform.position.Y < bounds[1];
-        collided[1] = obj.transform.position.X < bounds[0];
-        collided[2] = obj.transform.position.Y + obj.transform.size.Y > bounds[3];
-        collided[3] = obj.transform.position.X + obj.transform.size.X > bounds[2];
 
-        return collided;
-    }
 
     public void UpdatePlayer(InputWrapper e)
     {

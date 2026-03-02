@@ -1,6 +1,3 @@
-using System;
-using System.Diagnostics;
-using System.Dynamic;
 using System.Numerics;
 using Blazorex;
 using Microsoft.AspNetCore.Components;
@@ -14,8 +11,8 @@ public class RenderManager
     public readonly int worldSizeX = 2000;
     public readonly int worldSizeY = 2000;
     //World offset, for rendering.
-    public int worldOffsetX = 0;
-    public int worldOffsetY = 0;
+    public float worldOffsetX = 0;
+    public float worldOffsetY = 0;
 
     //pass by reference settigns object so all objects use the same one.
     //Objs to render
@@ -52,6 +49,29 @@ public class RenderManager
         t = new Text("FPS: " + fps, ref tTransform);
         t.textAlpha = 150;
 
+    }
+
+    public void CenterCameraOn(Transform t, bool constrainX = false, bool constrainY = false)
+    {   
+        if (!constrainX)
+        {
+            this.worldOffsetX = t.position.X  - Settings.CanvasWidth / 2;
+        }
+        if (!constrainY)
+        {
+            this.worldOffsetY = t.position.Y - Settings.CanvasHeight / 2;
+        }
+    }
+
+    public void MoveCamera(Vector2 direction)
+    {
+        this.worldOffsetX += direction.X;
+        this.worldOffsetY += direction.Y;
+    }
+
+    public void CanvasToWorldPosition(Vector2 v)
+    {
+        //return new Vector2()
     }
     public void SetMainCanvas(CanvasBase c)
     {
@@ -157,7 +177,7 @@ public class RenderManager
 
 
             _renderBuffer[offset] = obj.transform.position.X - worldOffsetX;
-            _renderBuffer[offset+1] = obj.transform.position.Y + worldOffsetY;
+            _renderBuffer[offset+1] = obj.transform.position.Y - worldOffsetY;
             _renderBuffer[offset+2] = obj.transform.size.X;
             _renderBuffer[offset+3] = obj.transform.size.Y;
             _renderBuffer[offset+4] = obj.transform.rotation * (float)Math.PI / 180f;
@@ -173,21 +193,22 @@ public class RenderManager
         
         
     }
-    //call after update added all the objects it wants to, because async.
-
-    //Returns offset trasnform, what we actually see relative to canvas view.
-    public Transform GetRenderTransform(Transform obj)
+    public Vector2 CameraToWorldPos(Vector2 v)
     {
-        return new Transform(obj.position.X - worldOffsetX, obj.position.Y + worldOffsetY, (int)obj.size.X, (int)obj.size.Y, obj.rotation);
+        return new Vector2(v.X + worldOffsetX, v.Y + worldOffsetY);
+    }
+    public Vector2 CameraToWorldPos(float x, float y)
+    {
+        return new Vector2(x + worldOffsetX, y + worldOffsetY);
     }
     //Returns Canvas bounds. USeful for seeign if an object moves outside of bounds, within reason.
     public float[] GetCanvasBounds()
     {
         float[] bounds = new float[4];
         bounds[0] = 0 + worldOffsetX;
-        bounds[1] = 0 - worldOffsetY;
+        bounds[1] = 0 + worldOffsetY;
         bounds[2] = Settings.CanvasWidth + worldOffsetX;
-        bounds[3] = Settings.CanvasHeight - worldOffsetY;
+        bounds[3] = Settings.CanvasHeight + worldOffsetY;
 
         return bounds;
     }
@@ -195,8 +216,17 @@ public class RenderManager
     public float[] GetCanvasCenter()
     {
         float[] center = new float[2];
+        center[0] = Settings.CanvasWidth/2;
+        center[1] = Settings.CanvasHeight/2;
+
+        return center;
+    }
+
+    public float[] GetCanvasCenterWorld()
+    {
+        float[] center = new float[2];
         center[0] = Settings.CanvasWidth/2 + worldOffsetX;
-        center[1] = Settings.CanvasHeight/2 - worldOffsetY;
+        center[1] = Settings.CanvasHeight/2 + worldOffsetY;
 
         return center;
     }
@@ -211,6 +241,12 @@ public class RenderManager
         return bounds;
     }
 
+    public Transform GetRenderTrasnform(Transform t)
+    {
+        Transform newT = new Transform(t.position.X - worldOffsetX, t.position.Y - worldOffsetY,(int)t.size.X, (int)t.size.Y);
+        newT.rotation = t.rotation;
+        return newT;
+    }
 
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
     public async virtual void Render()
