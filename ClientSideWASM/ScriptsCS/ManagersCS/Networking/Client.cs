@@ -1,0 +1,7 @@
+namespace ClientSideWASM;
+
+
+class Client
+{
+    
+}
