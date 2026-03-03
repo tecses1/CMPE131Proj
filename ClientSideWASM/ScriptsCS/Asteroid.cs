@@ -13,19 +13,28 @@ class Asteroid : GameObject
 
     public int hp = 1;
 
-    public int LifetimeFrames = 30;
+    public int LifetimeFrames = 90; // how long we live outside of bounds.
     public Asteroid(ref GameManager gm, Transform t, float speed) : base(ref gm, t)
     {
         this.speed = speed;
         this.rotationSpeed = (float)Random.Shared.NextDouble() * 5;
         hp = (int)this.transform.size.X ;
     }
-
-    public void SetTarget(Transform t)
+    public void SetDirection(Vector2 v)
     {
-        Vector2 direction = t.position - transform.position;
+        Vector2 normalized = Vector2.Normalize(v);
+        this.velocity = normalized * speed;
+    }
+
+    public void SetTarget(Vector2 v)
+    {
+        Vector2 direction = v - transform.position;
         direction = Vector2.Normalize(direction);
         velocity = direction * speed;  
+    }
+    public void SetTarget(Transform t)
+    {
+        SetTarget(t.position);
     }
 
     public override void Update()
@@ -75,6 +84,21 @@ class Asteroid : GameObject
                 dead = true;
                 this.disableCollision = true;
                 cDeathAnim = deathAnimSpeed;
+            float hypo = this.transform.GetHypotenuse();
+            if (hypo > 40)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    float randomAngle = (float)(Math.PI * 2 * Random.Shared.NextDouble());
+                    Vector2 randomDirection = new Vector2((float)Math.Cos(randomAngle),(float)Math.Sin(randomAngle));
+                    randomDirection = Vector2.Normalize(randomDirection + this.velocity);
+                    Transform t = new Transform(this.transform.position.X, this.transform.position.Y, (int)hypo / 3, (int)hypo / 3);
+                    Asteroid newAsteroid = new Asteroid(ref gm, t, this.speed / 3);
+                    newAsteroid.SetDirection(randomDirection);
+                    gm.AddNewGameObject(newAsteroid);
+                }
             }
+            }
+
     }
 }

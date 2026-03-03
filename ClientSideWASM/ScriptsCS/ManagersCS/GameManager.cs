@@ -19,6 +19,8 @@ public class GameManager : RenderManager
     //Remove objects after tehy die. Can not happen during the frame, so we save waht dies during the frame to remove after..
     private List<GameObject> objsToRemove = new List<GameObject>();
 
+    private List<GameObject> objsToAdd = new List<GameObject>();
+
      DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
     public GameManager(IJSRuntime JSRuntime) : base(JSRuntime)
@@ -72,6 +74,11 @@ public class GameManager : RenderManager
     {
         Random r = new Random();
         int size = (int)(20 + r.NextDouble() * 30);
+        if (r.NextInt64(0,10) == 5)
+        {
+            size = size * 5;
+        }
+                
         int spawnX,spawnY;
         int edge = r.Next(0,4);
         switch (edge)
@@ -131,6 +138,13 @@ public class GameManager : RenderManager
         {
             activeObjects.Remove(go);
         }
+        objsToRemove.Clear();
+
+        foreach (GameObject go in objsToAdd)
+        {
+            activeObjects.Add(go);
+        }
+        objsToAdd.Clear();
 
         //Update the player.
         player.Update();
@@ -181,7 +195,7 @@ public class GameManager : RenderManager
     }
     public void AddNewGameObject(GameObject o)
     {
-        this.activeObjects.Add(o);
+        objsToAdd.Add(o);
     }
     public void RemoveGameObject(GameObject o)
     {

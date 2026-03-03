@@ -28,6 +28,11 @@ public class Transform
             (float)Math.Cos(radians)
         );
     }
+    public float GetHypotenuse()
+    {
+        return (float)Math.Sqrt(size.X * size.X + 
+                                size.Y * size.Y);
+    }
     public Vector2 Left()
     {
         // To rotate 90 degrees counter-clockwise:

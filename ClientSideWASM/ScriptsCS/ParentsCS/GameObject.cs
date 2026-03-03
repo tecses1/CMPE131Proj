@@ -17,6 +17,8 @@ public class GameObject
     public int currentFrame = 0;
 
     public bool disableCollision = false;
+
+
     public GameObject(ref GameManager gm, Transform transform)
     {
         this.gm  = gm;

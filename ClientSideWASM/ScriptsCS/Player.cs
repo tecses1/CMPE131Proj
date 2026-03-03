@@ -184,12 +184,11 @@ public class Player : GameObject
         {
             if (guntype == 0)
             {
-                shotCooldownSeconds = 0.12f;
+                
                 SpawnGuntype1(mousePos);
 
             }else if (guntype == 1)
             {
-                shotCooldownSeconds = 0.24f;
                 SpawnGuntype2(mousePos);
             }
             
@@ -221,6 +220,7 @@ public class Player : GameObject
     private void SpawnGuntype1(Vector2 target)
     {
     
+        shotCooldownSeconds = 0.09f;
         Vector2 dir = target - transform.position;
         if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
         dir = Vector2.Normalize(dir);
@@ -241,7 +241,7 @@ public class Player : GameObject
     }
     private void SpawnGuntype2(Vector2 target)
     {
-
+        shotCooldownSeconds = 0.24f;
         Vector2 dir = target - transform.position;
         if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
         dir = Vector2.Normalize(dir);
