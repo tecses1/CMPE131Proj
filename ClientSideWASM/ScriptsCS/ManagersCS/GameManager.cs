@@ -24,13 +24,13 @@ public class GameManager : RenderManager
      DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
 
-    NetworkManager test = new NetworkManager();
+    NetworkManager nm;
 
     Text isLocal;
 
-    public GameManager(IJSRuntime JSRuntime) : base(JSRuntime)
+    public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
-
+        this.nm = nm;
         GameManager reference = this;
          player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
 
@@ -119,11 +119,19 @@ public class GameManager : RenderManager
     }
     public override async Task Render()
     {
-        if (!test.client.isConnected())
+        if (nm == null)
         {
             isLocal.Draw(this);
-
         }
+        else
+        {
+            if (nm.client == null)
+            {
+                Console.WriteLine("warning... client is null?");
+            }
+            if (!nm.client.isConnected()) isLocal.Draw(this);
+        }
+
         foreach (GameObject other in backgroundStars)
         {
             AddObjToRender(other);//tell RenderManager to Render the object.

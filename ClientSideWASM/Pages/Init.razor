@@ -1,0 +1,30 @@
+@page "/"
+@layout MainLayout
+
+@code{
+    async Task Save(){
+        await LocalStorage.SetItemAsStringAsync("settingsSaveKey",Settings.Save());
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        //Initialize the network manager. COnnect to the server service.
+
+        
+        bool worked = Settings.Load(await LocalStorage.GetItemAsync<string>("settingsSaveKey"));
+        if (!worked){
+            await Save();
+        }
+        await nm.Initialize();
+        if (nm.client.isConnected())
+        {
+            Nav.NavigateTo("/Home");//,true);
+        }else{
+            Nav.NavigateTo("/Error");//,true);
+        }
+        
+
+    }
+        
+}

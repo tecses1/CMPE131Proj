@@ -17,7 +17,6 @@ public class Client
     public Client(NetworkManager nm)
     {
         this.nm = nm;
-        handler = new ClientWebSocket();
     }
     public async Task<Packet> getLatest()
     {
@@ -39,6 +38,8 @@ public class Client
     {
         try
         {
+            handler = new ClientWebSocket();
+
             // Note: Use "ws://" for standard or "wss://" for secure connections
             Uri serverUri = new Uri($"ws://{Settings.server}:{Settings.port}");
             
@@ -97,7 +98,7 @@ public class Client
                     await Recv();
 
                 }
-            await Task.Delay(100);
+            await Task.Delay(1);
             }
             
 
@@ -126,6 +127,7 @@ public class Client
     {
         var buffer = new byte[4096];
         try{
+            
             while (handler.State == WebSocketState.Open)
             {
                 var result = await handler.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
