@@ -24,6 +24,10 @@ public class GameManager : RenderManager
      DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
 
+    NetworkManager test = new NetworkManager();
+
+    Text isLocal;
+
     public GameManager(IJSRuntime JSRuntime) : base(JSRuntime)
     {
 
@@ -31,8 +35,9 @@ public class GameManager : RenderManager
          player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
 
         GenerateStars();
-
-
+        Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
+        isLocal = new Text("Playing Locally ", ref t);
+        isLocal.worldSpace = false;
     }
     
     void GenerateStars()
@@ -114,7 +119,11 @@ public class GameManager : RenderManager
     }
     public override async Task Render()
     {
+        if (!test.client.isConnected())
+        {
+            isLocal.Draw(this);
 
+        }
         foreach (GameObject other in backgroundStars)
         {
             AddObjToRender(other);//tell RenderManager to Render the object.

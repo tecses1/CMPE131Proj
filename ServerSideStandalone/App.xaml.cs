@@ -9,7 +9,7 @@ namespace ServerSideStandalone;
 /// </summary>
 public partial class App : Application
 {
-    Server s = new Server();
+    public Server s = new Server();
 
 }
 

@@ -3,9 +3,10 @@ using System.Text.Json;
 [System.Serializable]
 public class Packet
 {
-    public string customMessage;
-    public StartUpInfo startUpInfo;
-    public static Packet fromJSON(string s)
+public string customMessage { get; set; } 
+    public ClientInfo clientInfo { get; set; }   
+    public ServerInfo serverInfo { get; set; }   
+     public static Packet fromJSON(string s)
     {
         // Deserialize packet from string
         try

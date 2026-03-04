@@ -1,11 +1,21 @@
 {
   "version": "2.0.0",
   "tasks": [
-    {
-      "label": "build-blazor",
+{
+
+      "label": "build-wasm",
       "command": "dotnet",
       "type": "process",
-      "args": ["build", "${workspaceFolder}/ClientSideWASM/ClientSideWASM.csproj"]
+      "args": [
+        "build",
+        "${workspaceFolder}/ClientSideWASM/ClientSideWASM.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/ClientSideWASM"
+      },
+      "problemMatcher": "$msCompile"
     },
     {
       "label": "build-wpf",

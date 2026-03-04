@@ -16,8 +16,18 @@ namespace ServerSideStandalone;
 /// </summary>
 public partial class MainWindow : Window
 {
+    App app = (App)Application.Current;
     public MainWindow()
     {
         InitializeComponent();
+        CompositionTarget.Rendering += Update;
+    }
+
+    public void Update(object sender, EventArgs e)
+    {
+        Title = "Server - Connected Clients: " + app.s.GetClientCount();
+        MyStatusText.Text = app.s.GetUserList();
+        
+        
     }
 }

@@ -1,19 +1,22 @@
 {
   "version": "0.2.0",
   "configurations": [
-    {
+{
       "name": "Launch Client (GAME)",
-"type": "blazorwasm",
-    "request": "launch",
-    "preLaunchTask": "build-wasm", 
-    "program": "${workspaceFolder}/ClientSideWASM/bin/Debug/net9.0/ClientSideWASM.dll",
-    "cwd": "${workspaceFolder}/ClientSideWASM",
-    "url": "http://localhost:5152",
-    "browser": "edge",
+      "type": "blazorwasm",
+      "request": "launch",
+      "url": "http://localhost:5152",
+      "browser": "chrome", 
+      "webRoot": "${workspaceFolder}/ClientSideWASM",
+      "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
+      "preLaunchTask": "build-wasm",
+      "cwd": "${workspaceFolder}/ClientSideWASM",
+      "timeout": 30000
+    
     },
     {
       "name": "Launch Server (WPF)",
-      "type": "clr", 
+      "type": "coreclr", 
       "request": "launch",
       "preLaunchTask": "build-wpf",
       "program": "${workspaceFolder}/ServerSideStandalone/bin/Debug/net9.0-windows/ServerSideStandalone.exe",

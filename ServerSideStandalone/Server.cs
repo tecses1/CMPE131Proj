@@ -6,11 +6,13 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Shared;
 
 public class Server
 {
+    int uidCounter = 0;
     private List<User> users = new List<User>();
-    private readonly string _url = "http://*:8888/"; // WebSockets start as HTTP
+    private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
 
     public Server()
     {
@@ -36,11 +38,12 @@ public class Server
                 HttpListenerWebSocketContext wsContext = await context.AcceptWebSocketAsync(null);
                 WebSocket webSocket = wsContext.WebSocket;
 
-                Console.WriteLine("Client requesting connection: WebSocket Upgrade");
+                Console.WriteLine("Client requesting connection:"+ webSocket.SubProtocol);
                 _ = Task.Run(() => ProcessClientAsync(webSocket));
             }
             else
             {
+                Console.WriteLine("Non websocket protocol requested connection... blocking!");
                 // Reject non-WebSocket requests
                 context.Response.StatusCode = 400;
                 context.Response.Close();
@@ -50,21 +53,34 @@ public class Server
 
     private async Task ProcessClientAsync(WebSocket webSocket)
     {
-        var buffer = new byte[1024];
-        
-        // Receive the first message (assuming it's your JSON Packet)
-        WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        string request = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
         
         // Packet p = Packet.fromJSON(request); // Your custom logic
 
         // Create user with the WebSocket instead of a Socket
-        User newUser = new User(webSocket);
+        User newUser = new User(webSocket, uidCounter++);
+        newUser.Initialize(); // Assuming User has an Initialize method to set the WebSocket
         users.Add(newUser);
 
         Console.WriteLine("Client connected via WebSocket.");
         
         // Keep connection alive/listen for more messages if needed
         // Note: You must handle the receive loop or newUser.Update() must use webSocket.SendAsync/ReceiveAsync
+    }
+
+    public int GetClientCount()
+    {
+        return users.Count;
+    }
+
+    public string GetUserList()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Connected Clients:");
+        foreach (var user in users)
+        {
+            sb.AppendLine($"- {user.name} (UID: {user.uid})"); // Assuming User has an Id property
+        }
+        return sb.ToString();
     }
 }
