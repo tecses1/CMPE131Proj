@@ -1,4 +1,5 @@
 using System;
+using Shared;
 
 namespace ClientSideWASM;
 
@@ -6,5 +7,17 @@ namespace ClientSideWASM;
 
 public class NetworkManager
 {
-    
+    public Client client;
+
+    public NetworkManager()
+    {
+        client = new Client(this);
+        client.ConnectToServer();
+    }
+
+    public void Process(Packet p)
+    {
+        
+    }
+
 }

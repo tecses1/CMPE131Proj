@@ -1,4 +1,8 @@
-ClientSideWASM/bin/
-bin/
-ClientSideWASM/obj/
-obj/
+ClientSideWASM/bin
+bin
+ClientSideWASM/obj
+obj
+ServerSideStandalone/bin
+ServerSideStandalone/obj
+Shared/bin
+shard/obj

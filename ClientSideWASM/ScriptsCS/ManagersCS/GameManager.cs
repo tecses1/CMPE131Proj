@@ -23,6 +23,7 @@ public class GameManager : RenderManager
 
      DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
+
     public GameManager(IJSRuntime JSRuntime) : base(JSRuntime)
     {
 
@@ -74,7 +75,7 @@ public class GameManager : RenderManager
     {
         Random r = new Random();
         int size = (int)(20 + r.NextDouble() * 30);
-        if (r.NextInt64(0,10) == 5)
+        if (r.NextInt64(0,15) == 8)
         {
             size = size * 5;
         }

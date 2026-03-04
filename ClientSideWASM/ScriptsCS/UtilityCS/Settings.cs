@@ -15,9 +15,18 @@ public static class Settings
 
     //only public vars save.
     public static string name = "Player";
+
+
+    //Server settings...
+
+    public const string server = "127.0.0.1"; // Server address (localhost)
+    public const int port = 8888; // Port number
+
+    //Game Settings
     public const string OutOfBoundsMessage = "You are out of bounds!";
 
     // Star Settings
+
     public const float Sparseness = 0.2f;
     public const int minSize = 1;
     public const int maxSize = 10;

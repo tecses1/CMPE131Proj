@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-blazor",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/ClientSideWASM/ClientSideWASM.csproj"]
+    },
+    {
+      "label": "build-wpf",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/ServerSideStandalone/ServerSideStandalone.csproj"]
+    }
+  ]
+}
