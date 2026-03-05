@@ -19,7 +19,12 @@
 </div>
 
 <PageTitle>Game</PageTitle>
-<h3>CMPE131 Proj (Game thing idk) </h3>
+<h3> @if (nm.myLobby != "")
+    {
+        @:Your lobby: @nm.myLobby
+    }else{
+        @: You're not currently in a lobby. All solo, baby!
+    }</h3>
 
 <!-- The @bind attribute links the HTML value to the C# variable 'userInput' -->
 

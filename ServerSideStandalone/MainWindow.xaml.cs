@@ -30,4 +30,27 @@ public partial class MainWindow : Window
         
         
     }
+    private async void SendAlert_Click(object sender, RoutedEventArgs e)
+    {
+        string message = AlertTextBox.Text;
+
+        // Assuming you have a list of connected clients
+        // List<GameServer> connectedClients = ...;
+
+        if (app.s.users.Count == 0)
+        {
+            MessageBox.Show("No clients connected!");
+            return;
+        }
+
+        foreach (var client in app.s.users)
+        {
+            Console.WriteLine($"Sending alert to client {client.uid}: {message}");
+            // Use the Send() method we created for Fire-and-Forget
+            await client.Send("ServerAlert", message);
+            
+        }
+
+        AlertTextBox.Clear();
+    }
 }

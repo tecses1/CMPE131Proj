@@ -7,16 +7,13 @@ using Shared;
 public partial class Home
 {
     public string userInput;
-    public string lobbyName;
-    public string responseLobby;
-    
+    public string requestedLobby = "";
+
+    public string failedToJoinLobby = "";
     protected override void OnInitialized()
     {
         userInput = Settings.name;
         // Example: Set a default supplier if null
-        Packet p = new Packet();
-        p.customMessage = "{PageUpdate}" + '\x1F' + "Home";
-        nm.client.QueueToSend(p);
 
     }
     protected override async Task OnInitializedAsync()
@@ -27,22 +24,39 @@ public partial class Home
 
     }
 
-    public void Request()
+    public async Task RequestNewLobby()
     {
-        Packet p = new Packet();
-        p.customMessage = "requestLobby";
+        var response = await nm.client.SendWithResponse("GetInventory", new[] { "PlayerID_99" });
 
-        nm.client.QueueToSend(p);
+            if (response != null)
+            {
+                // Populate the UI with the args returned from the server
+                var _items = response.Args.ToList();
+                Console.WriteLine(_items);
+            }
+            else
+            {
+                // This happens if the 5-second timeout we built triggers!
+                Console.WriteLine("Server didn't respond in time.");
+            }
     }
-    //Called when button is pressed, see above.
+    public async Task RequestJoinLobby()
+    {
+        await nm.client.Send("GlobalChat", "Hero123", "Hello everyone!");
+    
+        
+    }
+    //Called when button is pr essed, see above.
     private async Task SaveToStorage()
     {
         if (!string.IsNullOrWhiteSpace(userInput))
         {
             // Saves the current value of 'userInput' to local storage
+            
             Settings.name = userInput;
             await Save();
         }
+
     }
     //Reference method. Called from OnIntializedAsync().
     async Task Save(){

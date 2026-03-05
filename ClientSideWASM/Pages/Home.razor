@@ -4,15 +4,23 @@
 <div>
 
 </div>
-<button @onclick="Request">Request Lobby</button>
+
 
 <div>
 <div>
-    @if (lobbyName != "")
+    @if (nm.myLobby != "")
     {
-        @:Your lobby: @lobbyName
+        @:Your lobby: @nm.myLobby
     }else{
-        @: You're not currently in a lobby. Request one! 
+       
+        @: You're not currently in a lobby. Request one, or type one in if you know it! 
+         <input type="text" @bind="requestedLobby" class="form-control" placeholder="Lobby Name" />
+         <button @onclick="RequestNewLobby">Request New</button>
+         <button @onclick="RequestJoinLobby">Request Join</button>
+         if (failedToJoinLobby != "")
+         {
+             @: @failedToJoinLobby
+         }
     }
 </div>
 <input type="text" @bind="userInput" class="form-control" placeholder="Enter text here..." />

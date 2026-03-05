@@ -13,7 +13,7 @@ public class Server
 {
     int uidCounter = 0;
     int lobbyCtr = 0;
-    private List<User> users = new List<User>();
+    public List<User> users = new List<User>();
     private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
     private List<String> openLobbies = new List<String>();
 
@@ -23,6 +23,11 @@ public class Server
         openLobbies.Add(newLobby);
         return newLobby;
     }
+    public bool getLobby(string lobbyName)
+    {
+        return openLobbies.Contains(lobbyName);
+    }
+    
     public Server()
     {
         Console.WriteLine("Server initialized.");
@@ -63,19 +68,14 @@ public class Server
     private async Task ProcessClientAsync(WebSocket webSocket)
     {
 
-        
-        // Packet p = Packet.fromJSON(request); // Your custom logic
-
         // Create user with the WebSocket instead of a Socket
-        User newUser = new User(webSocket, uidCounter++,this);
-        newUser.Initialize(); // Assuming User has an Initialize method to set the WebSocket
+        User newUser = new User(uidCounter++,this);
+        newUser.Initialize(webSocket); // Assuming User has an Initialize method to set the WebSocket
         await Task.Delay(1000);
         users.Add(newUser);
 
         Console.WriteLine("Client connected via WebSocket.");
         
-        // Keep connection alive/listen for more messages if needed
-        // Note: You must handle the receive loop or newUser.Update() must use webSocket.SendAsync/ReceiveAsync
     }
 
     public int GetClientCount()

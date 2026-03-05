@@ -3,10 +3,14 @@ using System.Text.Json;
 [System.Serializable]
 public class Packet
 {
-public string customMessage { get; set; } 
-    public ClientInfo clientInfo { get; set; }   
-    public ServerInfo serverInfo { get; set; }   
-     public static Packet fromJSON(string s)
+    public Guid CorrelationId { get; set; } // Matches requests to responses
+    public bool IsResponse { get; set; }    // True if this is answering a command
+    public string Purpose { get; set; }
+    public string[] Args { get; set; }
+
+
+
+    public static Packet fromJSON(string s)
     {
         // Deserialize packet from string
         try

@@ -8,7 +8,7 @@ namespace ClientSideWASM;
 public class NetworkManager
 {
     public Client client;
-    public string lobbyName = "";
+    public string myLobby = "";
 
     public NetworkManager()
     {

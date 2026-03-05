@@ -23,10 +23,7 @@ public partial class Game
     protected override void OnInitialized()
     {
         // Example: Set a default supplier if null
-        Packet p = new Packet();
-        p.customMessage = "{PageUpdate}" + '\x1F' + "Home";
-        nm.client.QueueToSend(p);
-        swag +=1;
+
 
     }
     protected override void OnAfterRender(bool firstRender)

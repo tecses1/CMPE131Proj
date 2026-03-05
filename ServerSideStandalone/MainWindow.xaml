@@ -6,7 +6,35 @@
         xmlns:local="clr-namespace:ServerSideStandalone"
         mc:Ignorable="d"
         Title="Server" Height="450" Width="800">
+
     <Grid>
-        <TextBlock x:Name="MyStatusText" Text="Waiting..." FontSize="20" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="MyStatusText" 
+                   Grid.Row="0"
+                   Text="Waiting..." 
+                   FontSize="20" 
+                   HorizontalAlignment="Center" 
+                   Margin="10"/>
+
+        <StackPanel Grid.Row="1" Margin="20">
+            <Separator Margin="0,0,0,20"/>
+            
+            <TextBlock Text="Client Message:" FontWeight="Bold" Margin="0,0,0,5"/>
+            <TextBox x:Name="AlertTextBox" 
+                     Text="Hello from the Server!" 
+                     Margin="0,0,0,10"
+                     Padding="5"/>
+            
+            <Button Content="Send Alert to All Clients" 
+                    Click="SendAlert_Click" 
+                    Height="40" 
+                    Background="LightBlue"
+                    Cursor="Hand"/>
+        </StackPanel>
     </Grid>
+
 </Window>
