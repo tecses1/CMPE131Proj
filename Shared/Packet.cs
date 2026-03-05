@@ -4,6 +4,7 @@ using System.Text.Json;
 public class Packet
 {
     public Guid CorrelationId { get; set; } // Matches requests to responses
+    public bool RequiresResponse {get; set;}
     public bool IsResponse { get; set; }    // True if this is answering a command
     public string Purpose { get; set; }
     public string[] Args { get; set; }

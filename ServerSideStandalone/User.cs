@@ -21,29 +21,45 @@ public class User : NetworkModel
 
     }   
 
-    protected override async Task<string[]> HandleRequestAsync(string purpose, string[] args)
+    protected override async Task<string[]> HandleRecvWithResponse(string purpose, string[] args)
     {
+        Console.WriteLine("Recieved update that requires response." + purpose);
         switch (purpose)
             {
-                case "GetInventory":
-                    string playerId = args[0];
-                    
-                    // Look up data in your WPF server's database/list
-                    string[] items = {"This", "Hurts", "My", "Brain"}; 
-                    
-                    // Returning this array triggers the automatic response logic 
-                    // in the base NetworkModel, which sends it back with the matching ID.
-                    return items;
-
-                case "GlobalChat":
-                    string username = args[0];
-                    string message = args[1];
-                    
-                    Console.WriteLine($"[CHAT] {username}: {message}");
-                    return null;
+                case "{NewLobby}":
+                    string newLobby = myServer.getLobby();
+                    myLobby = newLobby;
+                    return new string[] {myLobby};
+                case "{JoinLobby}":
+                    if (myServer.getLobby(args[0]))
+                    {
+                        //That lobby exists.
+                        myLobby = args[0];
+                        return new string[] {"{Success}"};
+                        
+                    }
+                    else return new string[]{"{Failed}"};
+                case "{SetName}":
 
                 default:
                     return new[] { "Error", "Unknown Command" };
+            }
+    }
+    protected override async Task HandleRecv(string purpose, string[] args)
+    {
+        Console.WriteLine("Recieved one time update: " + purpose);
+        switch (purpose)
+            {
+                case "{SetName}":
+                    this.name = args[0];
+                    break;
+                case "{SetPage}":
+                    this.currentPage = args[0];
+                    break;
+
+                default:
+                    Console.WriteLine("Error: Unknown Purpose: " + purpose);// new[] { "Error", "Unknown Command" };
+                    break;
             }
     }
     

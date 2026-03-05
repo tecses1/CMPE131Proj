@@ -15,17 +15,25 @@ public class Server
     int lobbyCtr = 0;
     public List<User> users = new List<User>();
     private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
-    private List<String> openLobbies = new List<String>();
+    private List<Lobby> openLobbies = new List<Lobby>();
 
     public string getLobby()
     {
-        string newLobby = "Game" + lobbyCtr++;
-        openLobbies.Add(newLobby);
-        return newLobby;
+        Lobby newLobby = new Lobby();
+        newLobby.Name = "Game" + lobbyCtr++;
+        
+        return newLobby.Name;
     }
     public bool getLobby(string lobbyName)
     {
-        return openLobbies.Contains(lobbyName);
+        foreach (Lobby l in openLobbies)
+        {
+            if (l.Name == lobbyName)
+            {
+                return true;
+            }
+        }
+        return false;
     }
     
     public Server()

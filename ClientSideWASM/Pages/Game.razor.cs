@@ -20,10 +20,14 @@ public partial class Game
     private float _lastTime = 0f;
     private const float _fixedDeltaTime = 1f / 60f; // 0.01666... seconds
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        if (!nm.client.isConnected()){
+            Nav.NavigateTo("/");
+        }
         // Example: Set a default supplier if null
-
+        await nm.client.Send("{SetName}",Settings.name);
+        await nm.client.Send("{SetPage}",this.GetType().Name);
 
     }
     protected override void OnAfterRender(bool firstRender)

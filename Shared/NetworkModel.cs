@@ -46,6 +46,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
         var packet = new Packet 
         { 
             CorrelationId = Guid.NewGuid(), 
+            RequiresResponse = false,
             IsResponse = false, 
             Purpose = purpose, 
             Args = args 
@@ -60,6 +61,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
         var packet = new Packet 
         { 
             CorrelationId = Guid.NewGuid(), 
+            RequiresResponse = true,
             IsResponse = false, 
             Purpose = purpose, 
             Args = args 
@@ -161,10 +163,11 @@ using System.Threading.Tasks;public abstract class NetworkModel
         {
             try
             {
-                string[] responseArgs = await HandleRequestAsync(packet.Purpose, packet.Args);
-
-                if (responseArgs != null)
+                if (packet.RequiresResponse)
                 {
+                    string[] responseArgs = await HandleRecvWithResponse(packet.Purpose, packet.Args);
+
+
                     await queuedToSend.Writer.WriteAsync(new Packet
                     {
                         CorrelationId = packet.CorrelationId,
@@ -172,7 +175,13 @@ using System.Threading.Tasks;public abstract class NetworkModel
                         Purpose = packet.Purpose + "_ACK",
                         Args = responseArgs
                     });
+
                 }
+                else
+                {
+                    await HandleRecv(packet.Purpose, packet.Args);
+                }
+
             }
             catch (Exception ex)
             {
@@ -183,7 +192,8 @@ using System.Threading.Tasks;public abstract class NetworkModel
     }
 
         // This is your "Callback." Inheriting classes MUST implement this.
-        protected abstract Task<string[]> HandleRequestAsync(string purpose, string[] args);
+        protected abstract Task<string[]> HandleRecvWithResponse(string purpose, string[] args);
+        protected abstract Task HandleRecv(string purpose, string[] args);
 
         // ... (ReceiveLoopAsync and SendLoopAsync remain the same) ...
     

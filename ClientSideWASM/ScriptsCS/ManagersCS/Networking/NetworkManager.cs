@@ -9,15 +9,16 @@ public class NetworkManager
 {
     public Client client;
     public string myLobby = "";
+    public bool isHost = false;
 
     public NetworkManager()
     {
-
+        client = new Client(this);
 
     }
     public async Task Initialize()
     {
-        client = new Client(this);
+        
         await client.ConnectToServer();
     }
 

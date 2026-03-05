@@ -37,7 +37,7 @@ public class Client : NetworkModel
         }
     }
 
-    protected override async Task<string[]> HandleRequestAsync(string purpose, string[] args)
+    protected override async Task<string[]> HandleRecvWithResponse(string purpose, string[] args)
     {
         //Console.WriteLine("PACKET: " + purpose + " | " + string.Join(", ", args));  
         switch (purpose)
@@ -45,10 +45,14 @@ public class Client : NetworkModel
             case "ServerAlert":
                 // Logic: Show a popup
                 Console.WriteLine($"SERVER SAYS: {args[0]}");
-                return new[] { "Received" }; // Send an ACK back to server
+                return new[] { "Acknowledge" }; // Send an ACK back to server
 
             default:
                 return null;
         }
+    }
+    protected override async Task HandleRecv(string purpose, string[] args)
+    {
+        
     }
 }

@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ClientSideWASM;
 
@@ -7,6 +8,7 @@ public class GameObject
 {
 
 
+    public Guid uid;
     //sizing
     public Transform transform;
     //game manager reference. This class makes many frequent callbacks.
@@ -23,7 +25,7 @@ public class GameObject
     {
         this.gm  = gm;
         this.transform = transform;
-
+        this.uid =  Guid.NewGuid();
         this.missingText = new Text("MISSING",ref transform);
         this.missingText.setFillColor(Color.LightYellow,255);
         this.missingText.setBorderColor(Color.Red);
@@ -93,12 +95,34 @@ public class GameObject
     }
     public virtual void Update()
     {
-
+        
     }
 
     public virtual void Render()
     {
         
+    }
+
+    public virtual string[] Encode()
+    {
+        return new string[]
+        {
+            this.transform.position.X.ToString(),
+            this.transform.position.Y.ToString(),
+            this.transform.size.X.ToString(),
+            this.transform.size.Y.ToString(),
+            this.transform.rotation.ToString()
+        };
+    }
+
+    public virtual void Decode(string[] args)
+    {
+        this.transform.position.X = float.Parse(args[0]);
+        this.transform.position.Y = float.Parse(args[0]);
+        this.transform.size.X = float.Parse(args[0]);
+        this.transform.size.X = float.Parse(args[0]);
+        this.transform.rotation = float.Parse(args[0]);
+
     }
     public virtual void Kill()
     {

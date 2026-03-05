@@ -1,11 +1,6 @@
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.Dynamic;
-using System.Numerics;
-using Blazorex;
-using Microsoft.AspNetCore.Components;
+
 using Microsoft.JSInterop;
+using System.Text.Json;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 public class GameManager : RenderManager
@@ -121,18 +116,13 @@ public class GameManager : RenderManager
     }
     public override async Task Render()
     {
-        if (nm == null)
+
+        if (!nm.client.isConnected()) isLocal.Draw(this);
+        if (nm.myLobby == "")
         {
-            isLocal.Draw(this);
+            isLocal.text = "Playing Solo (No Lobby)";
         }
-        else
-        {
-            if (nm.client == null)
-            {
-                Console.WriteLine("warning... client is null?");
-            }
-            if (!nm.client.isConnected()) isLocal.Draw(this);
-        }
+        
 
         foreach (GameObject other in backgroundStars)
         {
@@ -150,10 +140,37 @@ public class GameManager : RenderManager
         await base.Render(); //Do whatever the RenderManager wants to do by itself. probably the official render calls.
 
     }
+    public string[][] getGamesstate()
+    {
+        string[][] gameState = new string[activeObjects.Count][];
+        for (int i = 0; i < gameState.Length; i++)
+        {
+            List<string> encoded = new List<string>();
+
+            GameObject go = activeObjects[i];
+            string goName = go.GetType().Name;
+            string uid = go.uid.ToString();
+            string[] state = activeObjects[i].Encode();
+
+            encoded.Add(goName);
+            encoded.Add(uid);
+            encoded.AddRange(state);
+            
+            gameState[i] = encoded.ToArray();
+        }
+        
+        return gameState;
+
+    }
+
     public override async Task Update()
     {
         await base.Update();
 
+        if (nm.client.isConnected() && nm.myLobby != "")
+        {
+            nm.client.Send("{GameUpdate",JsonSerializer.Serialize<string[][]>(this.getGamesstate()));
+        }
         foreach (GameObject go in objsToRemove)
         {
             activeObjects.Remove(go);
@@ -194,8 +211,8 @@ public class GameManager : RenderManager
 
                     if (((Asteroid)collideGO).hp <= 0)
                     {
+                        ((Player)player).AddScore(10);
                         collideGO.Kill();
-                        ((Player)player).AddScore(10); // score adding
                     }
                 }
             }
