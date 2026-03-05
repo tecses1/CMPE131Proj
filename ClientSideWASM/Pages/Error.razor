@@ -1,8 +1,8 @@
 @page "/Error"
 @layout MainLayout
 @using Blazored.LocalStorage
+@using System.Dynamic
 @inject ILocalStorageService LocalStorage
-
 
 <div>
     <h1>Error</h1>
@@ -12,6 +12,7 @@
 
 @code{
     void Continue(){
+        
         Nav.NavigateTo("/Game");//,true);
     }
 }

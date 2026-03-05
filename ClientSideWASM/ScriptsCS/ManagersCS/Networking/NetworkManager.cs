@@ -8,8 +8,8 @@ namespace ClientSideWASM;
 public class NetworkManager
 {
     public Client client;
-    public bool initialized;
-    string stackTrace = Environment.StackTrace;
+    public string lobbyName = "";
+
     public NetworkManager()
     {
 
@@ -19,10 +19,6 @@ public class NetworkManager
     {
         client = new Client(this);
         await client.ConnectToServer();
-    }
-    public void Process(Packet p)
-    {
-        
     }
 
 }

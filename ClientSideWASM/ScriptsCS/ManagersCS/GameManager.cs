@@ -27,6 +27,8 @@ public class GameManager : RenderManager
     NetworkManager nm;
 
     Text isLocal;
+    
+
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
@@ -56,7 +58,7 @@ public class GameManager : RenderManager
                     Transform t = new Transform(i,j,size,size);
                     GameManager reference = this;
                     Star s = new Star(ref reference, t);
-
+                    
                     backgroundStars.Add(s);
                 }
 
@@ -167,10 +169,11 @@ public class GameManager : RenderManager
         //Update the player.
         player.Update();
         //Update stars.
+        /*
         foreach (GameObject other in backgroundStars)
         {
             other.Update();
-        }
+        }*/
         //Update active objects. Check for collision withj stars.
         foreach (GameObject go in activeObjects)
         {

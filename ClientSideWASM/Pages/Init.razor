@@ -16,7 +16,10 @@
         if (!worked){
             await Save();
         }
-        await nm.Initialize();
+        nm.Initialize();
+        await Task.Delay(1000);
+
+        
         if (nm.client.isConnected())
         {
             Nav.NavigateTo("/Home");//,true);

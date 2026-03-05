@@ -2,7 +2,7 @@
 
 namespace ClientSideWASM.Pages;
 using Blazorex;
-
+using Shared;
 public partial class Game
 {
     private CanvasManager? _canvasManager;
@@ -20,7 +20,15 @@ public partial class Game
     private float _lastTime = 0f;
     private const float _fixedDeltaTime = 1f / 60f; // 0.01666... seconds
 
+    protected override void OnInitialized()
+    {
+        // Example: Set a default supplier if null
+        Packet p = new Packet();
+        p.customMessage = "{PageUpdate}" + '\x1F' + "Home";
+        nm.client.QueueToSend(p);
+        swag +=1;
 
+    }
     protected override void OnAfterRender(bool firstRender)
     {
         if (!firstRender)

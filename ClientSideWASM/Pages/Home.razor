@@ -2,6 +2,19 @@
 @layout MainLayout
 
 <div>
+
+</div>
+<button @onclick="Request">Request Lobby</button>
+
+<div>
+<div>
+    @if (lobbyName != "")
+    {
+        @:Your lobby: @lobbyName
+    }else{
+        @: You're not currently in a lobby. Request one! 
+    }
+</div>
 <input type="text" @bind="userInput" class="form-control" placeholder="Enter text here..." />
 
 <button @onclick="SaveToStorage" class="btn btn-primary mt-2">Set Name</button>
@@ -17,6 +30,8 @@
 @code {
     private void NavigateToCounter()
     {
+
+
         Nav.NavigateTo("/Game");//,true);
     }
 }

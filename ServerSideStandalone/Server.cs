@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,9 +12,17 @@ using Shared;
 public class Server
 {
     int uidCounter = 0;
+    int lobbyCtr = 0;
     private List<User> users = new List<User>();
     private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
+    private List<String> openLobbies = new List<String>();
 
+    public string getLobby()
+    {
+        string newLobby = "Game" + lobbyCtr++;
+        openLobbies.Add(newLobby);
+        return newLobby;
+    }
     public Server()
     {
         Console.WriteLine("Server initialized.");
@@ -58,8 +67,9 @@ public class Server
         // Packet p = Packet.fromJSON(request); // Your custom logic
 
         // Create user with the WebSocket instead of a Socket
-        User newUser = new User(webSocket, uidCounter++);
+        User newUser = new User(webSocket, uidCounter++,this);
         newUser.Initialize(); // Assuming User has an Initialize method to set the WebSocket
+        await Task.Delay(1000);
         users.Add(newUser);
 
         Console.WriteLine("Client connected via WebSocket.");
@@ -80,6 +90,8 @@ public class Server
         foreach (var user in users)
         {
             sb.AppendLine($"- {user.name} (UID: {user.uid})"); // Assuming User has an Id property
+            sb.AppendLine("    Current Lobby: " + user.myLobby);
+            sb.AppendLine("    Current Page: " + user.currentPage);
         }
         return sb.ToString();
     }
