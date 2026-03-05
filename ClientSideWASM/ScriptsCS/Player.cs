@@ -17,6 +17,7 @@ public class Player : GameObject
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
+    public int Score { get; private set; } = 0;
     
     //behavior
     float maxSpeed = 5f;
@@ -28,6 +29,7 @@ public class Player : GameObject
     Text playerName;
     Text outOfBoundsText;
     Rect oobScreenFlashRect;
+    Text scoreText;
     
     int guntype = 1;
     bool barrel = true;
@@ -50,6 +52,11 @@ public class Player : GameObject
         oobScreenFlashRect = new Rect(ref oobScreenFlashT);
         oobScreenFlashRect.borderWidth = 50;
         oobScreenFlashRect.worldSpace = false;
+
+        // score system
+        Transform scoreTransform = new Transform(Settings.CanvasWidth - 50, Settings.CanvasHeight - 8, 100, 125); // x=, y=10 near top-left corner
+        scoreText = new Text("Score: 0", ref scoreTransform);
+        scoreText.worldSpace = false; 
     }
     public string GetColorString(Color c)
     {
@@ -203,6 +210,7 @@ public class Player : GameObject
     {
         playerName.text = Settings.name;
         playerName.Draw(gm);
+        scoreText.Draw(gm);
 
         //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
         //If we're in the world bounds.
@@ -263,5 +271,9 @@ public class Player : GameObject
         barrel = !barrel;
 
     }
-    
-}
+    public void AddScore(int points)
+    {
+        Score += points;
+        scoreText.text = $"Score: {Score}";
+    }
+    }

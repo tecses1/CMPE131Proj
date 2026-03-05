@@ -195,6 +195,7 @@ public class GameManager : RenderManager
                     if (((Asteroid)collideGO).hp <= 0)
                     {
                         collideGO.Kill();
+                        ((Player)player).AddScore(10); // score adding
                     }
                 }
             }
