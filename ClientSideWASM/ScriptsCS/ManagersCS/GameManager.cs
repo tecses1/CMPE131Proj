@@ -34,8 +34,8 @@ public class GameManager : RenderManager
     {
         this.nm = nm;
         GameManager reference = this;
-         player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
-
+        player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
+        activeObjects.Add(player);
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
         isLocal = new Text("Playing Locally ", ref t);
@@ -175,6 +175,8 @@ public class GameManager : RenderManager
             other.Update();
         }*/
         //Update active objects. Check for collision withj stars.
+        // Console.WriteLine(activeObjects);
+        
         foreach (GameObject go in activeObjects)
         {
             go.Update();
@@ -182,24 +184,34 @@ public class GameManager : RenderManager
             
             foreach (GameObject collideGO in activeObjects)
             {
-            if (collideGO.disableCollision) continue;
+                if (collideGO.disableCollision) continue;
+                // Console.WriteLine(go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
                 
-            if (go.CollideWith(collideGO))
-            {
-                //Console.WriteLine("We detected a collision between a " + go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
-                if (go.GetType().Name == "Projectile" && collideGO.GetType().Name == "Asteroid")
+                if (go.CollideWith(collideGO))
                 {
-                    go.Kill();
-                    ((Asteroid)collideGO).hp -= ((Projectile)go).damage;
-
-                    if (((Asteroid)collideGO).hp <= 0)
+                    // Console.WriteLine("Should be dead but no respawn yet");
+                    // Console.WriteLine("We detected a collision between a " + go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
+                    if (go.GetType().Name == "Projectile" && collideGO.GetType().Name == "Asteroid")
                     {
-                        collideGO.Kill();
-                        ((Player)player).AddScore(10); // score adding
+                        go.Kill();
+                        ((Asteroid)collideGO).hp -= ((Projectile)go).damage;
+
+                        if (((Asteroid)collideGO).hp <= 0)
+                        {
+                            collideGO.Kill();
+                            ((Player)player).AddScore(10); // score adding
+                        }
+                    }
+
+                    if (go.GetType().Name == "Asteroid" && collideGO.GetType().Name == "Player")
+                    {
+                        Console.WriteLine("We detected a collision between a " + go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
+
+                        ((Player)collideGO).TakeDamage(10);
+                        go.Kill();
                     }
                 }
             }
-        }
             
 
             //if obj is in the bounds of the canvas, we can render.

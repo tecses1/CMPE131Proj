@@ -18,7 +18,18 @@ public class Player : GameObject
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
     public int Score { get; private set; } = 0;
-    
+
+    // for health bar
+    public int MaxHealth = 1000;
+    public int CurrentHealth = 1000;
+    private Rect healthBarBackground;
+    private Rect healthBarFill;
+    private int barOffsetX;
+    private int barOffsetY;
+    private int healthBarWidth = 70;
+    private int healthBarHeight = 10;
+    private Color currentHealthColor = Color.Green;
+
     //behavior
     float maxSpeed = 5f;
     float acceleration = 0.33f;
@@ -30,6 +41,7 @@ public class Player : GameObject
     Text outOfBoundsText;
     Rect oobScreenFlashRect;
     Text scoreText;
+
     
     int guntype = 1;
     bool barrel = true;
@@ -54,10 +66,35 @@ public class Player : GameObject
         oobScreenFlashRect.worldSpace = false;
 
         // score system
-        Transform scoreTransform = new Transform(Settings.CanvasWidth - 50, Settings.CanvasHeight - 8, 100, 125); // x=, y=10 near top-left corner
+        Transform scoreTransform = new Transform(Settings.CanvasWidth - 50, Settings.CanvasHeight - 8, 100, 125);
         scoreText = new Text("Score: 0", ref scoreTransform);
         scoreText.worldSpace = false; 
+
+        // offset for health bar relative to player
+        barOffsetX = 0;
+        barOffsetY = (int)transform.size.Y / 2 + 10;
+
+        // health bar in background
+        Transform hbBgTransform = new Transform(transform.position.X + barOffsetX,
+            transform.position.Y + barOffsetY,
+            healthBarWidth,
+            healthBarHeight
+        );
+        healthBarBackground = new Rect(ref hbBgTransform);
+        healthBarBackground.setFillColor(Color.DarkGray);
+        healthBarBackground.worldSpace = true;
+
+        Transform hbFillTransform = new Transform(
+            transform.position.X + barOffsetX,
+            transform.position.Y + barOffsetY,
+            healthBarWidth,
+            healthBarHeight
+        );
+        healthBarFill = new Rect(ref hbFillTransform);
+        healthBarFill.setFillColor(Color.Green);
+        healthBarFill.worldSpace = true;
     }
+
     public string GetColorString(Color c)
     {
         return $"#{c.R:X2}{c.G:X2}{c.B:X2}{c.A:X2}";
@@ -202,9 +239,11 @@ public class Player : GameObject
             lastShotTime = DateTime.UtcNow;
         }
 
-
-
-    }
+        // health bar relative to player
+        healthBarBackground.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
+        healthBarFill.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
+        UpdateHealthBarVisual();
+}
 
     public override void Render()
     {
@@ -212,22 +251,29 @@ public class Player : GameObject
         playerName.Draw(gm);
         scoreText.Draw(gm);
 
+        healthBarBackground.Draw(gm);
+        healthBarFill.Draw(gm);
+
         //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
         //If we're in the world bounds.
+        // added else out of bounds take damage
         bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
         if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
         {
             gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
+        } else {
+            TakeDamage(1);
         }
         if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
         {
             gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
+        } else {
+            TakeDamage(1);
         }
     }
 
     private void SpawnGuntype1(Vector2 target)
     {
-    
         shotCooldownSeconds = 0.09f;
         Vector2 dir = target - transform.position;
         if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
@@ -247,6 +293,7 @@ public class Player : GameObject
         gm.AddNewGameObject(proj);
         gm.AddNewGameObject(proj2);
     }
+
     private void SpawnGuntype2(Vector2 target)
     {
         shotCooldownSeconds = 0.24f;
@@ -269,11 +316,55 @@ public class Player : GameObject
         proj.damage = 16;
         gm.AddNewGameObject(proj);
         barrel = !barrel;
-
     }
+
+    //score
     public void AddScore(int points)
     {
         Score += points;
         scoreText.text = $"Score: {Score}";
     }
+
+    // ship damage
+    public void TakeDamage(int damage)
+    {
+        CurrentHealth -= damage;
+        if (CurrentHealth < 0) CurrentHealth = 0;
+
+        UpdateHealthBarVisual();
+        // check death
+        if (CurrentHealth == 0)
+        {  
+            this.Kill();
+            Console.WriteLine("Should be dead but no respawn yet");
+        }
     }
+
+    // health bar
+    private void UpdateHealthBarVisual()
+    {
+        float healthPercent = (float)CurrentHealth / MaxHealth;
+
+        Color newColor;
+        bool dead = false;
+        if (healthPercent > 0.5f) newColor = Color.Green;
+        else if (healthPercent > 0.25f) newColor = Color.Yellow;
+        else if (healthPercent > 0f) newColor = Color.Red;
+        else {
+            dead = true;
+            newColor = Color.Red;
+        }
+        if (dead) {
+            healthPercent = 1f;
+        }
+        // scale health width
+        healthBarFill.transform.size.X = healthBarWidth * healthPercent;
+
+        if (newColor != currentHealthColor)
+        {
+            healthBarFill.setFillColor(newColor);
+            currentHealthColor = newColor;
+        }
+    }
+
+}
