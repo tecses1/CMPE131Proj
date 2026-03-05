@@ -1,6 +1,8 @@
 
 using Microsoft.JSInterop;
+using Shared;
 using System.Text.Json;
+using System.Numerics;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 public class GameManager : RenderManager
@@ -24,7 +26,7 @@ public class GameManager : RenderManager
     Text isLocal;
     
 
-
+    bool isHost = false;
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
         this.nm = nm;
@@ -162,15 +164,67 @@ public class GameManager : RenderManager
         return gameState;
 
     }
-
-    public override async Task Update()
+    public void loadGamesstate(string[][] gameState)
     {
-        await base.Update();
-
-        if (nm.client.isConnected() && nm.myLobby != "")
+        //Console.WriteLine("Updating gamestate");
+        // 1. Collect all UIDs from the incoming data
+        HashSet<string> incomingUIDs = new HashSet<string>();
+        
+        foreach (string[] data in gameState)
         {
-            nm.client.Send("{GameUpdate",JsonSerializer.Serialize<string[][]>(this.getGamesstate()));
+            incomingUIDs.Add(data[1]); // Assuming index 1 is the UID
         }
+
+        // 2. DESTROY: Remove objects that are no longer in the game state
+        // We loop backwards so we can safely remove items from the list
+        for (int i = activeObjects.Count - 1; i >= 0; i--)
+        {
+            if (!incomingUIDs.Contains(activeObjects[i].uid.ToString()))
+            {
+                GameObject toDestroy = activeObjects[i];
+                this.activeObjects.Remove(toDestroy); // Mark for removal after the loop to avoid modifying the list while iterating
+            }
+        }
+
+        // 3. UPDATE or ADD: Process the incoming data
+        foreach (string[] gameStateObj in gameState)
+        {
+            string objName = gameStateObj[0];
+            string uid = gameStateObj[1];
+            string[] state = gameStateObj.Skip(2).ToArray();
+
+            // Check if we already have this object
+            GameObject existingGo = activeObjects.Find(x => x.uid.ToString() == uid);
+
+            if (existingGo != null)
+            {
+                // Update existing
+                existingGo.Decode(state);
+            }
+            else
+            {
+                // ADD: This UID wasn't found in activeObjects, so spawn it
+                if (objName == "Asteroid")
+                {
+                    Transform t = new Transform(0, 0, 0, 0);
+                    GameManager reference = this;
+                    Asteroid a = new Asteroid(ref reference, t,1);
+                    a.Decode(state);
+                    this.activeObjects.Add(a);
+                }
+                else if (objName == "Projectile")
+                {
+                    Transform t = new Transform(0, 0, 0, 0);
+                    GameManager reference = this;
+                    Projectile p = new Projectile(ref reference, t, new Vector2(0,0));
+                    p.Decode(state);
+                    this.activeObjects.Add(p);
+                }
+            }
+        }
+    }
+    public void Runlocal()
+    {
         foreach (GameObject go in objsToRemove)
         {
             activeObjects.Remove(go);
@@ -183,15 +237,8 @@ public class GameManager : RenderManager
         }
         objsToAdd.Clear();
 
-        //Update the player.
-        player.Update();
-        //Update stars.
-        /*
-        foreach (GameObject other in backgroundStars)
-        {
-            other.Update();
-        }*/
-        //Update active objects. Check for collision withj stars.
+
+
         foreach (GameObject go in activeObjects)
         {
             go.Update();
@@ -227,6 +274,41 @@ public class GameManager : RenderManager
         {
             SpawnAsteroid();
             counter = DateTime.Now;
+        }
+    }
+    public override async Task Update()
+    {
+        await base.Update();
+        //Update the player, always.
+        player.Update();
+        
+
+        if (nm.client.isConnected() && nm.myLobby != "")
+        {
+            //Send over our position first, as thats needed on all.
+            
+            //Check if we're the host first. Theres gotta be a better way then calling each update. Will ivnestigate.
+            Packet isHost = await nm.client.SendWithResponse("{IsHost}");
+            this.isHost = isHost.Args[0] == "{Yes}";
+            if (this.isHost) //we're hosting ,so we'll send our gamestate.
+            {
+                Runlocal(); //Update the game locally, the nsend our state to the server.
+                await nm.client.Send("{GameUpdate}",JsonSerializer.Serialize<string[][]>(this.getGamesstate()));
+                
+            }
+            else
+            {
+                //Request the gamestate from the server.
+                Packet gameState = await nm.client.SendWithResponse("{RequestGameState}");
+                string[][] state = JsonSerializer.Deserialize<string[][]>(gameState.Args[0]);
+                loadGamesstate(state);
+            }
+
+
+        }
+        else
+        {
+            Runlocal();
         }
 
         

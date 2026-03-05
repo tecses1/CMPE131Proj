@@ -171,6 +171,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
                     await queuedToSend.Writer.WriteAsync(new Packet
                     {
                         CorrelationId = packet.CorrelationId,
+                        RequiresResponse = false,
                         IsResponse = true,
                         Purpose = packet.Purpose + "_ACK",
                         Args = responseArgs

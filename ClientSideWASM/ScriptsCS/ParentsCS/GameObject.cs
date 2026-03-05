@@ -118,10 +118,10 @@ public class GameObject
     public virtual void Decode(string[] args)
     {
         this.transform.position.X = float.Parse(args[0]);
-        this.transform.position.Y = float.Parse(args[0]);
-        this.transform.size.X = float.Parse(args[0]);
-        this.transform.size.X = float.Parse(args[0]);
-        this.transform.rotation = float.Parse(args[0]);
+        this.transform.position.Y = float.Parse(args[1]);
+        this.transform.size.X = float.Parse(args[2]);
+        this.transform.size.Y = float.Parse(args[3]);
+        this.transform.rotation = float.Parse(args[4]);
 
     }
     public virtual void Kill()
