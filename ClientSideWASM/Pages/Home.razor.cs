@@ -13,36 +13,59 @@ public partial class Home
     protected override void OnInitialized()
     {
         userInput = Settings.name;
+
         // Example: Set a default supplier if null
 
     }
     protected override async Task OnInitializedAsync()
     {
-
-
-        
-
+        if (!nm.client.isConnected()){
+            Nav.NavigateTo("/");
+        }
+        await nm.client.Send("{SetName}",Settings.name);
+        await nm.client.Send("{SetPage}",this.GetType().Name);
     }
 
     public async Task RequestNewLobby()
     {
-        var response = await nm.client.SendWithResponse("GetInventory", new[] { "PlayerID_99" });
+        var response = await nm.client.SendWithResponse("{NewLobby}");
 
-            if (response != null)
-            {
-                // Populate the UI with the args returned from the server
-                var _items = response.Args.ToList();
-                Console.WriteLine(_items);
-            }
-            else
-            {
-                // This happens if the 5-second timeout we built triggers!
-                Console.WriteLine("Server didn't respond in time.");
-            }
+        if (response != null)
+        {
+            // Populate the UI with the args returned from the server
+            var lobby = response.Args.ToList()[0];
+            nm.isHost = true;
+            nm.myLobby = lobby;
+            Console.WriteLine(lobby);
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            Console.WriteLine("Server didn't respond in time.");
+        }
     }
     public async Task RequestJoinLobby()
     {
-        await nm.client.Send("GlobalChat", "Hero123", "Hello everyone!");
+        var response = await nm.client.SendWithResponse("{JoinLobby}",requestedLobby);
+
+        if (response != null)
+        {
+            var args = response.Args.ToList();
+            var resp = args[0];//what did the server say
+            if (resp == "{Success}")
+            {
+                this.nm.myLobby = requestedLobby;
+            }
+            else
+            {
+                failedToJoinLobby = "Failed to find the Lobby. Please check the name and try again.";
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            Console.WriteLine("Server didn't respond in time.");
+        }
     
         
     }

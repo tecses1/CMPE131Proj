@@ -37,7 +37,7 @@ public class Player : GameObject
     float drag = 0.05f;
 
     //UI elements
-    Text playerName;
+    public Text playerName;
     Text outOfBoundsText;
     Rect oobScreenFlashRect;
     Text scoreText;
@@ -45,12 +45,12 @@ public class Player : GameObject
     
     int guntype = 1;
     bool barrel = true;
-    bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
-    bool[] centered = {false, false}; //x, y
     Vector2 cVelocity = new Vector2(0,0);
     int alpha = 0;
     int direction = 1;
+    int shooting = -1;
 
+    public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
@@ -103,6 +103,17 @@ public class Player : GameObject
     {
         return Math.Abs(value) < epsilon;
     }
+
+    public override string[] Encode()
+    {
+        return base.Encode();//.ToArray();
+    }
+
+    public override void Decode(string[] data)
+    {
+        base.Decode(data);
+        this.playerName.transform.position = this.transform.position + new Vector2(0,-transform.size.Y/2);
+    }
     public override void Update() {
 
 
@@ -111,7 +122,7 @@ public class Player : GameObject
         if (e == null){
             return;
         }
-
+        
         Vector2 mousePos = gm.CameraToWorldPos((float)e.MouseX, (float)e.MouseY);
         transform.RotateTo(mousePos);      //we're inside the bounds.
 
@@ -183,7 +194,73 @@ public class Player : GameObject
         this.transform.position += cVelocity;
 
 
-        
+
+
+    
+        if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
+        {
+            guntype++;
+            if (guntype > 1)
+            {
+                guntype = 0;
+            }
+            lastChange = DateTime.Now;
+        }
+
+        bool shotEdge = e.LeftDown;
+        bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
+        this.shooting = -1;
+        if (shotEdge && canShoot)
+        {        
+
+                if (guntype == 0)
+                {
+                    
+                    SpawnGuntype1(mousePos);
+
+                }else if (guntype == 1)
+                {
+                    SpawnGuntype2(mousePos);
+                }
+
+            lastShotTime = DateTime.UtcNow;
+        }
+
+        // health bar relative to player
+        healthBarBackground.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
+        healthBarFill.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
+        UpdateHealthBarVisual();
+}
+
+    public override void Render()
+    {
+        playerName.text = Settings.name;
+        playerName.Draw(gm);
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+        scoreText.Draw(gm);
+
+        healthBarBackground.Draw(gm);
+        healthBarFill.Draw(gm);
+
+        //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
+        //If we're in the world bounds.
+        // added else out of bounds take damage
+        bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
+        if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
+        {
+            gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
+        } else {
+            TakeDamage(1);
+        }
+        if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
+        {
+            gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
+        } else {
+            TakeDamage(1);
+        }
         
 
 
@@ -208,67 +285,29 @@ public class Player : GameObject
         {
             alpha = 0;
         }
+        
 
 
-    
-        if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
-        {
-            guntype++;
-            if (guntype > 1)
+        if(!this.CollideWith(gm.GetWorldBounds())){
+            outOfBoundsText.Draw(gm);
+            if (alpha <= 25)
             {
-                guntype = 0;
+                direction = 1;
             }
-            lastChange = DateTime.Now;
-        }
-
-        bool shotEdge = e.LeftDown;
-        bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
-
-        if (shotEdge && canShoot)
-        {
-            if (guntype == 0)
+            else if (alpha >= 75)
             {
-                
-                SpawnGuntype1(mousePos);
-
-            }else if (guntype == 1)
-            {
-                SpawnGuntype2(mousePos);
+                direction = -1;
             }
+            alpha += direction;
             
-            lastShotTime = DateTime.UtcNow;
+            oobScreenFlashRect.setBorderColor(Color.Red, alpha);
+            oobScreenFlashRect.Draw(gm);
+
+
         }
-
-        // health bar relative to player
-        healthBarBackground.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
-        healthBarFill.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
-        UpdateHealthBarVisual();
-}
-
-    public override void Render()
-    {
-        playerName.text = Settings.name;
-        playerName.Draw(gm);
-        scoreText.Draw(gm);
-
-        healthBarBackground.Draw(gm);
-        healthBarFill.Draw(gm);
-
-        //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
-        //If we're in the world bounds.
-        // added else out of bounds take damage
-        bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
-        if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
+        else
         {
-            gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
-        } else {
-            TakeDamage(1);
-        }
-        if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
-        {
-            gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
-        } else {
-            TakeDamage(1);
+            alpha = 0;
         }
     }
 

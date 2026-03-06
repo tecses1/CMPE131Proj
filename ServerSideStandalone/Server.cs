@@ -15,17 +15,25 @@ public class Server
     int lobbyCtr = 0;
     public List<User> users = new List<User>();
     private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
-    private List<String> openLobbies = new List<String>();
+    private List<Lobby> openLobbies = new List<Lobby>();
 
-    public string getLobby()
+    public Lobby CreateLobby()
     {
-        string newLobby = "Game" + lobbyCtr++;
+        Lobby newLobby = new Lobby();
+        newLobby.Name = "Game" + lobbyCtr++;
         openLobbies.Add(newLobby);
         return newLobby;
     }
-    public bool getLobby(string lobbyName)
+    public Lobby GetLobby(string lobbyName)
     {
-        return openLobbies.Contains(lobbyName);
+        foreach (Lobby l in openLobbies)
+        {
+            if (l.Name == lobbyName)
+            {
+                return l;
+            }
+        }
+        return null;
     }
     
     public Server()
@@ -90,7 +98,14 @@ public class Server
         foreach (var user in users)
         {
             sb.AppendLine($"- {user.name} (UID: {user.uid})"); // Assuming User has an Id property
-            sb.AppendLine("    Current Lobby: " + user.myLobby);
+            if (user.myLobby != null)
+            {
+                sb.AppendLine("    Current Lobby: " + user.myLobby.Name);
+            }
+            else
+            {
+                sb.AppendLine("    Current Lobby: None");
+            }
             sb.AppendLine("    Current Page: " + user.currentPage);
         }
         return sb.ToString();
