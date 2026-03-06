@@ -1,13 +1,20 @@
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ClientSideWASM;
 
+[System.Serializable]
 public class Transform
 {
     public Vector2 position;
-    public Vector2 previousPosition;
     public Vector2 size;
     public float rotation;
+    public Transform()
+    {
+        position = new Vector2(0,0);
+        size = new Vector2(0,0);
+        rotation = 0;
+    }
     public Transform(float x, float y, int sizeX, int sizeY)
     {
         this.position = new Vector2(x,y);

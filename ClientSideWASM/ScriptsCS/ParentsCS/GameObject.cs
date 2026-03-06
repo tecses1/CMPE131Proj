@@ -1,24 +1,30 @@
-using System.Drawing;
-using System.Security.Cryptography.X509Certificates;
 
 namespace ClientSideWASM;
 
-
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 public class GameObject
 {
 
-
-    public Guid uid;
+    [Network]
+    public Guid uid {get; set;}
     //sizing
-    public Transform transform;
+    [Network]
+    public Transform transform {get;set;}
     //game manager reference. This class makes many frequent callbacks.
     protected GameManager gm;
 
     public Text missingText;
 
-    public int currentFrame = 0;
+    [Network]
+    public int currentFrame {get;set;} = 0;
 
     public bool disableCollision = false;
+
+    string[] updateCache;
+    JsonSerializerOptions options = new JsonSerializerOptions { IncludeFields = true };
 
 
     public GameObject(ref GameManager gm, Transform transform)
@@ -30,6 +36,7 @@ public class GameObject
         this.missingText.setFillColor(Color.LightYellow,255);
         this.missingText.setBorderColor(Color.Red);
         this.missingText.borderWidth = 5;
+        
     }
     public bool InBounds(float[] rect)
     {
@@ -105,25 +112,31 @@ public class GameObject
 
     public virtual string[] Encode()
     {
-        return new string[]
+        
+        var properities = NetworkMemberCache.GetSyncProperties(this.GetType());
+        if (updateCache == null)
         {
-            this.transform.position.X.ToString(),
-            this.transform.position.Y.ToString(),
-            this.transform.size.X.ToString(),
-            this.transform.size.Y.ToString(),
-            this.transform.rotation.ToString(),
-            this.currentFrame.ToString()
-        };
+            updateCache = new string[properities.Count+1];
+        }
+
+        updateCache[0] = this.GetType().Name;
+        for (int i = 0; i < properities.Count; i++)
+        {
+            updateCache[i+1] = JsonSerializer.Serialize( properities[i].GetValue(this),options);
+        }
+        
+        return updateCache;
     }
 
     public virtual void Decode(string[] args)
     {
-        this.transform.position.X = float.Parse(args[0]);
-        this.transform.position.Y = float.Parse(args[1]);
-        this.transform.size.X = float.Parse(args[2]);
-        this.transform.size.Y = float.Parse(args[3]);
-        this.transform.rotation = float.Parse(args[4]);
-        this.currentFrame = int.Parse(args[5]);
+
+        var properities = NetworkMemberCache.GetSyncProperties(this.GetType());
+        for (int i = 0; i < properities.Count; i++)
+        {
+            //Console.WriteLine("Decoding " + properities[i].PropertyType + " with " + args[i]);
+            properities[i].SetValue(this, JsonSerializer.Deserialize( args[i],properities[i].PropertyType,options));
+        }
 
     }
     public virtual void Kill()

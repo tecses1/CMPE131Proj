@@ -35,6 +35,8 @@ public class Player : GameObject
     float acceleration = 0.33f;
 
     float drag = 0.05f;
+    [Network]
+    public string playerNameString = "";
 
     //UI elements
     public Text playerName;
@@ -69,30 +71,6 @@ public class Player : GameObject
         Transform scoreTransform = new Transform(Settings.CanvasWidth - 50, Settings.CanvasHeight - 8, 100, 125);
         scoreText = new Text("Score: 0", ref scoreTransform);
         scoreText.worldSpace = false; 
-
-        // offset for health bar relative to player
-        barOffsetX = 0;
-        barOffsetY = (int)transform.size.Y / 2 + 10;
-
-        // health bar in background
-        Transform hbBgTransform = new Transform(transform.position.X + barOffsetX,
-            transform.position.Y + barOffsetY,
-            healthBarWidth,
-            healthBarHeight
-        );
-        healthBarBackground = new Rect(ref hbBgTransform);
-        healthBarBackground.setFillColor(Color.DarkGray);
-        healthBarBackground.worldSpace = true;
-
-        Transform hbFillTransform = new Transform(
-            transform.position.X + barOffsetX,
-            transform.position.Y + barOffsetY,
-            healthBarWidth,
-            healthBarHeight
-        );
-        healthBarFill = new Rect(ref hbFillTransform);
-        healthBarFill.setFillColor(Color.Green);
-        healthBarFill.worldSpace = true;
     }
 
     public string GetColorString(Color c)
@@ -104,10 +82,7 @@ public class Player : GameObject
         return Math.Abs(value) < epsilon;
     }
 
-    public override string[] Encode()
-    {
-        return base.Encode();//.ToArray();
-    }
+
 
     public override void Decode(string[] data)
     {
@@ -234,12 +209,15 @@ public class Player : GameObject
 
     public override void Render()
     {
-        playerName.text = Settings.name;
+        
         playerName.Draw(gm);
+        playerName.text = playerNameString;
+
         if (!isLocalPlayer)
         {
             return;
         }
+        playerNameString = Settings.name;
         scoreText.Draw(gm);
 
         healthBarBackground.Draw(gm);

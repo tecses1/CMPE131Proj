@@ -26,9 +26,8 @@ public class GameManager : RenderManager
 
     Text isLocal;
     
-    bool isHost = false;
-
-    bool recieveLoopIsAlive = false;
+    int testctr = 0;
+    string lastencode = "";
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
         this.nm = nm;
@@ -120,26 +119,15 @@ public class GameManager : RenderManager
         activeObjects.Add(a);
     }
 
-    public string[][] getGamesstate()
+    public string getGamesstate()
     {
         string[][] gameState = new string[activeObjects.Count][];
         for (int i = 0; i < gameState.Length; i++)
         {
-            List<string> encoded = new List<string>();
-
-            GameObject go = activeObjects[i];
-            string goName = go.GetType().Name;
-            string uid = go.uid.ToString();
-            string[] state = activeObjects[i].Encode();
-
-            encoded.Add(goName);
-            encoded.Add(uid);
-            encoded.AddRange(state);
-            
-            gameState[i] = encoded.ToArray();
+            gameState[i] = activeObjects[i].Encode();
         }
         
-        return gameState;
+        return JsonSerializer.Serialize(gameState); //Make the array of obj jsons a single string
 
     }
     public string[] getPlayerState(Player p)
@@ -147,79 +135,93 @@ public class GameManager : RenderManager
         List<string> encoded = new List<string>();
 
         string playerName = Settings.name;
-        string uid = p.uid.ToString();
         string[] state = p.Encode();
 
         encoded.Add(playerName);
-        encoded.Add(uid);
         encoded.AddRange(state);
 
         return encoded.ToArray();
     }
-    public void loadGamesstate(string currentGamestateJson)
+    public void loadGameState(string currentGamestateJson)
     {
-        if (currentGamestateJson == "") return; //No gamestate to load.
-        //Console.WriteLine("Loading gamestate: " + currentGamestateJson);
-        string[][] gameState = JsonSerializer.Deserialize<string[][]>(currentGamestateJson);
-        //Console.WriteLine("Updating gamestate");
-        // 1. Collect all UIDs from the incoming data
+        if (string.IsNullOrWhiteSpace(currentGamestateJson)) return;
+
+        // 1. Break the big JSON into the individual object arrays
+        // Expects: [ ["Player", "uid1", "x", "y"], ["Asteroid", "uid2", "x", "y"] ]
+        List<string[]> incomingObjects = JsonSerializer.Deserialize<List<string[]>>(currentGamestateJson);
+        if (incomingObjects == null) return;
+
+        // 2. Map incoming UIDs for quick "Destroy" and "Update" checks
         HashSet<string> incomingUIDs = new HashSet<string>();
-        
-        foreach (string[] data in gameState)
+        foreach (var objData in incomingObjects)
         {
-            incomingUIDs.Add(data[1]); // Assuming index 1 is the UID
+            incomingUIDs.Add(objData[1]); // Index 1 is the UID
         }
 
-        // 2. DESTROY: Remove objects that are no longer in the game state
-        // We loop backwards so we can safely remove items from the list
+        // 3. DESTROY Phase: If it's in our scene but NOT in the JSON, it despawned
         for (int i = activeObjects.Count - 1; i >= 0; i--)
         {
-            if (!incomingUIDs.Contains(activeObjects[i].uid.ToString()))
+            var localObj = activeObjects[i];
+            if (!incomingUIDs.Contains(localObj.uid.ToString()))
             {
-                GameObject toDestroy = activeObjects[i];
-                this.activeObjects.Remove(toDestroy); // Mark for removal after the loop to avoid modifying the list while iterating
+                // Trigger any in-game destruction logic (explosions, etc.)
+                // localObj.OnDestroy(); 
+                activeObjects.RemoveAt(i);
             }
         }
 
-        // 3. UPDATE or ADD: Process the incoming data
-        foreach (string[] gameStateObj in gameState)
+        // 4. UPDATE or CREATE Phase
+        foreach (string[] objData in incomingObjects)
         {
-            string objName = gameStateObj[0];
-            string uid = gameStateObj[1];
+            string className = objData[0];
+            string uid = objData[1];
+            string[] stateData = objData.Skip(1).ToArray(); // Everything after ClassName and UID
 
-
-            // Check if we already have this object
+            // Try to find the existing object by UID
             GameObject existingGo = activeObjects.Find(x => x.uid.ToString() == uid);
 
             if (existingGo != null)
             {
-                // Update existing
-                existingGo.Decode(gameStateObj.Skip(2).ToArray());
+                // UPDATE: Object exists, hand it the rest of the array to decode
+                existingGo.Decode(stateData);
             }
             else
             {
-                // ADD: This UID wasn't found in activeObjects, so spawn it
-                if (objName == "Asteroid")
-                {
-                    Transform t = new Transform(0, 0, 0, 0);
-                    GameManager reference = this;
-                    Asteroid a = new Asteroid(ref reference, t,1);
-                    a.Decode(gameStateObj.Skip(2).ToArray());
-                    this.activeObjects.Add(a);
-                }
-                else if (objName == "Projectile")
-                {
-                    Transform t = new Transform(0, 0, 0, 0);
-                    GameManager reference = this;
-                    Projectile p = new Projectile(ref reference, t, new Vector2(0,0));
-                    p.Decode(gameStateObj.Skip(2).ToArray());
-                    this.activeObjects.Add(p);
-                }
+                // CREATE: Object is new to this client
+                SpawnNewObject(className, stateData);
             }
+        }
+    }
+
+    private void SpawnNewObject(string className, string[] stateData)
+    {
+        GameObject newObj = null;
+        
+        // Setup common references (GameManager, etc.)
+        GameManager gm = this;
+        Transform defaultT = new Transform(0,0,0,0);
+
+        // Factory logic based on the ClassName string at index [0]
+        switch (className)
+        {
+            case "Asteroid":
+                newObj = new Asteroid(ref gm, defaultT, 1);
+                break;
+            case "Projectile":
+                newObj = new Projectile(ref gm, defaultT, new Vector2(0,0));
+                break;
+            // Add more types here as your game grows
+        }
+
+        if (newObj != null)
+        {
+            newObj.Decode(stateData);     // Apply initial position/rotation/state
+            activeObjects.Add(newObj);    // Track it
         }
     }
     public void LoadPlayerState(string playerStateJson)
     {
+        //return;
         if (string.IsNullOrEmpty(playerStateJson)) return;
 
         // 1. Deserialize the single player array
@@ -229,14 +231,17 @@ public class GameManager : RenderManager
         if (playerUpdate == null || playerUpdate.Length < 2) return;
 
         string playerName = playerUpdate[0];
-        string uid = playerUpdate[1];
+        string uid = playerUpdate[2].Trim('"');
+
+        //Console.WriteLine("atempting decode of player: "  + playerName + ", guid = " + uid);
 
         // 2. Find if this specific player already exists in our active list
-        Player existingPlayer = otherPlayers.Find(p => p.uid.ToString() == uid);
-
+        Player existingPlayer = otherPlayers.Find(p => p.uid.ToString()  == uid);
+        
         if (existingPlayer != null)
         {
             // UPDATE: Just decode the remaining data (skipping Name and UID)
+            //Console.WriteLine("DECODING PLAYER DEBUG");
             existingPlayer.Decode(playerUpdate.Skip(2).ToArray());
         }
         else
@@ -250,10 +255,10 @@ public class GameManager : RenderManager
             Player newPlayer = new Player(ref reference, t);
             newPlayer.playerName.text = playerName;
             newPlayer.playerName.worldSpace = true;
-            newPlayer.uid = Guid.Parse(uid);
-            
-            // Populate the rest of their data
             newPlayer.Decode(playerUpdate.Skip(2).ToArray());
+            
+            
+            //Console.WriteLine("New player GUID " + newPlayer.uid.ToString());
             
             this.otherPlayers.Add(newPlayer);
     }
@@ -332,7 +337,7 @@ public class GameManager : RenderManager
 
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
-            SpawnAsteroid();
+            //SpawnAsteroid();
             counter = DateTime.Now;
         }
     }
@@ -340,7 +345,10 @@ public class GameManager : RenderManager
     public override async Task Render()
     {
 
-        if (!nm.client.isConnected()) isLocal.Draw(this);
+        if (!nm.client.isConnected()) {
+            isLocal.Draw(this);
+            nm.isHost = true;
+        }
         if (nm.myLobby == "")
         {
             isLocal.text = "Playing Solo (No Lobby)";
@@ -369,6 +377,7 @@ public class GameManager : RenderManager
         await base.Render(); //Do whatever the RenderManager wants to do by itself. probably the official render calls.
 
     }
+
     public override async Task Update()
     {
         await base.Update();
@@ -376,6 +385,8 @@ public class GameManager : RenderManager
         //Update the player, always.
         player.Update();
 
+
+        
         if (nm.client.isConnected() && nm.myLobby != "")
         {
             //Send over our position first, as thats needed on all.
@@ -385,7 +396,8 @@ public class GameManager : RenderManager
             if (this.nm.isHost) //we're hosting ,so we'll send our gamestate.
             {
                 Runlocal(); //Update the game locally, the nsend our state to the server.
-                await nm.client.Send("{GameUpdate}",JsonSerializer.Serialize<string[][]>(this.getGamesstate()));
+                string gamestate = this.getGamesstate();
+                await nm.client.Send("{GameUpdate}",gamestate);
                 
                 foreach (string objToAdd in nm.objsToAdd)
                 {
@@ -399,7 +411,7 @@ public class GameManager : RenderManager
             else
             {
                 //load gamestate auto recvied in Network Manager./
-                loadGamesstate(nm.gameState);
+                loadGameState(nm.gameState);
 
             }
 
@@ -418,15 +430,7 @@ public class GameManager : RenderManager
         //This is a request from the server to spawn a new game object. We will decode the JSON to figure out what to spawn and where.
         string[] data = JsonSerializer.Deserialize<string[]>(JSON);
         string objName = data[0];
-        
-        GameManager me = this;
-        Transform baseT = new Transform(0, 0, 0, 0);
-        if (objName == "Projectile")
-        {
-            Projectile newProjectile = new Projectile(ref me, baseT, new Vector2(0,0));
-            newProjectile.Decode(data.Skip(1).ToArray());
-            this.activeObjects.Add(newProjectile);
-        }
+        SpawnNewObject(objName, data.Skip(1).ToArray());
         
     }
     public void AddNewGameObject(GameObject o)
@@ -439,11 +443,7 @@ public class GameManager : RenderManager
         {
             //if we're not the host, lets send a request to spawn this game object.
             string[] encoded = o.Encode();
-            List<string> data = new List<string>();
-            string name = o.GetType().Name;
-            data.Add(name);
-            data.AddRange(encoded);//let them know the data to spawn it with. (position, rotation, ect)
-            nm.client.Send("{SpawnGameObject}", JsonSerializer.Serialize<string[]>(data.ToArray()));
+            nm.client.Send("{SpawnGameObject}", JsonSerializer.Serialize<string[]>(encoded));
         }
         
     }

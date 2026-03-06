@@ -23,11 +23,14 @@ public partial class Game
     protected override async Task OnInitializedAsync()
     {
         if (!nm.client.isConnected()){
-            Nav.NavigateTo("/");
+        }
+        else
+        {
+            await nm.client.Send("{SetName}",Settings.name);
+            await nm.client.Send("{SetPage}",this.GetType().Name);
         }
         // Example: Set a default supplier if null
-        await nm.client.Send("{SetName}",Settings.name);
-        await nm.client.Send("{SetPage}",this.GetType().Name);
+
 
     }
     protected override void OnAfterRender(bool firstRender)

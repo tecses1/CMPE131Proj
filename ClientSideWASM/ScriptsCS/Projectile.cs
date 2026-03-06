@@ -9,12 +9,15 @@ namespace ClientSideWASM
     {
         //public float X;
         //public float Y;
-        public Vector2 Velocity;
-        public int LifetimeFrames = 30; 
+        [Network]
+        public Vector2 Velocity {get; set;}
+        [Network]
+        public int LifetimeFrames {get; set;} = 30; 
         public int deathAnimSpeed = 5;
         int cDeathAnim = 20;
         bool dead = false;
-        public int damage = 1;
+        [Network]
+        public int damage {get; set;} = 1;
         public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime = 30) : base(ref gm, transform)
         {
             Velocity = velocity;
@@ -75,22 +78,5 @@ namespace ClientSideWASM
             
         }
 
-        public override string[] Encode()
-        {
-            string[] baseData = base.Encode();
-            string[] data = new string[baseData.Length + 3];
-            data[0] = Velocity.X.ToString();
-            data[1] = Velocity.Y.ToString();
-            data[2] = damage.ToString();
-            Array.Copy(baseData, 0, data, 3, baseData.Length);
-            return data;
-        }
-        public override void Decode(string[] args)
-        {
-            Velocity.X = float.Parse(args[0]);
-            Velocity.Y = float.Parse(args[1]);  
-            this.damage = int.Parse(args[2]);
-            base.Decode(args.Skip(3).ToArray() );
-        }
     }
 }
