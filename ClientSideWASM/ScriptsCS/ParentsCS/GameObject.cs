@@ -10,14 +10,14 @@ public class GameObject
 
     public Guid uid {get; set;}
     //sizing
-    [Network(0)]
+    [Network(-1)]
     public Transform transform {get;set;}
     //game manager reference. This class makes many frequent callbacks.
     protected GameManager gm;
 
     public Text missingText;
 
-    [Network(1)]
+    [Network(-2)]
     public int currentFrame {get;set;} = 0;
 
     public bool disableCollision = false;

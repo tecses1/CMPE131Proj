@@ -18,7 +18,7 @@ namespace ClientSideWASM
         bool dead = false;
         [Network(2)]
         public int damage {get; set;} = 1;
-        public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime = 30) : base(ref gm, transform)
+        public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime =5) : base(ref gm, transform)
         {
             Velocity = velocity;
             LifetimeFrames = lifetime;
@@ -49,14 +49,17 @@ namespace ClientSideWASM
             {
                 transform.position += Velocity;
 
-                if (!this.CollideWith(gm.GetWorldBounds())) //We are outside of bounds. Start counting down for kill.
+                if (!this.CollideWith(gm.GetWorldBounds())) //We are outside of bounds. \\
                 {
-                    //Console.WriteLine("OUT OF BOUNDS");
-                    LifetimeFrames--;
-                    if (LifetimeFrames < 0)
-                    {
-                        this.Kill();
-                    }
+                    this.Kill();
+                    
+
+                }
+                LifetimeFrames--;
+                Console.WriteLine("Counting down: " + LifetimeFrames);
+                if (LifetimeFrames < 0)
+                {
+                    this.Kill();
                 }
             }
         }
