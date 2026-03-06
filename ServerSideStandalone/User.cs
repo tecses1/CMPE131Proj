@@ -67,10 +67,15 @@ public class User : NetworkModel
         switch (purpose)
             {
                 case "{GameUpdate}":
-                    Console.WriteLine("Recieved game update from client. Updating lobby state: " + args[0]);    
-                    myLobby.State = args[0];
+                    myLobby.UpdateState(args[0]);
                     break;
-                
+                case "{PlayerUpdate}":
+                    myLobby.UpdateUser(this,args[0]);
+                    break;
+                case "{SpawnGameObject}":
+                    
+                    myLobby.SpawnGameObject(args[0]);
+                    break;
                 case "{SetName}":
                     this.name = args[0];
                     break;

@@ -26,19 +26,19 @@ public class Player : GameObject
     float drag = 0.05f;
 
     //UI elements
-    Text playerName;
+    public Text playerName;
     Text outOfBoundsText;
     Rect oobScreenFlashRect;
     Text scoreText;
     
     int guntype = 1;
     bool barrel = true;
-    bool[] allowedMove = {true, true, true, true}; //top, left, bottom, right
-    bool[] centered = {false, false}; //x, y
     Vector2 cVelocity = new Vector2(0,0);
     int alpha = 0;
     int direction = 1;
+    int shooting = -1;
 
+    public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
@@ -66,6 +66,17 @@ public class Player : GameObject
     {
         return Math.Abs(value) < epsilon;
     }
+
+    public override string[] Encode()
+    {
+        return base.Encode();//.ToArray();
+    }
+
+    public override void Decode(string[] data)
+    {
+        base.Decode(data);
+        this.playerName.transform.position = this.transform.position + new Vector2(0,-transform.size.Y/2);
+    }
     public override void Update() {
 
 
@@ -74,7 +85,7 @@ public class Player : GameObject
         if (e == null){
             return;
         }
-
+        
         Vector2 mousePos = gm.CameraToWorldPos((float)e.MouseX, (float)e.MouseY);
         transform.RotateTo(mousePos);      //we're inside the bounds.
 
@@ -186,21 +197,23 @@ public class Player : GameObject
 
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
-
+        this.shooting = -1;
         if (shotEdge && canShoot)
-        {
-            if (guntype == 0)
-            {
-                
-                SpawnGuntype1(mousePos);
+        {        
 
-            }else if (guntype == 1)
-            {
-                SpawnGuntype2(mousePos);
-            }
-            
+                if (guntype == 0)
+                {
+                    
+                    SpawnGuntype1(mousePos);
+
+                }else if (guntype == 1)
+                {
+                    SpawnGuntype2(mousePos);
+                }
+
             lastShotTime = DateTime.UtcNow;
         }
+
 
 
 

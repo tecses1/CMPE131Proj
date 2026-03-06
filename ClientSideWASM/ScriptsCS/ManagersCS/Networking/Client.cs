@@ -53,6 +53,24 @@ public class Client : NetworkModel
     }
     protected override async Task HandleRecv(string purpose, string[] args)
     {
-        
+        switch (purpose)
+        {
+            case "{GameStateUpdate}":
+                // Logic: Show a popup
+                this.nm.gameState = args[0];
+                break;
+            case "{PlayerUpdate}":
+                // Logic: Show a popup
+                //Console.WriteLine("got new json player: " + args[0]);
+                this.nm.playerStatesJSON.Add(args[0]);
+                break;
+            case "{SpawnGameObject}":
+                // Logic: Show a popup
+                nm.objsToAdd.Add(args[0]);
+                
+                break;
+            default:
+                break;
+        }
     }
 }
