@@ -40,7 +40,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
         Task.Run(() => SendLoopAsync(handler, cts.Token), cts.Token);
         Task.Run(() => ProcessIncomingPackets(cts.Token), cts.Token);
     }
-    public async Task Send(string purpose, params string[] args)
+    public async Task Send(string purpose, byte[] data = null, params string[] args)
     {
         
         var packet = new Packet 
@@ -49,13 +49,15 @@ using System.Threading.Tasks;public abstract class NetworkModel
             RequiresResponse = false,
             IsResponse = false, 
             Purpose = purpose, 
-            Args = args 
+            Args = args, 
+            Data = data
+            
         };
         if (debug) Console.WriteLine($"Queueing packet: {purpose} with args [{string.Join(", ", args)}]");
         await queuedToSend.Writer.WriteAsync(packet);
     }
 
-    public async Task<Packet> SendWithResponse(string purpose, params string[] args){
+    public async Task<Packet> SendWithResponse(string purpose, byte[] data=null, params string[] args){
         int timeoutMs = 5000; //DEFAULT TIMEOUT
     
         var packet = new Packet 
@@ -64,7 +66,8 @@ using System.Threading.Tasks;public abstract class NetworkModel
             RequiresResponse = true,
             IsResponse = false, 
             Purpose = purpose, 
-            Args = args 
+            Args = args, 
+            Data = data
         };
 
         var tcs = new TaskCompletionSource<Packet>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -90,9 +93,9 @@ using System.Threading.Tasks;public abstract class NetworkModel
         await foreach (var packet in queuedToSend.Reader.ReadAllAsync(ct))
         {
             if (debug) Console.WriteLine($"Sending packet: {packet.Purpose} with args [{string.Join(", ", packet.Args)}]");
-            byte[] data = Encoding.UTF8.GetBytes(packet.toJSON());
+            byte[] data = packet.Serialize();
             if (debug) Console.WriteLine("Data length: " + data.Length);
-            await webSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Text, true, ct).ConfigureAwait(false);
+            await webSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, ct).ConfigureAwait(false);
             if (debug) Console.WriteLine("Send completed.");
         }
             
@@ -130,9 +133,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
             while (!result.EndOfMessage);
 
             byte[] fullMessage = ms.ToArray();
-            string fullMessageJSON = Encoding.UTF8.GetString(fullMessage);
-            if (debug) Console.WriteLine("Received raw message: " + fullMessageJSON);
-            Packet p = Packet.fromJSON(fullMessageJSON);
+            Packet p = Packet.Deserialize(fullMessage);
 
             // --- THE INTERCEPTOR LOGIC ---
             if (p.IsResponse)
@@ -165,7 +166,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
             {
                 if (packet.RequiresResponse)
                 {
-                    string[] responseArgs = await HandleRecvWithResponse(packet.Purpose, packet.Args);
+                    string[] responseArgs = await HandleRecvWithResponse(packet.Purpose,packet.Data, packet.Args);
 
 
                     await queuedToSend.Writer.WriteAsync(new Packet
@@ -180,7 +181,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
                 }
                 else
                 {
-                    await HandleRecv(packet.Purpose, packet.Args);
+                    await HandleRecv(packet.Purpose, packet.Data, packet.Args);
                 }
 
             }
@@ -193,9 +194,60 @@ using System.Threading.Tasks;public abstract class NetworkModel
     }
 
         // This is your "Callback." Inheriting classes MUST implement this.
-        protected abstract Task<string[]> HandleRecvWithResponse(string purpose, string[] args);
-        protected abstract Task HandleRecv(string purpose, string[] args);
+        protected abstract Task<string[]> HandleRecvWithResponse(string purpose,byte[] data, string[] args);
+        protected abstract Task HandleRecv(string purpose,byte[] data, string[] args);
 
         // ... (ReceiveLoopAsync and SendLoopAsync remain the same) ...
-    
+//Helper function. 
+public static byte[] SerializeJagged(byte[][] source)
+{
+    if (source == null) return new byte[0];
+
+    using (MemoryStream ms = new MemoryStream())
+    using (BinaryWriter writer = new BinaryWriter(ms))
+    {
+        // 1. Write the count of sub-arrays
+        writer.Write(source.Length);
+
+        foreach (byte[] subArray in source)
+        {
+            if (subArray == null)
+            {
+                writer.Write(0); // Handle nulls as 0-length
+                continue;
+            }
+
+            // 2. Write the length of THIS sub-array
+            writer.Write(subArray.Length);
+            // 3. Write the actual bytes
+            writer.Write(subArray);
+        }
+
+        return ms.ToArray();
+    }
+}
+//helper
+ public static byte[][] DeserializeJagged(byte[] data)
+{
+    if (data == null || data.Length == 0) return new byte[0][];
+
+    using (MemoryStream ms = new MemoryStream(data))
+    using (BinaryReader reader = new BinaryReader(ms))
+    {
+        // 1. Read how many sub-arrays to expect
+        int count = reader.ReadInt32();
+        byte[][] result = new byte[count][];
+
+        for (int i = 0; i < count; i++)
+        {
+            // 2. Read the length of the next sub-array
+            int subLength = reader.ReadInt32();
+            
+            // 3. Read exactly that many bytes
+            result[i] = reader.ReadBytes(subLength);
+        }
+
+        return result;
+    }
+}   
 }

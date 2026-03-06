@@ -22,7 +22,7 @@ public class User : NetworkModel
 
     }   
 
-    protected override async Task<string[]> HandleRecvWithResponse(string purpose, string[] args)
+    protected override async Task<string[]> HandleRecvWithResponse(string purpose, byte[] data, string[] args)
     {
         //Console.WriteLine("Recieved update that requires response." + purpose);
         switch (purpose)
@@ -51,30 +51,24 @@ public class User : NetworkModel
                         else return new string[] {"{No}"};
                     }
                     return new string[] {"{NoLobby}"};
-                case "{RequestGameState}":
-                    if (myLobby != null)
-                    {
-                        return new string[] {myLobby.State};
-                    }
-                    return new string[] {"{NoLobby}"};
                 default:
                     return new[] { "Error", "Unknown Command" };
             }
     }
-    protected override async Task HandleRecv(string purpose, string[] args)
+    protected override async Task HandleRecv(string purpose, byte[] data, string[] args)
     {
         //Console.WriteLine("Recieved one time update: " + purpose);
         switch (purpose)
             {
                 case "{GameUpdate}":
-                    myLobby.UpdateState(args[0]);
+                    myLobby.UpdateState(data);
                     break;
                 case "{PlayerUpdate}":
-                    myLobby.UpdateUser(this,args[0]);
+                    myLobby.UpdateUser(this,data);
                     break;
                 case "{SpawnGameObject}":
                     
-                    myLobby.SpawnGameObject(args[0]);
+                    myLobby.SpawnGameObject(data);
                     break;
                 case "{SetName}":
                     this.name = args[0];

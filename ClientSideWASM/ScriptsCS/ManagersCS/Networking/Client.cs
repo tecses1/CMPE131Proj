@@ -37,7 +37,7 @@ public class Client : NetworkModel
         }
     }
 
-    protected override async Task<string[]> HandleRecvWithResponse(string purpose, string[] args)
+    protected override async Task<string[]> HandleRecvWithResponse(string purpose, byte[] data, string[] args)
     {
         //Console.WriteLine("PACKET: " + purpose + " | " + string.Join(", ", args));  
         switch (purpose)
@@ -51,22 +51,24 @@ public class Client : NetworkModel
                 return null;
         }
     }
-    protected override async Task HandleRecv(string purpose, string[] args)
+    protected override async Task HandleRecv(string purpose, byte[] data, string[] args)
     {
         switch (purpose)
         {
             case "{GameStateUpdate}":
                 // Logic: Show a popup
-                this.nm.gameState = args[0];
+                //if (data == null) Console.WriteLine("WARNING: NULL GAMESTATE???");
+                //Console.WriteLine("Got game state update: " + data.Length);
+                this.nm.gameState = data;
                 break;
-            case "{PlayerUpdate}":
+            case "{PlayerStateUpdates}":
                 // Logic: Show a popup
                 //Console.WriteLine("got new json player: " + args[0]);
-                this.nm.playerStatesJSON.Add(args[0]);
+                this.nm.playerStates = NetworkModel.DeserializeJagged(data);
                 break;
             case "{SpawnGameObject}":
                 // Logic: Show a popup
-                nm.objsToAdd.Add(args[0]);
+                nm.objsToAdd.Add(data);
                 
                 break;
             default:

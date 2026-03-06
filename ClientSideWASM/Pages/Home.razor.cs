@@ -22,8 +22,8 @@ public partial class Home
         if (!nm.client.isConnected()){
             Nav.NavigateTo("/");
         }
-        await nm.client.Send("{SetName}",Settings.name);
-        await nm.client.Send("{SetPage}",this.GetType().Name);
+        await nm.client.Send("{SetName}",null,Settings.name);
+        await nm.client.Send("{SetPage}",null,this.GetType().Name);
     }
 
     public async Task RequestNewLobby()
@@ -46,7 +46,7 @@ public partial class Home
     }
     public async Task RequestJoinLobby()
     {
-        var response = await nm.client.SendWithResponse("{JoinLobby}",requestedLobby);
+        var response = await nm.client.SendWithResponse("{JoinLobby}",null,requestedLobby);
 
         if (response != null)
         {

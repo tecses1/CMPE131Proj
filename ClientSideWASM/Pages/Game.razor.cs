@@ -26,8 +26,8 @@ public partial class Game
         }
         else
         {
-            await nm.client.Send("{SetName}",Settings.name);
-            await nm.client.Send("{SetPage}",this.GetType().Name);
+            await nm.client.Send("{SetName}",null,Settings.name);
+            await nm.client.Send("{SetPage}",null,this.GetType().Name);
         }
         // Example: Set a default supplier if null
 

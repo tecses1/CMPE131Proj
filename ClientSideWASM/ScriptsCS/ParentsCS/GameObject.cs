@@ -8,23 +8,19 @@ using System.Text.Json;
 public class GameObject
 {
 
-    [Network]
     public Guid uid {get; set;}
     //sizing
-    [Network]
+    [Network(0)]
     public Transform transform {get;set;}
     //game manager reference. This class makes many frequent callbacks.
     protected GameManager gm;
 
     public Text missingText;
 
-    [Network]
+    [Network(1)]
     public int currentFrame {get;set;} = 0;
 
     public bool disableCollision = false;
-
-    string[] updateCache;
-    JsonSerializerOptions options = new JsonSerializerOptions { IncludeFields = true };
 
 
     public GameObject(ref GameManager gm, Transform transform)
@@ -109,35 +105,29 @@ public class GameObject
     {
         
     }
-
-    public virtual string[] Encode()
+    public virtual void Encode(BinaryWriter writer)
     {
+        var properties = NetworkMemberCache.GetSyncProperties(this.GetType());
         
-        var properities = NetworkMemberCache.GetSyncProperties(this.GetType());
-        if (updateCache == null)
+        
+        foreach (var prop in properties)
         {
-            updateCache = new string[properities.Count+1];
+            NetworkMemberCache.WriteProperty(writer, prop.GetValue(this), prop.PropertyType);
         }
 
-        updateCache[0] = this.GetType().Name;
-        for (int i = 0; i < properities.Count; i++)
-        {
-            updateCache[i+1] = JsonSerializer.Serialize( properities[i].GetValue(this),options);
-        }
+
         
-        return updateCache;
     }
 
-    public virtual void Decode(string[] args)
+    public virtual void Decode(BinaryReader reader)
     {
-
-        var properities = NetworkMemberCache.GetSyncProperties(this.GetType());
-        for (int i = 0; i < properities.Count; i++)
+        var properties = NetworkMemberCache.GetSyncProperties(this.GetType());
+        
+        foreach (var prop in properties)
         {
-            //Console.WriteLine("Decoding " + properities[i].PropertyType + " with " + args[i]);
-            properities[i].SetValue(this, JsonSerializer.Deserialize( args[i],properities[i].PropertyType,options));
+            object value = NetworkMemberCache.ReadProperty(reader, prop.PropertyType);
+            prop.SetValue(this, value);
         }
-
     }
     public virtual void Kill()
     {

@@ -40,8 +40,20 @@ public class Server
     {
         Console.WriteLine("Server initialized.");
         _ = RunServerAsync(); // Fire and forget
+        _ = UpdateServer();// do any update methods we want to update regardless of client input.
     }
 
+    public async Task UpdateServer()
+    {
+        while (true)
+        {
+            foreach (Lobby l in openLobbies)
+            {
+                l.Update();//Send gamestates to the clients, do this on our end to reduce client overhead.
+            }
+            await Task.Delay(1);
+        }
+    }
     public async Task RunServerAsync()
     {
         using HttpListener listener = new HttpListener();

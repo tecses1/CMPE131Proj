@@ -47,7 +47,7 @@ public partial class MainWindow : Window
         {
             Console.WriteLine($"Sending alert to client {client.uid}: {message}");
             // Use the Send() method we created for Fire-and-Forget
-            await client.Send("ServerAlert", message);
+            await client.Send("ServerAlert", null, message);
             
         }
 

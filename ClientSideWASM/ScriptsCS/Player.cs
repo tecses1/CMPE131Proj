@@ -35,7 +35,7 @@ public class Player : GameObject
     float acceleration = 0.33f;
 
     float drag = 0.05f;
-    [Network]
+    [Network(0)]
     public string playerNameString = "";
 
     //UI elements
@@ -106,9 +106,9 @@ public class Player : GameObject
 
 
 
-    public override void Decode(string[] data)
+    public override void Decode(BinaryReader reader)
     {
-        base.Decode(data);
+        base.Decode(reader);
         this.playerName.transform.position = this.transform.position + new Vector2(0,-transform.size.Y/2);
     }
     public override void Update() {

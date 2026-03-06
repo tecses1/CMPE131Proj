@@ -9,14 +9,14 @@ namespace ClientSideWASM
     {
         //public float X;
         //public float Y;
-        [Network]
+        [Network(0)]
         public Vector2 Velocity {get; set;}
-        [Network]
+        [Network(1)]
         public int LifetimeFrames {get; set;} = 30; 
         public int deathAnimSpeed = 5;
         int cDeathAnim = 20;
         bool dead = false;
-        [Network]
+        [Network(2)]
         public int damage {get; set;} = 1;
         public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime = 30) : base(ref gm, transform)
         {

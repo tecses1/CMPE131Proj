@@ -26,8 +26,6 @@ public class GameManager : RenderManager
 
     Text isLocal;
     
-    int testctr = 0;
-    string lastencode = "";
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
         this.nm = nm;
@@ -119,9 +117,10 @@ public class GameManager : RenderManager
         activeObjects.Add(a);
     }
 
-    public string getGamesstate()
+/*json serializer defunct.
+    public byte[] getGamesstate()
     {
-        string[][] gameState = new string[activeObjects.Count][];
+        byte[][] gameState = new byte[activeObjects.Count][];
         for (int i = 0; i < gameState.Length; i++)
         {
             gameState[i] = activeObjects[i].Encode();
@@ -129,71 +128,117 @@ public class GameManager : RenderManager
         
         return JsonSerializer.Serialize(gameState); //Make the array of obj jsons a single string
 
-    }
-    public string[] getPlayerState(Player p)
+    }*/
+    public byte[] getGameState()
     {
-        List<string> encoded = new List<string>();
-
-        string playerName = Settings.name;
-        string[] state = p.Encode();
-
-        encoded.Add(playerName);
-        encoded.AddRange(state);
-
-        return encoded.ToArray();
-    }
-    public void loadGameState(string currentGamestateJson)
-    {
-        if (string.IsNullOrWhiteSpace(currentGamestateJson)) return;
-
-        // 1. Break the big JSON into the individual object arrays
-        // Expects: [ ["Player", "uid1", "x", "y"], ["Asteroid", "uid2", "x", "y"] ]
-        List<string[]> incomingObjects = JsonSerializer.Deserialize<List<string[]>>(currentGamestateJson);
-        if (incomingObjects == null) return;
-
-        // 2. Map incoming UIDs for quick "Destroy" and "Update" checks
-        HashSet<string> incomingUIDs = new HashSet<string>();
-        foreach (var objData in incomingObjects)
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
         {
-            incomingUIDs.Add(objData[1]); // Index 1 is the UID
+            writer.Write(activeObjects.Count);
+
+            foreach (var obj in activeObjects)
+            {
+                // We wrap each object in a 'Size' prefix so we can slice it easily
+                // This is the "Frame" for the object data
+                long startPos = writer.BaseStream.Position;
+                writer.Write(0); // Placeholder for length
+
+                long dataStart = writer.BaseStream.Position;
+                
+                // 1. Write metadata needed for routing
+                writer.Write(obj.GetType().Name);
+                writer.Write(obj.uid.ToString()); // Or writer.Write(obj.uid) if it's a Guid/long
+
+                // 2. Write the synced properties
+                obj.Encode(writer);
+
+                // 3. Go back and fill in the length
+                long endPos = writer.BaseStream.Position;
+                int length = (int)(endPos - dataStart);
+                writer.BaseStream.Position = startPos;
+                writer.Write(length);
+                writer.BaseStream.Position = endPos;
+            }
+            return ms.ToArray();
+        }
+    }
+    public byte[] getPlayerState(Player p)
+    {
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
+        {
+            // 1. Metadata (The Header)
+            writer.Write(Settings.name);  // Player Name
+            writer.Write(p.uid.ToString()); // UID
+
+            // 2. Data (The Payload)
+            p.Encode(writer); // Uses your refined reflection-based encoder
+
+            return ms.ToArray();
+        }
+    }
+public void loadGameState(byte[] data)
+{
+    if (data == null || data.Length == 0) return;
+
+    using (MemoryStream ms = new MemoryStream(data))
+    using (BinaryReader reader = new BinaryReader(ms))
+    {
+        int incomingCount = reader.ReadInt32();
+        HashSet<string> incomingUIDs = new HashSet<string>();
+        
+        // Temporary storage to hold object data until we decide to Update or Spawn
+        // Key: UID, Value: The raw bytes for that specific object
+        Dictionary<string, byte[]> packetData = new Dictionary<string, byte[]>();
+        Dictionary<string, string> typeMapping = new Dictionary<string, string>();
+
+        for (int i = 0; i < incomingCount; i++)
+        {
+            
+            int length = reader.ReadInt32();
+            string className = reader.ReadString();
+            string uid = reader.ReadString();
+            
+            byte[] objectBody = reader.ReadBytes(length - (className.Length + 1) - (uid.Length + 1)); 
+            // Note: BinaryReader strings are length-prefixed, hence the extra bytes calculation logic.
+            // Simplified: Just read the remaining bytes of this 'frame'
+            
+            incomingUIDs.Add(uid);
+            packetData[uid] = objectBody;
+            typeMapping[uid] = className;
+            //Console.WriteLine("Read obj: " + className);
         }
 
-        // 3. DESTROY Phase: If it's in our scene but NOT in the JSON, it despawned
+        // 3. DESTROY Phase
         for (int i = activeObjects.Count - 1; i >= 0; i--)
         {
-            var localObj = activeObjects[i];
-            if (!incomingUIDs.Contains(localObj.uid.ToString()))
+            if (!incomingUIDs.Contains(activeObjects[i].uid.ToString()))
             {
-                // Trigger any in-game destruction logic (explosions, etc.)
-                // localObj.OnDestroy(); 
+                // Despawn logic here
                 activeObjects.RemoveAt(i);
             }
         }
 
         // 4. UPDATE or CREATE Phase
-        foreach (string[] objData in incomingObjects)
+        foreach (var kvp in packetData)
         {
-            string className = objData[0];
-            string uid = objData[1];
-            string[] stateData = objData.Skip(1).ToArray(); // Everything after ClassName and UID
+            string uid = kvp.Key;
+            string className = typeMapping[uid];
+            byte[] body = kvp.Value;
 
-            // Try to find the existing object by UID
-            GameObject existingGo = activeObjects.Find(x => x.uid.ToString() == uid);
+            var existingGo = activeObjects.Find(x => x.uid.ToString() == uid);
+            using (MemoryStream objMs = new MemoryStream(body))
+            using (BinaryReader objReader = new BinaryReader(objMs))
+            {
+                if (existingGo != null) existingGo.Decode(objReader);
+                else SpawnNewObject(className, uid).Decode(objReader);
+            }
 
-            if (existingGo != null)
-            {
-                // UPDATE: Object exists, hand it the rest of the array to decode
-                existingGo.Decode(stateData);
-            }
-            else
-            {
-                // CREATE: Object is new to this client
-                SpawnNewObject(className, stateData);
-            }
         }
     }
+}
 
-    private void SpawnNewObject(string className, string[] stateData)
+    private GameObject SpawnNewObject(string className, string uid)
     {
         GameObject newObj = null;
         
@@ -215,57 +260,51 @@ public class GameManager : RenderManager
 
         if (newObj != null)
         {
-            newObj.Decode(stateData);     // Apply initial position/rotation/state
             activeObjects.Add(newObj);    // Track it
         }
+
+        return newObj;
     }
-    public void LoadPlayerState(string playerStateJson)
+public void LoadPlayerState(byte[] data)
+{
+    if (data == null || data.Length == 0) return;
+
+    using (MemoryStream ms = new MemoryStream(data))
+    using (BinaryReader reader = new BinaryReader(ms))
     {
-        //return;
-        if (string.IsNullOrEmpty(playerStateJson)) return;
+        // 1. Read Metadata
+        string playerName = reader.ReadString();
+        string uid = reader.ReadString();
 
-        // 1. Deserialize the single player array
-        // Expects: ["Name", "UID", "X", "Y", "Rot", "State"...]
-        string[] playerUpdate = JsonSerializer.Deserialize<string[]>(playerStateJson);
+        // 2. Find or Create
+        Player existingPlayer = otherPlayers.Find(p => p.uid.ToString() == uid);
 
-        if (playerUpdate == null || playerUpdate.Length < 2) return;
-
-        string playerName = playerUpdate[0];
-        string uid = playerUpdate[2].Trim('"');
-
-        //Console.WriteLine("atempting decode of player: "  + playerName + ", guid = " + uid);
-
-        // 2. Find if this specific player already exists in our active list
-        Player existingPlayer = otherPlayers.Find(p => p.uid.ToString()  == uid);
-        
         if (existingPlayer != null)
         {
-            // UPDATE: Just decode the remaining data (skipping Name and UID)
-            //Console.WriteLine("DECODING PLAYER DEBUG");
-            existingPlayer.Decode(playerUpdate.Skip(2).ToArray());
+            // UPDATE
+            existingPlayer.Decode(reader);
         }
         else
         {
-            // ADD: We haven't seen this player UID before, so spawn them
-            //Console.WriteLine($"New player detected: {playerName} ({uid})");
-            
+            // ADD: New player detected
             Transform t = new Transform(0, 0, 0, 0);
             GameManager reference = this;
             
             Player newPlayer = new Player(ref reference, t);
+            newPlayer.uid = Guid.Parse(uid); // Ensure the UID is set!
             newPlayer.playerName.text = playerName;
             newPlayer.playerName.worldSpace = true;
-            newPlayer.Decode(playerUpdate.Skip(2).ToArray());
-            
-            
-            //Console.WriteLine("New player GUID " + newPlayer.uid.ToString());
+
+            // Decode the rest of the properties from the stream
+            newPlayer.Decode(reader);
             
             this.otherPlayers.Add(newPlayer);
+        }
     }
 }
-    public void loadPlayerStates(List<string> playerStates)
+    public void loadPlayerStates(byte[][] playerStates)
     {
-        foreach (string playerState in playerStates)
+        foreach (byte[] playerState in playerStates)
         {
             LoadPlayerState(playerState);
         }
@@ -392,10 +431,10 @@ public class GameManager : RenderManager
             if (this.nm.isHost) //we're hosting ,so we'll send our gamestate.
             {
                 Runlocal(); //Update the game locally, the nsend our state to the server.
-                string gamestate = this.getGamesstate();
+                byte[] gamestate = this.getGameState();
                 await nm.client.Send("{GameUpdate}",gamestate);
                 
-                foreach (string objToAdd in nm.objsToAdd)
+                foreach (byte[] objToAdd in nm.objsToAdd)
                 {
                     
                     AddNewGameObject(objToAdd);
@@ -412,37 +451,62 @@ public class GameManager : RenderManager
             }
 
             //send my player data to the server. It will be relayed to the others.
-            await nm.client.Send("{PlayerUpdate}", JsonSerializer.Serialize<string[]>(getPlayerState(player)));//player.Encode());
-            loadPlayerStates(nm.playerStatesJSON);
-            nm.playerStatesJSON.Clear(); //Clear the player states after loading, so we dont keep adding them.
+            await nm.client.Send("{PlayerUpdate}", getPlayerState(player));//player.Encode());
+            loadPlayerStates(nm.playerStates);
         }
         else
         {
             Runlocal();
         }
     }
-    public void AddNewGameObject(string JSON)
+public void AddNewGameObject(byte[] objData)
+{
+    if (objData == null || objData.Length == 0) return;
+
+    using (MemoryStream ms = new MemoryStream(objData))
+    using (BinaryReader reader = new BinaryReader(ms))
     {
-        //This is a request from the server to spawn a new game object. We will decode the JSON to figure out what to spawn and where.
-        string[] data = JsonSerializer.Deserialize<string[]>(JSON);
-        string objName = data[0];
-        SpawnNewObject(objName, data.Skip(1).ToArray());
-        
+        // 1. Read Metadata from the head of the stream
+        string className = reader.ReadString();
+        string uid = reader.ReadString();
+
+        // 2. Use your Factory to create the instance
+        GameObject newObj = SpawnNewObject(className, uid);
+
+        if (newObj != null)
+        {
+            // 3. Let the new object read the rest of the bytes directly from the stream
+            newObj.Decode(reader);
+        }
     }
-    public void AddNewGameObject(GameObject o)
+}
+
+//local call. Might need to send data to server.
+  public void AddNewGameObject(GameObject o)
+{
+    if (nm.isHost)
     {
-        if (nm.isHost)
-        {
-            objsToAdd.Add(o);
-        }
-        else
-        {
-            //if we're not the host, lets send a request to spawn this game object.
-            string[] encoded = o.Encode();
-            nm.client.Send("{SpawnGameObject}", JsonSerializer.Serialize<string[]>(encoded));
-        }
-        
+        objsToAdd.Add(o);
     }
+    else
+    {
+        // 1. Create a temporary buffer for this specific object's data
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
+        {
+            // Write Metadata Header
+            writer.Write(o.GetType().Name);
+            writer.Write(o.uid.ToString());
+
+            // Write the actual property data
+            o.Encode(writer); 
+
+            // 2. Wrap it in your Binary Packet
+
+            nm.client.Send("{SpawnGameObject}",ms.ToArray());
+        }
+    }
+}
     public void RemoveGameObject(GameObject o)
     {
         objsToRemove.Add(o);
