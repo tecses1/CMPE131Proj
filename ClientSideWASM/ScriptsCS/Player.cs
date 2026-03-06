@@ -157,31 +157,6 @@ public class Player : GameObject
         this.transform.position += cVelocity;
 
 
-        
-        
-
-
-        if(!this.CollideWith(gm.GetWorldBounds())){
-            outOfBoundsText.Draw(gm);
-            if (alpha <= 25)
-            {
-                direction = 1;
-            }
-            else if (alpha >= 75)
-            {
-                direction = -1;
-            }
-            alpha += direction;
-            
-            oobScreenFlashRect.setBorderColor(Color.Red, alpha);
-            oobScreenFlashRect.Draw(gm);
-
-
-        }
-        else
-        {
-            alpha = 0;
-        }
 
 
     
@@ -223,12 +198,11 @@ public class Player : GameObject
     {
         playerName.text = Settings.name;
         playerName.Draw(gm);
-        scoreText.Draw(gm);
         if (!isLocalPlayer)
         {
             return;
         }
-
+        scoreText.Draw(gm);
         //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
         //If we're in the world bounds.
         bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
@@ -239,6 +213,30 @@ public class Player : GameObject
         if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
         {
             gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
+        }
+        
+
+
+        if(!this.CollideWith(gm.GetWorldBounds())){
+            outOfBoundsText.Draw(gm);
+            if (alpha <= 25)
+            {
+                direction = 1;
+            }
+            else if (alpha >= 75)
+            {
+                direction = -1;
+            }
+            alpha += direction;
+            
+            oobScreenFlashRect.setBorderColor(Color.Red, alpha);
+            oobScreenFlashRect.Draw(gm);
+
+
+        }
+        else
+        {
+            alpha = 0;
         }
     }
 
