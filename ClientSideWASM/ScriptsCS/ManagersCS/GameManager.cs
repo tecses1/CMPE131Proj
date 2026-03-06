@@ -333,7 +333,7 @@ public class GameManager : RenderManager
 
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
-            //SpawnAsteroid();
+            SpawnAsteroid();
             counter = DateTime.Now;
         }
     }

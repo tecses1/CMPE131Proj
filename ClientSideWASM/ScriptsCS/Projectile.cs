@@ -59,10 +59,6 @@ namespace ClientSideWASM
                     }
                 }
             }
-
-
-            
-
         }
 
         public override void Kill()
