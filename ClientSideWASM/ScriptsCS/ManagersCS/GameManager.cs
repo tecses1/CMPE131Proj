@@ -33,7 +33,7 @@ public class GameManager : RenderManager
         this.nm = nm;
         GameManager reference = this;
         player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
-        activeObjects.Add(player);
+        //activeObjects.Add(player);
         player.isLocalPlayer = true;
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
@@ -284,10 +284,6 @@ public class GameManager : RenderManager
         }
         objsToAdd.Clear();
 
-
-
-        //Update the player.
-        player.Update();
         //Update stars.
         /*
         foreach (GameObject other in backgroundStars)
