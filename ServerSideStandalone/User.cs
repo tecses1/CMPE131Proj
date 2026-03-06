@@ -12,6 +12,7 @@ public class User : NetworkModel
     public int uid;
 
 
+
     public User(int uid, Server s)
     {
         this.uid = uid;

@@ -34,6 +34,7 @@ public partial class Home
         {
             // Populate the UI with the args returned from the server
             var lobby = response.Args.ToList()[0];
+            nm.isHost = true;
             nm.myLobby = lobby;
             Console.WriteLine(lobby);
             await InvokeAsync(StateHasChanged);

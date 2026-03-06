@@ -25,8 +25,10 @@ public class GameManager : RenderManager
 
     Text isLocal;
     
-
+    string currentGamestateJson = "";
     bool isHost = false;
+
+    bool recieveLoopIsAlive = false;
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
         this.nm = nm;
@@ -164,8 +166,11 @@ public class GameManager : RenderManager
         return gameState;
 
     }
-    public void loadGamesstate(string[][] gameState)
+    public void loadGamesstate()
     {
+        if (currentGamestateJson == "") return; //No gamestate to load.
+        Console.WriteLine("Loading gamestate: " + currentGamestateJson);
+        string[][] gameState = JsonSerializer.Deserialize<string[][]>(currentGamestateJson);
         //Console.WriteLine("Updating gamestate");
         // 1. Collect all UIDs from the incoming data
         HashSet<string> incomingUIDs = new HashSet<string>();
@@ -276,21 +281,33 @@ public class GameManager : RenderManager
             counter = DateTime.Now;
         }
     }
+
+    public async Task requestGamestateFromServer()
+    {
+        Console.WriteLine("recieving indefnitely.   ");
+        recieveLoopIsAlive = true;
+        while (recieveLoopIsAlive)
+        {
+            Packet p = await nm.client.SendWithResponse("{RequestGameState}");
+            currentGamestateJson = p.Args[0];
+        }
+
+
+    }
     public override async Task Update()
     {
         await base.Update();
+
         //Update the player, always.
         player.Update();
-        
 
         if (nm.client.isConnected() && nm.myLobby != "")
         {
             //Send over our position first, as thats needed on all.
-            
+
             //Check if we're the host first. Theres gotta be a better way then calling each update. Will ivnestigate.
-            Packet isHost = await nm.client.SendWithResponse("{IsHost}");
-            this.isHost = isHost.Args[0] == "{Yes}";
-            if (this.isHost) //we're hosting ,so we'll send our gamestate.
+            
+            if (this.nm.isHost) //we're hosting ,so we'll send our gamestate.
             {
                 Runlocal(); //Update the game locally, the nsend our state to the server.
                 await nm.client.Send("{GameUpdate}",JsonSerializer.Serialize<string[][]>(this.getGamesstate()));
@@ -298,10 +315,10 @@ public class GameManager : RenderManager
             }
             else
             {
+                //Launch the RECV thread async so it doesn't pause our update thread.
+                if(recieveLoopIsAlive == false) _ = requestGamestateFromServer();
                 //Request the gamestate from the server.
-                Packet gameState = await nm.client.SendWithResponse("{RequestGameState}");
-                string[][] state = JsonSerializer.Deserialize<string[][]>(gameState.Args[0]);
-                loadGamesstate(state);
+                loadGamesstate();
             }
 
 

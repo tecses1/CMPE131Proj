@@ -111,7 +111,8 @@ public class GameObject
             this.transform.position.Y.ToString(),
             this.transform.size.X.ToString(),
             this.transform.size.Y.ToString(),
-            this.transform.rotation.ToString()
+            this.transform.rotation.ToString(),
+            this.currentFrame.ToString()
         };
     }
 
@@ -122,6 +123,7 @@ public class GameObject
         this.transform.size.X = float.Parse(args[2]);
         this.transform.size.Y = float.Parse(args[3]);
         this.transform.rotation = float.Parse(args[4]);
+        this.currentFrame = int.Parse(args[5]);
 
     }
     public virtual void Kill()
