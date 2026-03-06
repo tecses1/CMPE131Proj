@@ -224,6 +224,10 @@ public class Player : GameObject
         playerName.text = Settings.name;
         playerName.Draw(gm);
         scoreText.Draw(gm);
+        if (!isLocalPlayer)
+        {
+            return;
+        }
 
         //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
         //If we're in the world bounds.
