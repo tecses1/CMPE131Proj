@@ -264,7 +264,8 @@ public class GameManager : RenderManager
                 newObj = new Asteroid(ref gm, defaultT, 1);
                 break;
             case "Projectile":
-                newObj = new Projectile(ref gm, defaultT, new Vector2(0,0));
+                Projectile p = new Projectile(ref gm, defaultT, new Vector2(0,0), player);
+                newObj = p;
                 break;
             // Add more types here as your game grows
         }
@@ -422,7 +423,8 @@ public class GameManager : RenderManager
                 asteroid.hp -= proj.damage;
                 if (asteroid.hp <= 0)
                 {
-                    player.AddScore(10);
+                    proj.owner?.AddScore(10);
+                    // player.AddScore(10);
                     asteroid.Kill();
                 }
             }
@@ -432,7 +434,7 @@ public class GameManager : RenderManager
                 asteroid2.hp -= proj2.damage;
                 if (asteroid2.hp <= 0)
                 {
-                    player.AddScore(10);
+                    proj2.owner?.AddScore(10);
                     asteroid2.Kill();
                 }
             }

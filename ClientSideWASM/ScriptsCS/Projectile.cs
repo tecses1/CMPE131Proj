@@ -18,10 +18,12 @@ namespace ClientSideWASM
         bool dead = false;
         [Network(2)]
         public int damage {get; set;} = 1;
-        public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime =5) : base(ref gm, transform)
+        public Player? owner;
+        public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, Player owner, int lifetime =5) : base(ref gm, transform)
         {
             Velocity = velocity;
             LifetimeFrames = lifetime;
+            this.owner = owner;
         }
 
         public override void Update()
