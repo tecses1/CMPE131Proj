@@ -385,19 +385,14 @@ public class GameManager : RenderManager
         //             }
         //         }
         //     }
+        eventManager.Clear();//clear before they update on this frame.
         foreach (GameObject go in activeObjects)
         {
+            //Update and register in same lop. No need to run twice. On.
             go.Update();
-        }
-
-        // player.Update();
-        eventManager.Clear();
-
-        // register objects
-        foreach (GameObject go in activeObjects)
-        {
             eventManager.Register(go);
-        }
+
+        } 
 
         eventManager.Register(player);
 
