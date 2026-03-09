@@ -333,6 +333,8 @@ public class Player : GameObject
 
         proj.damage = 6;
         proj2.damage = 6;
+
+        
         gm.AddNewGameObject(proj);
         gm.AddNewGameObject(proj2);
     }

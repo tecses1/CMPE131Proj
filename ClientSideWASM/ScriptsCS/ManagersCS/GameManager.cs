@@ -11,6 +11,9 @@ public class GameManager : RenderManager
 {
     //em for collision
     EventManager eventManager = new EventManager();
+
+    public  NetworkManager nm;
+
     //Intiialzie the rendre manager
     //List of different game objects.
     Player  player;
@@ -19,13 +22,14 @@ public class GameManager : RenderManager
     List<Player> otherPlayers = new List<Player>();
     //Remove objects after tehy die. Can not happen during the frame, so we save waht dies during the frame to remove after..
     private List<GameObject> objsToRemove = new List<GameObject>();
-
+    //Add new objects that spawn.
     private List<GameObject> objsToAdd = new List<GameObject>();
+    //Request the host to spawn these.
+    private List<GameObject> objsToAddRequest = new List<GameObject>();
 
      DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
 
-    public  NetworkManager nm;
 
     Text isLocal;
     
@@ -33,6 +37,9 @@ public class GameManager : RenderManager
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
         this.nm = nm;
+        nm.Initialize(this);
+
+
         GameManager reference = this;
         player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
         //activeObjects.Add(player);
@@ -122,136 +129,12 @@ public class GameManager : RenderManager
         a.SetTarget(player.transform);
         activeObjects.Add(a);
     }
-
-/*json serializer defunct.
-    public byte[] getGamesstate()
-    {
-        byte[][] gameState = new byte[activeObjects.Count][];
-        for (int i = 0; i < gameState.Length; i++)
-        {
-            gameState[i] = activeObjects[i].Encode();
-        }
-        
-        return JsonSerializer.Serialize(gameState); //Make the array of obj jsons a single string
-
-    }*/
-    public byte[] getGameState()
-    {
-        using (MemoryStream ms = new MemoryStream())
-        using (BinaryWriter writer = new BinaryWriter(ms))
-        {
-            writer.Write(activeObjects.Count);
-
-            foreach (var obj in activeObjects)
-            {
-                // We wrap each object in a 'Size' prefix so we can slice it easily
-                // This is the "Frame" for the object data
-                long startPos = writer.BaseStream.Position;
-                writer.Write(0); // Placeholder for length
-
-                long dataStart = writer.BaseStream.Position;
-                
-                // 1. Write metadata needed for routing
-                writer.Write(obj.GetType().Name);
-                writer.Write(obj.uid.ToString()); // Or writer.Write(obj.uid) if it's a Guid/long
-
-                // 2. Write the synced properties
-                obj.Encode(writer);
-
-                // 3. Go back and fill in the length
-                long endPos = writer.BaseStream.Position;
-                int length = (int)(endPos - dataStart);
-                writer.BaseStream.Position = startPos;
-                writer.Write(length);
-                writer.BaseStream.Position = endPos;
-            }
-            return ms.ToArray();
-        }
-    }
-
-
-    public byte[] getPlayerState(Player p)
-    {
-        using (MemoryStream ms = new MemoryStream())
-        using (BinaryWriter writer = new BinaryWriter(ms))
-        {
-            // 1. Metadata (The Header)
-            writer.Write(Settings.name);  // Player Name
-            writer.Write(p.uid.ToString()); // UID
-
-            // 2. Data (The Payload)
-            p.Encode(writer); // Uses your refined reflection-based encoder
-
-            return ms.ToArray();
-        }
-    }
-
-
-    public void loadGameState(byte[] data)
-    {
-        if (data == null || data.Length == 0) return;
-
-        using (MemoryStream ms = new MemoryStream(data))
-        using (BinaryReader reader = new BinaryReader(ms))
-        {
-            int incomingCount = reader.ReadInt32();
-            HashSet<string> incomingUIDs = new HashSet<string>();
-            
-            // Temporary storage to hold object data until we decide to Update or Spawn
-            // Key: UID, Value: The raw bytes for that specific object
-            Dictionary<string, byte[]> packetData = new Dictionary<string, byte[]>();
-            Dictionary<string, string> typeMapping = new Dictionary<string, string>();
-
-            for (int i = 0; i < incomingCount; i++)
-            {
-                
-                int length = reader.ReadInt32();
-                string className = reader.ReadString();
-                string uid = reader.ReadString();
-                
-                byte[] objectBody = reader.ReadBytes(length - (className.Length + 1) - (uid.Length + 1)); 
-                // Note: BinaryReader strings are length-prefixed, hence the extra bytes calculation logic.
-                // Simplified: Just read the remaining bytes of this 'frame'
-                
-                incomingUIDs.Add(uid);
-                packetData[uid] = objectBody;
-                typeMapping[uid] = className;
-                //Console.WriteLine("Read obj: " + className);
-            }
-
-            // 3. DESTROY Phase
-            for (int i = activeObjects.Count - 1; i >= 0; i--)
-            {
-                if (!incomingUIDs.Contains(activeObjects[i].uid.ToString()))
-                {
-                    // Despawn logic here
-                    activeObjects.RemoveAt(i);
-                }
-            }
-
-            // 4. UPDATE or CREATE Phase
-            foreach (var kvp in packetData)
-            {
-                string uid = kvp.Key;
-                string className = typeMapping[uid];
-                byte[] body = kvp.Value;
-
-                var existingGo = activeObjects.Find(x => x.uid.ToString() == uid);
-                using (MemoryStream objMs = new MemoryStream(body))
-                using (BinaryReader objReader = new BinaryReader(objMs))
-                {
-                    if (existingGo != null) existingGo.Decode(objReader);
-                    else SpawnNewObject(className, uid).Decode(objReader);
-                }
-
-            }
-        }
-    }
+    
 
     //called when the client requests a new item to be added.
     private GameObject SpawnNewObject(string className, string uid)
     {
-        GameObject newObj = nm.SpawnNewObject(className, uid);
+        GameObject newObj = nm.CreateGameObject(className, uid);
 
         if (newObj != null)
         {
@@ -290,48 +173,7 @@ public class GameManager : RenderManager
         }
         objsToAdd.Clear();
 
-        //old collisions for reference  
-        //Update stars.
-        /*
-        foreach (GameObject other in backgroundStars)
-        {
-            other.Update();
-        }*/
-        //Update active objects. Check for collision withj stars.
-        // Console.WriteLine(activeObjects);
-        
-        // foreach (GameObject go in activeObjects)
-        // {
-        //     go.Update();
-        //     if (go.disableCollision) continue; //If the object is already dead, skip collision.
-            
-        //     foreach (GameObject collideGO in activeObjects)
-        //     {
-        //         if (collideGO.disableCollision) continue;
-        //         // Console.WriteLine(go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
-                
-        //         if (go.CollideWith(collideGO))
-        //         {
-        //             // Console.WriteLine("Should be dead but no respawn yet");
-        //             // Console.WriteLine("We detected a collision between a " + go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
-        //             if (go.GetType().Name == "Projectile" && collideGO.GetType().Name == "Asteroid")
-        //             {
-        //                 go.Kill();
-        //                 ((Asteroid)collideGO).hp -= ((Projectile)go).damage;
-        //                 if (((Asteroid)collideGO).hp <= 0)
-        //                 {
-        //                     ((Player)player).AddScore(10);
-        //                     collideGO.Kill();
-        //                 }
-        //             }
-        //             if (go.GetType().Name == "Asteroid" && collideGO.GetType().Name == "Player")
-        //             {
-        //                 // Console.WriteLine("We detected a collision between a " + go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
-        //                 ((Player)collideGO).TakeDamage(10);
-        //                 go.Kill();
-        //             }
-        //         }
-        //     }
+
         eventManager.Clear();//clear before they update on this frame.
         foreach (GameObject go in activeObjects)
         {
@@ -397,6 +239,7 @@ public class GameManager : RenderManager
         }
     }
 
+
     public override async Task Render()
     {
 
@@ -444,15 +287,11 @@ public class GameManager : RenderManager
 
         
         if (nm.client.isConnected() && nm.myLobby != "")
-        {
-            //Send over our position first, as thats needed on all.
-
-            //Check if we're the host first. Theres gotta be a better way then calling each update. Will ivnestigate.
-            
+        {            
             if (this.nm.isHost) //we're hosting ,so we'll send our gamestate.
             {
                 Runlocal(); //Update the game locally, the nsend our state to the server.
-                byte[] gamestate = this.getGameState();
+                byte[] gamestate = nm.getGameState(activeObjects);
                 await nm.client.Send("{GameUpdate}",gamestate);
                 
                 foreach (byte[] objToAdd in nm.objsToAdd)
@@ -467,12 +306,33 @@ public class GameManager : RenderManager
             else
             {
                 //load gamestate auto recvied in Network Manager./
-                loadGameState(nm.gameState);
+                //Go through objects we want to create clientside
+                foreach (GameObject go in objsToAddRequest)
+                {
+                    //Tell the server to spawn them.
+                    RequestGameObjectSpawn(go);
+                }
+                objsToAddRequest.Clear();
+
+                foreach (GameObject go in objsToAdd)
+                {
+                    activeObjects.Add(go);
+                }
+                objsToAdd.Clear();
+
+                foreach(GameObject go in objsToRemove)
+                {
+                    activeObjects.Remove(go);
+                }
+                objsToRemove.Clear();
+
+
+                nm.loadGameState(ref activeObjects);
 
             }
 
             //send my player data to the server. It will be relayed to the others.
-            await nm.client.Send("{PlayerUpdate}", getPlayerState(player));//player.Encode());
+            await nm.client.Send("{PlayerUpdate}", nm.getPlayerState(player));//player.Encode());
             loadPlayerStates(nm.playerStates);
         }
         else
@@ -487,7 +347,8 @@ public class GameManager : RenderManager
         {
             if (p.uid == uid) return p;
         }
-        return null;
+        Console.WriteLine("player " + uid.ToString() + " not found, defaulting to host.");
+        return player;
     }
 
     public void AddNewGameObject(byte[] objData)
@@ -498,8 +359,11 @@ public class GameManager : RenderManager
         using (BinaryReader reader = new BinaryReader(ms))
         {
             // 1. Read Metadata from the head of the stream
-            string className = reader.ReadString();
-            string uid = reader.ReadString();
+            object[] metaData = NetworkObject.ReadMetaData(reader);
+            //cast those.
+            string className = (string)metaData[0]; //class name cast to string
+            string uid = (string)metaData[1]; //uid cast to string
+            bool eventOnly = (bool)metaData[2]; //event only check
 
             // 2. Use your Factory to create the instance
             GameObject newObj = SpawnNewObject(className, uid);
@@ -512,36 +376,53 @@ public class GameManager : RenderManager
         }
     }
 
-    //local call. Might need to send data to server.
+    //Client call to ask server to spawn a new game object.
+    public void RequestGameObjectSpawn(GameObject o)
+    {
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
+        {
+            // Write Metadata Header
+            o.WriteMetaData(writer);
+
+            // Write the actual property data
+            o.Encode(writer); 
+
+            // REquest the gamestate host spawn this object for us.
+
+
+            nm.client.Send("{SpawnGameObject}",ms.ToArray());
+        }
+    }
+
+    //Called when the client syncs.
+    //Must be seperate from add new game object, as this creates a request by default.
+    public void AddNewGameObjectSync(GameObject o)
+    {
+        objsToAdd.Add(o);
+    }
+
+    //Add a game object to the world
     public void AddNewGameObject(GameObject o)
     {
         if (nm.isHost)
         {
+            if (o.eventOnly)
+            {
+                //Send an event to the other players that this object is being added. Useful for fixed velocity items.
+            }
             objsToAdd.Add(o);
         }
         else
         {
-            // 1. Create a temporary buffer for this specific object's data
-            using (MemoryStream ms = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(ms))
-            {
-                // Write Metadata Header
-                writer.Write(o.GetType().Name);
-                writer.Write(o.uid.ToString());
-
-                // Write the actual property data
-                o.Encode(writer); 
-
-                // 2. Wrap it in your Binary Packet
-
-                nm.client.Send("{SpawnGameObject}",ms.ToArray());
-            }
+            //This object was spawned clientside. 
+            objsToAddRequest.Add(o);
         }
     }
 
     
     public void RemoveGameObject(GameObject o)
-        {
+    {
             objsToRemove.Add(o);
-        }
     }
+}

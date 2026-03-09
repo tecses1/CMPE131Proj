@@ -58,7 +58,7 @@ namespace ClientSideWASM
 
                 }
                 LifetimeFrames--;
-                Console.WriteLine("Counting down: " + LifetimeFrames);
+                //Console.WriteLine("Counting down: " + LifetimeFrames);
                 if (LifetimeFrames < 0)
                 {
                     this.Kill();
