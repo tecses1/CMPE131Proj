@@ -248,27 +248,10 @@ public class GameManager : RenderManager
         }
     }
 
-
+    //called when the client requests a new item to be added.
     private GameObject SpawnNewObject(string className, string uid)
     {
-        GameObject newObj = null;
-        
-        // Setup common references (GameManager, etc.)
-        GameManager gm = this;
-        Transform defaultT = new Transform(0,0,0,0);
-
-        // Factory logic based on the ClassName string at index [0]
-        switch (className)
-        {
-            case "Asteroid":
-                newObj = new Asteroid(ref gm, defaultT, 1);
-                break;
-            case "Projectile":
-                Projectile p = new Projectile(ref gm, defaultT, new Vector2(0,0), player);
-                newObj = p;
-                break;
-            // Add more types here as your game grows
-        }
+        GameObject newObj = nm.SpawnNewObject(className, uid);
 
         if (newObj != null)
         {
@@ -278,50 +261,14 @@ public class GameManager : RenderManager
         return newObj;
     }
 
-    public void LoadPlayerState(byte[] data)
-    {
-        if (data == null || data.Length == 0) return;
 
-        using (MemoryStream ms = new MemoryStream(data))
-        using (BinaryReader reader = new BinaryReader(ms))
-        {
-            // 1. Read Metadata
-            string playerName = reader.ReadString();
-            string uid = reader.ReadString();
-
-            // 2. Find or Create
-            Player existingPlayer = otherPlayers.Find(p => p.uid.ToString() == uid);
-
-            if (existingPlayer != null)
-            {
-                // UPDATE
-                existingPlayer.Decode(reader);
-            }
-            else
-            {
-                // ADD: New player detected
-                Transform t = new Transform(0, 0, 0, 0);
-                GameManager reference = this;
-                
-                Player newPlayer = new Player(ref reference, t);
-                newPlayer.uid = Guid.Parse(uid); // Ensure the UID is set!
-                newPlayer.playerName.text = playerName;
-                newPlayer.playerName.worldSpace = true;
-
-                // Decode the rest of the properties from the stream
-                newPlayer.Decode(reader);
-                
-                this.otherPlayers.Add(newPlayer);
-            }
-        }
-    }
 
 
     public void loadPlayerStates(byte[][] playerStates)
     {
         foreach (byte[] playerState in playerStates)
         {
-            LoadPlayerState(playerState);
+            nm.LoadPlayerState(playerState, otherPlayers);
         }
     }
 
@@ -418,7 +365,7 @@ public class GameManager : RenderManager
                 asteroid.hp -= proj.damage;
                 if (asteroid.hp <= 0)
                 {
-                    proj.owner?.AddScore(10);
+                    getPlayerWithUID(proj.owner).AddScore(10);
                     // player.AddScore(10);
                     asteroid.Kill();
                 }
@@ -429,7 +376,7 @@ public class GameManager : RenderManager
                 asteroid2.hp -= proj2.damage;
                 if (asteroid2.hp <= 0)
                 {
-                    proj2.owner?.AddScore(10);
+                   getPlayerWithUID(proj2.owner).AddScore(10);
                     asteroid2.Kill();
                 }
             }
@@ -533,7 +480,15 @@ public class GameManager : RenderManager
             Runlocal();
         }
     }
-
+    public Player getPlayerWithUID(Guid uid)
+    {
+        if (player.uid == uid) return player;
+        foreach (Player p in otherPlayers)
+        {
+            if (p.uid == uid) return p;
+        }
+        return null;
+    }
 
     public void AddNewGameObject(byte[] objData)
     {

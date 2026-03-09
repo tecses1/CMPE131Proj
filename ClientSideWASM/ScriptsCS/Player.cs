@@ -325,8 +325,12 @@ public class Player : GameObject
 
         Transform proj1t = new Transform(spawnPos.X-transform.Left().X*16,spawnPos.Y-transform.Left().Y*16, 7,7, transform.rotation);
         Transform proj2t = new Transform(spawnPos.X+transform.Left().X*16,spawnPos.Y+transform.Left().Y*16, 7,7, transform.rotation);
-        var proj = new Projectile(ref gm, proj1t, velocity, this, lifetime: 28);
-        var proj2 = new Projectile(ref gm, proj2t, velocity, this, lifetime: 28);
+        var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 28);
+        var proj2 = new Projectile(ref gm, proj2t, velocity, lifetime: 28);
+
+        proj.owner = this.uid;
+        proj2.owner = this.uid;
+
         proj.damage = 6;
         proj2.damage = 6;
         gm.AddNewGameObject(proj);
@@ -351,8 +355,10 @@ public class Player : GameObject
         proj1t.RotateTo(target);
         Vector2 velocity = proj1t.Forward() * bulletSpeed;
 
-        var proj = new Projectile(ref gm, proj1t, velocity, this, lifetime: 56);
+        var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 56);
+        proj.owner = this.uid;
         proj.damage = 16;
+
         gm.AddNewGameObject(proj);
         barrel = !barrel;
     }

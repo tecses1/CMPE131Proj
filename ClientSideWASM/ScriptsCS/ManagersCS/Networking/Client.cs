@@ -6,10 +6,6 @@ using System.Net.WebSockets;
 public class Client : NetworkModel
 {  
     NetworkManager nm;
-    public int UID;
-
-
-
     public Client(NetworkManager nm)
     {
         this.nm = nm;

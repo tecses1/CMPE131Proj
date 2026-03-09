@@ -5,10 +5,9 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-public class GameObject
+public class GameObject : NetworkObject
 {
 
-    public Guid uid {get; set;}
     //sizing
     [Network(-1)]
     public Transform transform {get;set;}
@@ -27,7 +26,6 @@ public class GameObject
     {
         this.gm  = gm;
         this.transform = transform;
-        this.uid =  Guid.NewGuid();
         this.missingText = new Text("MISSING",ref transform);
         this.missingText.setFillColor(Color.LightYellow,255);
         this.missingText.setBorderColor(Color.Red);
@@ -45,6 +43,9 @@ public class GameObject
     }
     public bool CollideWith(GameObject two)
     {//Collid with other gameobject.
+        if (two.disableCollision || this.disableCollision) {
+            return false;
+        }
         return this.CollideWith(two.GetBounds());
     }
     
@@ -105,30 +106,7 @@ public class GameObject
     {
         
     }
-    public virtual void Encode(BinaryWriter writer)
-    {
-        var properties = NetworkMemberCache.GetSyncProperties(this.GetType());
-        
-        
-        foreach (var prop in properties)
-        {
-            NetworkMemberCache.WriteProperty(writer, prop.GetValue(this), prop.PropertyType);
-        }
 
-
-        
-    }
-
-    public virtual void Decode(BinaryReader reader)
-    {
-        var properties = NetworkMemberCache.GetSyncProperties(this.GetType());
-        
-        foreach (var prop in properties)
-        {
-            object value = NetworkMemberCache.ReadProperty(reader, prop.PropertyType);
-            prop.SetValue(this, value);
-        }
-    }
     public virtual void Kill()
     {
         gm.RemoveGameObject(this);
