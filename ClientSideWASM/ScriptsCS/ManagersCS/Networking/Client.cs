@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 public class Client : NetworkModel
 {  
     NetworkManager nm;
+    public Guid assignedUID;
     public Client(NetworkManager nm)
     {
         this.nm = nm;
@@ -21,10 +22,15 @@ public class Client : NetworkModel
             
             Console.WriteLine($"Connecting to {serverUri}...");
             await handler.ConnectAsync(serverUri, cts.Token);
-            
+            this.Initialize(handler, cts);
             Console.WriteLine("Connected to server! Connection check: " + handler.State);
 
-            this.Initialize(handler, cts);
+            Console.WriteLine("Requesting UID from server...");
+            Packet uidPacket = await SendWithResponse("{RequestUID}",null);
+            Console.WriteLine("parsing UID: " + uidPacket.Args[0]);
+            this.assignedUID = Guid.Parse(uidPacket.Args[0]);
+            Console.WriteLine($"Received assigned UID: {assignedUID}");
+            
 
         }
         catch (Exception e)
@@ -57,10 +63,10 @@ public class Client : NetworkModel
                 //Console.WriteLine("Got game state update: " + data.Length);
                 this.nm.gameState = data;
                 break;
-            case "{PlayerStateUpdates}":
+            case "{InputAll}":
                 // Logic: Show a popup
                 //Console.WriteLine("got new json player: " + args[0]);
-                this.nm.playerStates = NetworkModel.DeserializeJagged(data);
+                this.nm.inputsReceived.Add(data);
                 break;
             case "{SpawnGameObject}":
                 // Logic: Show a popup

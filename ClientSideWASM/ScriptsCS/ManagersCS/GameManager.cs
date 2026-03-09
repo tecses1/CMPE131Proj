@@ -19,7 +19,7 @@ public class GameManager : RenderManager
     Player  player;
     List<GameObject> activeObjects = new List<GameObject>();
     List<GameObject> backgroundStars = new List<GameObject>();
-    List<Player> otherPlayers = new List<Player>();
+    List<GameObject> otherPlayers = new List<GameObject>();
     //Remove objects after tehy die. Can not happen during the frame, so we save waht dies during the frame to remove after..
     private List<GameObject> objsToRemove = new List<GameObject>();
     //Add new objects that spawn.
@@ -32,6 +32,8 @@ public class GameManager : RenderManager
 
 
     Text isLocal;
+
+    InputWrapper cInput;
     
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
@@ -44,6 +46,9 @@ public class GameManager : RenderManager
         player  = new Player(ref reference, new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight/2, 60,60,0));
         //activeObjects.Add(player);
         player.isLocalPlayer = true;
+        //Make sure local player and  assigned UID match.
+        player.uid = nm.client.assignedUID;
+        
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
         isLocal = new Text("Playing Locally ", ref t);
@@ -77,13 +82,11 @@ public class GameManager : RenderManager
     }
 
 
-    public void UpdatePlayer(InputWrapper e)
+    public void UpdateInput(InputWrapper e)
     {
-        if (e.keys[5]) //Escape key pressed, exit game.
-        {
-            Environment.Exit(0);
-        }
-        ((Player)player).cInput = e;
+
+        this.cInput = e;
+
 
     }
 
@@ -144,16 +147,6 @@ public class GameManager : RenderManager
         return newObj;
     }
 
-
-
-
-    public void loadPlayerStates(byte[][] playerStates)
-    {
-        foreach (byte[] playerState in playerStates)
-        {
-            nm.LoadPlayerState(playerState, otherPlayers);
-        }
-    }
 
 
 
@@ -276,83 +269,127 @@ public class GameManager : RenderManager
 
     }
 
-    void debug()
+    //Do all the updates and create a gamestate cache. 
+    void Generate(DateTime framestamp)
     {
-        string output = "Local UID: " + player.uid.ToString();
-
-        foreach (Player p in otherPlayers)
-        {
-            output += ", Other player: " + p.uid;
-        }
-
-        Console.WriteLine(output);
-    }
-    public override async Task Update()
-    {
-        await base.Update();
-
-        //Update the player, always.
-        player.Update();
-
-
         
-        if (nm.client.isConnected() && nm.myLobby != "")
-        {            
-            if (this.nm.isHost) //we're hosting ,so we'll send our gamestate.
+        //Get the input for this update
+        //player inputs
+        InputWrapper[] playerInputs = null;
+        if (nm.inputsReceived.Count > 0)
+        {
+            playerInputs = DecodeInputs(nm.inputsReceived[0]);
+            nm.inputsReceived.RemoveAt(0); //remove the input we just processed.
+
+            foreach (InputWrapper input in playerInputs)
             {
-                Runlocal(); //Update the game locally, the nsend our state to the server.
-                byte[] gamestate = nm.getGameState(activeObjects);
-                await nm.client.Send("{GameUpdate}",gamestate);
-                
-                foreach (byte[] objToAdd in nm.objsToAdd)
+                if (input == null)
                 {
-                    
-                    AddNewGameObject(objToAdd);
-
+                    Console.WriteLine("Warning: Null input received from server!");
+                    continue;
                 }
-                nm.objsToAdd.Clear();
+                Player p = getPlayerWithUID(input.owner);
+                if (p == player) continue; //skip our own input, we process that locally for client side prediction.
+                if (p == null)
+                {
+                    Console.WriteLine("Player with UID " + input.owner + " not found for input processing! Creating...");
 
-                debug();
+                    GameManager gameManagerReference = this;
+                    Player newPlayer = new Player(ref gameManagerReference, new Transform(0, 0, 50, 50));
 
+                    newPlayer.uid = input.owner;
+                    otherPlayers.Add(newPlayer);
+                }
+                else
+                {
+                    p.cInput = input;
+                    p.Update();
+                }
             }
-            else
-            {
-                //load gamestate auto recvied in Network Manager./
-                //Go through objects we want to create clientside
-                foreach (GameObject go in objsToAddRequest)
-                {
-                    //Tell the server to spawn them.
-                    RequestGameObjectSpawn(go);
-                }
-                objsToAddRequest.Clear();
-
-                foreach (GameObject go in objsToAdd)
-                {
-                    activeObjects.Add(go);
-                }
-                objsToAdd.Clear();
-
-                foreach(GameObject go in objsToRemove)
-                {
-                    activeObjects.Remove(go);
-                }
-                objsToRemove.Clear();
-
-
-                nm.loadGameState(ref activeObjects);
-
-                debug();
-
-            }
-
-            //send my player data to the server. It will be relayed to the others.
-            await nm.client.Send("{PlayerUpdate}", nm.getPlayerState(player));//player.Encode());
-            loadPlayerStates(nm.playerStates);
         }
         else
         {
-            Runlocal();
+            Console.WriteLine("No player inputs received for this frame.");
         }
+
+        //local input
+        InputWrapper e = this.cInput;
+        //give the input wrapper an owner and timestamp.
+        e.owner = player.uid;
+        e.timeStamp = framestamp;
+
+
+        if (e.keys[5]) //Escape key pressed, exit game.
+        {
+            Environment.Exit(0);
+        }
+        //pass off the input to the player.
+        player.cInput = e;
+        //Update the player.
+        player.Update();
+
+        //we're going to do clientSide predicion / remtoe model.... so,
+        //first, we update our gamestate based on what we got.
+
+        //Runlocal();
+
+
+        //Then, we create a snapshot of our gamestate, and cache it. 
+        byte[] gameState = this.nm.getGameState(framestamp, otherPlayers,activeObjects);
+        GameState gs = new GameState(e, playerInputs, gameState);
+        nm.gameStateHistory.Add(gs);
+
+        //Then, send our input over to the host for confirmation
+        nm.client.Send("{Input}", e.Encode());
+
+
+        //if we're hosting, send over our calculated gamestate for others to sync to.
+        if (nm.isHost)
+        {
+            nm.client.Send("{GameStateUpdate}", gameState);
+        }
+    }
+    //Verify that we did what the host did. If not, we need to correct our gamestate to match the host.
+
+    void Sync()
+    {
+        
+    }
+    public override async Task Update()
+    {
+        //Set the timestamp for this update.
+        DateTime framestamp = DateTime.Now;
+        Generate(framestamp);
+
+        
+    }
+
+
+    public InputWrapper[] DecodeInputs(byte[] data)
+    {
+
+        byte[][] playerInputs = NetworkModel.DeserializeJagged(data);
+
+        InputWrapper[] inputs = new InputWrapper[playerInputs.Length];
+
+        for (int i = 0; i < playerInputs.Length; i++)
+        {
+            if (playerInputs[i] == null)
+            {
+                Console.WriteLine("Warning: Null player input at index " + i);
+                continue;
+            }
+
+            if (playerInputs[i].Length == 0)
+            {
+                Console.WriteLine("Warning: Empty player input at index " + i);
+                continue;
+            }
+            inputs[i] = InputWrapper.Decode(playerInputs[i]);
+            
+        }
+
+        return inputs;
     }
     public Player getPlayerWithUID(Guid uid)
     {
@@ -361,8 +398,8 @@ public class GameManager : RenderManager
         {
             if (p.uid == uid) return p;
         }
-        Console.WriteLine("player " + uid.ToString() + " not found, defaulting to host.");
-        return player;
+        Console.WriteLine("player " + uid.ToString() + " not found!");
+        return null;
     }
 
     public void AddNewGameObject(byte[] objData)
@@ -377,7 +414,6 @@ public class GameManager : RenderManager
             //cast those.
             string className = (string)metaData[0]; //class name cast to string
             string uid = (string)metaData[1]; //uid cast to string
-            bool eventOnly = (bool)metaData[2]; //event only check
 
             // 2. Use your Factory to create the instance
             GameObject newObj = SpawnNewObject(className, uid);
@@ -421,10 +457,6 @@ public class GameManager : RenderManager
     {
         if (nm.isHost)
         {
-            if (o.eventOnly)
-            {
-                //Send an event to the other players that this object is being added. Useful for fixed velocity items.
-            }
             objsToAdd.Add(o);
         }
         else

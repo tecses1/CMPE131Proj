@@ -4,6 +4,8 @@ using Blazorex;
 
 public class InputWrapper
 {
+    public Guid owner;
+    public DateTime timeStamp;
     // WASD keys
     public bool[] keys = { false, false, false, false, false, false };
 
@@ -84,5 +86,66 @@ public class InputWrapper
     public void Clear()
     {
         LeftPressed = false;
+    }
+
+
+    public byte[] Encode()
+    {
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
+        {
+            //write the UID owner.
+            writer.Write(owner.ToString());
+            //Write the timestamp.
+            writer.Write(timeStamp.ToBinary());
+            // Write keys as a single byte (bitmask)
+            byte keyByte = 0;
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (keys[i]) keyByte |= (byte)(1 << i);
+            }
+            writer.Write(keyByte);
+
+            // Write mouse position as two doubles
+            writer.Write(MouseX);
+            writer.Write(MouseY);
+
+            // Write mouse button state as a single byte
+            byte mouseByte = 0;
+            if (LeftDown) mouseByte |= 1; // bit 0 for left button
+            writer.Write(mouseByte);
+
+
+            return ms.ToArray();
+
+        }
+        
+    }
+    public static InputWrapper Decode(byte[] playerInput)
+    {
+        using (MemoryStream ms = new MemoryStream(playerInput))
+        using (BinaryReader reader = new BinaryReader(ms))
+        {
+            InputWrapper input = new InputWrapper();
+            //read the header.
+            input.owner = Guid.Parse(reader.ReadString());
+            input.timeStamp = DateTime.FromBinary(reader.ReadInt64());
+            // Read keys from single byte
+            byte keyByte = reader.ReadByte();
+            for (int i = 0; i < input.keys.Length; i++)
+            {
+                input.keys[i] = (keyByte & (1 << i)) != 0;
+            }
+
+            // Read mouse position
+            input.MouseX = reader.ReadDouble();
+            input.MouseY = reader.ReadDouble();
+
+            // Read mouse button state
+            byte mouseByte = reader.ReadByte();
+            input.LeftDown = (mouseByte & 1) != 0;
+            
+            return input;
+        }
     }
 }

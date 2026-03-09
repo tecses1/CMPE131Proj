@@ -7,8 +7,6 @@ public class NetworkObject
     //Servers as a header. No need to tag this network, its grabbed automatically.
     public Guid uid {get; set;}
 
-    public bool eventOnly = false;
-
     public NetworkObject()
     {
         this.uid = Guid.NewGuid();
@@ -18,11 +16,10 @@ public class NetworkObject
     {
         writer.Write(this.GetType().Name);
         writer.Write(this.uid.ToString());
-        writer.Write(this.eventOnly);
     }
     public static object[] ReadMetaData(BinaryReader reader)//, out int length) //returns meta data objects. needs to be casted.
     {
-        return new object[] {reader.ReadString(), reader.ReadString(), reader.ReadBoolean()};
+        return new object[] {reader.ReadString(), reader.ReadString()};
     }
     public virtual void Encode(BinaryWriter writer)
     {

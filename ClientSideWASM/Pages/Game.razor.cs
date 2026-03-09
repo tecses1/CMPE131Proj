@@ -103,7 +103,7 @@ public async void OnFrameReady(float timestamp)
     private async Task FixedUpdate()
     {
         // All physics logic goes here!
-        main.UpdatePlayer(inputWrapper);
+        main.UpdateInput(inputWrapper);
         await main.Update();
         
         // Clear input only after it has been processed by the physics

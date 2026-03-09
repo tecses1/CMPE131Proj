@@ -23,28 +23,26 @@ public class Lobby
     {
         return users[0] == user;
     }
-
+    //Called when host sends over their gamestate.
     public void UpdateState(byte[] newState)
     {
-        //send state to all users. no need to keep it in memory, unless we want async updating. 
-        State = newState;
-        //Update();
-    }
-    
-    public void Update()
-    {
+        //Send state to all users NOT host.
+        for (int i = 1; i < users.Count; i++)
+        {
+            users[i].Send("{GameStateUpdate}", newState);
+        }
+
+        //Send the next inputs to everyone.
         for (int i = 0; i < users.Count; i++)
         {
-            users[i].Send("{GameStateUpdate}",  State );
-            //Serialize the array of player states into 
-
-            //remove our state, we don't have to send it to the local machine.
-            List<byte[]> copy = new List<byte[]>(playerStates);
-            copy.RemoveAt(i);
-            //Send over our the players! 
-            users[i].Send("{PlayerStateUpdates}",NetworkModel.SerializeJagged(copy.ToArray()));
+            if (playerStates[i] != null)
+            {
+                users[i].Send("{InputAll}", NetworkModel.SerializeJagged(playerStates));
+            }
         }
+        
     }
+    
     public void SpawnGameObject(byte[] gameObjectData)
     {
         //Request the host to spawn this game object.
@@ -63,5 +61,18 @@ public class Lobby
                 playerStates[i] = newState;
             }
         }
+    }
+
+    public void AddInput(User user, byte[] inputData)
+    {
+        for (int i = 0; i < users.Count; i++)
+        {
+            if (user == users[i])
+            {
+                playerStates[i] = inputData;
+            }
+        }
+        //send the input to the host to handle. 
+        //users[0].Send("{Input}", inputData);
     }
 }

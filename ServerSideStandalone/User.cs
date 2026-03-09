@@ -9,13 +9,13 @@ public class User : NetworkModel
     public string name;
     public Lobby myLobby ;
     public string currentPage;
-    public int uid;
+    public Guid uid;
 
 
 
-    public User(int uid, Server s)
+    public User( Server s)
     {
-        this.uid = uid;
+        this.uid = Guid.NewGuid();
         this.server = s;
         
         //Initialzie the net code.
@@ -51,6 +51,8 @@ public class User : NetworkModel
                         else return new string[] {"{No}"};
                     }
                     return new string[] {"{NoLobby}"};
+                case "{RequestUID}":
+                    return new string[] {uid.ToString()};
                 default:
                     return new[] { "Error", "Unknown Command" };
             }
@@ -60,7 +62,7 @@ public class User : NetworkModel
         //Console.WriteLine("Recieved one time update: " + purpose);
         switch (purpose)
             {
-                case "{GameUpdate}":
+                case "{GameStateUpdate}":
                     myLobby.UpdateState(data);
                     break;
                 case "{PlayerUpdate}":
@@ -75,6 +77,11 @@ public class User : NetworkModel
                     break;
                 case "{SetPage}":
                     this.currentPage = args[0];
+                    break;
+
+                case "{Input}":
+                    //We can handle some input on the server, but for now we just send it to the host to handle. 
+                    myLobby.AddInput(this,data);
                     break;
 
                 default:

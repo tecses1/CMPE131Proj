@@ -11,7 +11,6 @@ using Shared;
 
 public class Server
 {
-    int uidCounter = 0;
     int lobbyCtr = 0;
     public List<User> users = new List<User>();
     private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
@@ -40,20 +39,8 @@ public class Server
     {
         Console.WriteLine("Server initialized.");
         _ = RunServerAsync(); // Fire and forget
-        _ = UpdateServer();// do any update methods we want to update regardless of client input.
     }
 
-    public async Task UpdateServer()
-    {
-        while (true)
-        {
-            foreach (Lobby l in openLobbies)
-            {
-                l.Update();//Send gamestates to the clients, do this on our end to reduce client overhead.
-            }
-            await Task.Delay(1);
-        }
-    }
     public async Task RunServerAsync()
     {
         using HttpListener listener = new HttpListener();
@@ -89,7 +76,7 @@ public class Server
     {
 
         // Create user with the WebSocket instead of a Socket
-        User newUser = new User(uidCounter++,this);
+        User newUser = new User(this);
         newUser.Initialize(webSocket); // Assuming User has an Initialize method to set the WebSocket
         await Task.Delay(1000);
         users.Add(newUser);
