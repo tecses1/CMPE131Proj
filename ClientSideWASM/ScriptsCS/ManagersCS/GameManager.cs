@@ -276,7 +276,17 @@ public class GameManager : RenderManager
 
     }
 
+    void debug()
+    {
+        string output = "Local UID: " + player.uid.ToString();
 
+        foreach (Player p in otherPlayers)
+        {
+            output += ", Other player: " + p.uid;
+        }
+
+        Console.WriteLine(output);
+    }
     public override async Task Update()
     {
         await base.Update();
@@ -301,6 +311,8 @@ public class GameManager : RenderManager
 
                 }
                 nm.objsToAdd.Clear();
+
+                debug();
 
             }
             else
@@ -328,6 +340,8 @@ public class GameManager : RenderManager
 
 
                 nm.loadGameState(ref activeObjects);
+
+                debug();
 
             }
 
