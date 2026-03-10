@@ -10,7 +10,7 @@ public class NetworkManager
     GameManager gm;
     public string myLobby = "";
     public bool isHost = false;
-    public byte[] gameState;
+    public List<byte[]> gameState = new List<byte[]>();
     public List<byte[]> inputsReceived = new List<byte[]>();
     public List<byte[]> objsToAdd = new List<byte[]>();
     public List<byte[]> serverGameStates = new List<byte[]>();

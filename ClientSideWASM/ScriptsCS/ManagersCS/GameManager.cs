@@ -96,8 +96,10 @@ public class GameManager : RenderManager
 
 
         //Update our gamestate from the input.
-        if (nm.gameState != null) //wait for the gamestate to populate.
-        gl.LoadGameState(nm.gameState);
+        if (nm.gameState.Count > 0){ //wait for the gamestate to populate.
+            gl.LoadGameState(nm.gameState[0]);
+            nm.gameState.RemoveAt(0);
+        }
         else Console.WriteLine("Gamestate is null. Are we recieving? ");
     }
 

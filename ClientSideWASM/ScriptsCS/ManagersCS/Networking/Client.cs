@@ -61,7 +61,8 @@ public class Client : NetworkModel
                 // Logic: Show a popup
                 //if (data == null) Console.WriteLine("WARNING: NULL GAMESTATE???");
                 //Console.WriteLine("Got game state update: " + data.Length);
-                this.nm.gameState = data;
+
+                this.nm.gameState.Add(data);
                 break;
             case "{InputAll}":
                 // Logic: Show a popup
