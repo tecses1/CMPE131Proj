@@ -3,14 +3,14 @@ using System.Numerics;
 using Blazorex;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using Shared;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 public class RenderManager
 {
     //World size.
     
-    public readonly int worldSizeX = 2000;
-    public readonly int worldSizeY = 2000;
+
     //World offset, for rendering.
     public float worldOffsetX = 0;
     public float worldOffsetY = 0;
@@ -91,10 +91,6 @@ public class RenderManager
         this.worldOffsetY += direction.Y;
     }
 
-    public void CanvasToWorldPosition(Vector2 v)
-    {
-        //return new Vector2()
-    }
     public void SetMainCanvas(CanvasBase c)
     {
         this.mainCanvas = c;
@@ -109,6 +105,7 @@ public class RenderManager
         
         this.rectsToRender.Add(rect);
     }
+
     int getCacheIndex(GameObject o)
     {
         int frameSkip = 0;
@@ -279,8 +276,8 @@ public class RenderManager
         float[] bounds = new float[4];
         bounds[0] = 0; //Top left corner X
         bounds[1] = 0; //Top left corner Y
-        bounds[2] = worldSizeX; //Bottom right corner X
-        bounds[3] = worldSizeY; //Bottom right corner Y
+        bounds[2] = GameConstants.worldSizeX; //Bottom right corner X
+        bounds[3] = GameConstants.worldSizeY; //Bottom right corner Y
 
         return bounds;
     }

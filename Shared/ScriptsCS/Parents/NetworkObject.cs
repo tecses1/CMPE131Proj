@@ -1,5 +1,5 @@
 
-namespace ClientSideWASM;
+namespace Shared;
 
 
 public class NetworkObject

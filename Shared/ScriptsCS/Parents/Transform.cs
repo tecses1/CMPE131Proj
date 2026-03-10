@@ -1,7 +1,6 @@
 using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
 
-namespace ClientSideWASM;
+namespace Shared;
 
 [System.Serializable]
 public class Transform

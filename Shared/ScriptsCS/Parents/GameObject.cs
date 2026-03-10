@@ -1,10 +1,6 @@
 
-namespace ClientSideWASM;
+namespace Shared;
 
-using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.Json;
 public class GameObject : NetworkObject
 {
 
@@ -12,9 +8,7 @@ public class GameObject : NetworkObject
     [Network(-1)]
     public Transform transform {get;set;}
     //game manager reference. This class makes many frequent callbacks.
-    protected GameManager gm;
-
-    public Text missingText;
+    protected GameLogic gl;
 
     [Network(-2)]
     public int currentFrame {get;set;} = 0;
@@ -22,15 +16,15 @@ public class GameObject : NetworkObject
     public bool disableCollision = false;
 
 
-    public GameObject(ref GameManager gm, Transform transform)
+    public GameObject (Transform transform)
     {
-        this.gm  = gm;
         this.transform = transform;
-        this.missingText = new Text("MISSING",ref transform);
-        this.missingText.setFillColor(Color.LightYellow,255);
-        this.missingText.setBorderColor(Color.Red);
-        this.missingText.borderWidth = 5;
         
+    }
+
+    public void RegisterGameLogic(GameLogic gl)
+    {
+        this.gl  = gl;
     }
     public bool InBounds(float[] rect)
     {
@@ -109,7 +103,7 @@ public class GameObject : NetworkObject
 
     public virtual void Kill()
     {
-        gm.RemoveGameObject(this);
+        gl.RemoveGameObject(this);
         
         
     }

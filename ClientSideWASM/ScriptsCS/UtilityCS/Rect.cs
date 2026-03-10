@@ -1,5 +1,5 @@
 namespace ClientSideWASM;
-
+using Shared;
 using System.Drawing;
 public class Rect
 {
@@ -20,9 +20,9 @@ public class Rect
         this.transform = t;
 
     }
-    public virtual void Draw(GameManager gm)
+    public virtual void Draw(RenderManager rm)
     {
-        gm.AddRectToRender(this);
+        rm.AddRectToRender(this);
            
     }
     public void setBorderColor(Color c)

@@ -1,9 +1,7 @@
-namespace ClientSideWASM
-{
+namespace Shared;
+
     using System.Numerics;
     using System;
-    using Blazorex;
-    using System.ComponentModel;
 
     public class Projectile : GameObject
     {
@@ -20,8 +18,9 @@ namespace ClientSideWASM
         public int damage {get; set;} = 1;
         [Network(3)]
         public Guid owner;
-        public Projectile(ref GameManager gm, Transform transform, Vector2 velocity, int lifetime =5) : base(ref gm, transform)
+        public Projectile( Transform transform, Vector2 velocity, int lifetime =5) : base(transform)
         {
+        
             Velocity = velocity;
             LifetimeFrames = lifetime;
         }
@@ -78,6 +77,6 @@ namespace ClientSideWASM
 
             
         }
-
     }
-}
+    
+

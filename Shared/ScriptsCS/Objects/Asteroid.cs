@@ -1,8 +1,8 @@
-namespace ClientSideWASM;
+namespace Shared;
 using System.Dynamic;
 using System.Numerics;
 
-class Asteroid : GameObject
+public class Asteroid : GameObject
 {
     public float rotationSpeed;
     public Vector2 velocity;
@@ -14,7 +14,7 @@ class Asteroid : GameObject
     public int hp = 1;
 
     public int LifetimeFrames = 90; // how long we live outside of bounds.
-    public Asteroid(ref GameManager gm, Transform t, float speed) : base(ref gm, t)
+    public Asteroid(Transform t, float speed) : base( t)
     {
         this.speed = speed;
         this.rotationSpeed = (float)Random.Shared.NextDouble() * 5;
@@ -64,7 +64,7 @@ class Asteroid : GameObject
             transform.rotation += rotationSpeed;
             transform.position += velocity;
 
-                if (!this.CollideWith(gm.GetWorldBounds())) //We are outside of bounds. Start counting down for kill.
+                if (!this.CollideWith(gl.GetWorldBounds())) //We are outside of bounds. Start counting down for kill.
                 {
                     //Console.WriteLine("OUT OF BOUNDS");
                     LifetimeFrames--;
@@ -93,12 +93,54 @@ class Asteroid : GameObject
                     Vector2 randomDirection = new Vector2((float)Math.Cos(randomAngle),(float)Math.Sin(randomAngle));
                     randomDirection = Vector2.Normalize(randomDirection + this.velocity);
                     Transform t = new Transform(this.transform.position.X, this.transform.position.Y, (int)hypo / 3, (int)hypo / 3);
-                    Asteroid newAsteroid = new Asteroid(ref gm, t, this.speed / 3);
+                    Asteroid newAsteroid = new Asteroid(t, this.speed / 3);
                     newAsteroid.SetDirection(randomDirection);
-                    gm.AddNewGameObject(newAsteroid);
+                    gl.AddGameObject(newAsteroid);
                 }
             }
             }
 
+    }
+    //Helper function to spawn an asteroid on world bounds.
+    public static Asteroid GenerateAsteroid()
+    {
+        Random r = new Random();
+        int size = (int)(20 + r.NextDouble() * 30);
+        if (r.NextInt64(0,15) == 8)
+        {
+            size = size * 5;
+        }
+                
+        int spawnX,spawnY;
+        int edge = r.Next(0,4);
+        switch (edge)
+        {
+            case 0: //top
+                spawnX = r.Next(0, GameConstants.worldSizeX);
+                spawnY = -size;
+                break;
+            case 1: //right
+                spawnX = GameConstants.worldSizeX + size;
+                spawnY = r.Next(0, GameConstants.worldSizeY);
+                break;
+            case 2: //bottom
+                spawnX = r.Next(0, GameConstants.worldSizeX);
+                spawnY = GameConstants.worldSizeY + size;
+                break;
+            case 3: //left
+                spawnX = -size;
+                spawnY = r.Next(0, GameConstants.worldSizeY);
+                break;
+            default:
+                spawnX = -size;
+                spawnY = r.Next(0, GameConstants.worldSizeY);
+                break;
+
+        }
+        Transform t = new Transform(spawnX, spawnY, size, size);
+        Asteroid a = new Asteroid(t,r.Next(1,3));
+        a.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
+        return a;
+        //gl.AddGameObject(a):
     }
 }

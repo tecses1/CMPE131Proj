@@ -1,11 +1,11 @@
-using Blazorex;
 
-namespace ClientSideWASM;
+
+namespace Shared;
 
 public class Star : GameObject 
 {
     
-    public Star (ref GameManager gm, Transform t) : base(ref gm,t )
+    public Star (Transform t) : base(t )
     {
         
     }

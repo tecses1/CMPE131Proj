@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Blazored.LocalStorage.StorageOptions;
+using Shared;
 
 //CONST variables will be static across the whole project. Access with Settings.x
 //CONST variables will also be IGNORED For saving a settings file.
@@ -17,12 +18,12 @@ public static class Settings
     public static string name = "Player";
 
 
-    //Server settings...
+    //Server settings to connect to.
 
     public const string server = "127.0.0.1"; // Server address (localhost)
     public const int port = 8888; // Port number
 
-    //Game Settings
+    //Game Settings for client
     public const string OutOfBoundsMessage = "You are out of bounds!";
 
     // Star Settings

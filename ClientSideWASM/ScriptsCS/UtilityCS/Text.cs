@@ -2,6 +2,7 @@ namespace ClientSideWASM;
 
 using System.Drawing;
 using System.Numerics;
+using Shared;
 
 public class Text : Rect
 {
@@ -28,9 +29,9 @@ public class Text : Rect
         this.offsetY = offsetY;
 
     }
-    public override void Draw(GameManager gm)
+    public override void Draw(RenderManager rm)
     {
-        gm.AddTextToRender(this);
+        rm.AddTextToRender(this);
            
     }
 

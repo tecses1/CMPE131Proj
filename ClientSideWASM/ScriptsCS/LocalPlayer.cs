@@ -1,27 +1,27 @@
 namespace ClientSideWASM;
 
+using Shared;
 using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 
 
 //Handles the local player controller.
-public class Player : GameObject
+public class LocalPlayer : Player 
 {
     //move comonly defined fields for classes to the GameObject class.
     //Game object class may be able to handle default rending, image fetching by name, etc.
 
     public InputWrapper cInput;
+    public GameManager gm;
     private readonly List<Projectile> projectiles = new();
     private float bulletSpeed = 12f;
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
-    public int Score { get; private set; } = 0;
 
     // for health bar
     public int MaxHealth = 1000;
-    public int CurrentHealth = 1000;
     private Rect healthBarBackground;
     private Rect healthBarFill;
     private int barOffsetX;
@@ -36,7 +36,6 @@ public class Player : GameObject
 
     float drag = 0.05f;
     [Network(0)]
-    public string playerNameString = "";
 
     //UI elements
     public Text playerName;
@@ -53,7 +52,7 @@ public class Player : GameObject
     int shooting = -1;
 
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
-    public Player(ref GameManager gm, Transform transform) : base(ref gm,transform ) {
+    public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
         playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
         playerName.worldSpace = false;
@@ -95,6 +94,8 @@ public class Player : GameObject
         healthBarFill = new Rect(ref hbFillTransform);
         healthBarFill.setFillColor(Color.Green);
         healthBarFill.worldSpace = true;
+
+        this.gm = gm;
     
 
     }
@@ -111,6 +112,7 @@ public class Player : GameObject
         base.Decode(reader);
         this.playerName.transform.position = this.transform.position + new Vector2(0,-transform.size.Y/2);
     }
+    /*
     public override void Update() {
 
 
@@ -228,7 +230,7 @@ public class Player : GameObject
         healthBarFill.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
         UpdateHealthBarVisual();
 }
-
+    */
     public override void Render()
     {
         
@@ -248,7 +250,7 @@ public class Player : GameObject
         //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
         //If we're in the world bounds.
         // added else out of bounds take damage
-        bool[] collided = this.GetCollisionSides(gm.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
+        bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
         if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
         {
             gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
@@ -264,7 +266,7 @@ public class Player : GameObject
         
 
 
-        if(!this.CollideWith(gm.GetWorldBounds())){
+        if(!this.CollideWith(gm.gl.GetWorldBounds())){
             outOfBoundsText.Draw(gm);
             if (alpha <= 25)
             {
@@ -288,7 +290,7 @@ public class Player : GameObject
         
 
 
-        if(!this.CollideWith(gm.GetWorldBounds())){
+        if(!this.CollideWith(gm.gl.GetWorldBounds())){
             outOfBoundsText.Draw(gm);
             if (alpha <= 25)
             {
@@ -311,80 +313,17 @@ public class Player : GameObject
         }
     }
 
-    private void SpawnGuntype1(Vector2 target)
-    {
-        shotCooldownSeconds = 0.09f;
-        Vector2 dir = target - transform.position;
-        if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
-        dir = Vector2.Normalize(dir);
+    
 
-        float spawnOffset = MathF.Max(20, MathF.Min(transform.size.X, transform.size.Y) / 2f - 10f);
-        
-        Vector2 spawnPos = transform.position - dir;// * spawnOffset;
-        Vector2 velocity = dir * bulletSpeed;
 
-        Transform proj1t = new Transform(spawnPos.X-transform.Left().X*16,spawnPos.Y-transform.Left().Y*16, 7,7, transform.rotation);
-        Transform proj2t = new Transform(spawnPos.X+transform.Left().X*16,spawnPos.Y+transform.Left().Y*16, 7,7, transform.rotation);
-        var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 28);
-        var proj2 = new Projectile(ref gm, proj2t, velocity, lifetime: 28);
-
-        proj.owner = this.uid;
-        proj2.owner = this.uid;
-
-        proj.damage = 6;
-        proj2.damage = 6;
-
-        
-        gm.AddNewGameObject(proj);
-        gm.AddNewGameObject(proj2);
-    }
-
-    private void SpawnGuntype2(Vector2 target)
-    {
-        shotCooldownSeconds = 0.24f;
-        Vector2 dir = target - transform.position;
-        if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
-        dir = Vector2.Normalize(dir);
-
-        
-        Vector2 spawnPos = transform.position - dir;// * spawnOffset;
-        int offset = 16;
-        if (barrel)
-        {
-            offset = -16;
-        }
-        Transform proj1t = new Transform(spawnPos.X-transform.Left().X*offset,spawnPos.Y-transform.Left().Y*offset, 15,15);
-        proj1t.RotateTo(target);
-        Vector2 velocity = proj1t.Forward() * bulletSpeed;
-
-        var proj = new Projectile(ref gm, proj1t, velocity, lifetime: 56);
-        proj.owner = this.uid;
-        proj.damage = 16;
-
-        gm.AddNewGameObject(proj);
-        barrel = !barrel;
-    }
-
-    //score
-    public void AddScore(int points)
-    {
-        Score += points;
-        scoreText.text = $"Score: {Score}";
-    }
 
     // ship damage
     public void TakeDamage(int damage)
     {
-        CurrentHealth -= damage;
-        if (CurrentHealth < 0) CurrentHealth = 0;
+        base.TakeDamage(damage);
 
         UpdateHealthBarVisual();
-        // check death
-        if (CurrentHealth == 0)
-        {  
-            this.Kill();
-            Console.WriteLine("Should be dead but no respawn yet");
-        }
+    
     }
 
     // health bar

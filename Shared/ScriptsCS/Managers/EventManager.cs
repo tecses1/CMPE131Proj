@@ -1,8 +1,4 @@
-using Microsoft.JSInterop;
-using Shared;
-using System.Text.Json;
-using System.Numerics;
-namespace ClientSideWASM;
+namespace Shared;
 
 
 public class EventManager

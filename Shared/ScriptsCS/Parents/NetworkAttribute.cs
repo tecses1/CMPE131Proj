@@ -1,5 +1,4 @@
-namespace ClientSideWASM;
-using System.ComponentModel.DataAnnotations;
+namespace Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
