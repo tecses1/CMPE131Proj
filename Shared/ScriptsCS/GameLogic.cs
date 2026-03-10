@@ -1,5 +1,5 @@
 namespace Shared;
-
+using System.Numerics;
 //replace game manager so we can run the game logic on a server machine.
 public class GameLogic
 {
@@ -45,7 +45,9 @@ public class GameLogic
         // TODO: probably update this when main player updates???
         foreach (Player p in players)
         {
+            p.Update();
             eventManager.Register(p);
+            
         }
 
 
@@ -91,7 +93,8 @@ public class GameLogic
 
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
-            AddGameObject(Asteroid.GenerateAsteroid());
+            Asteroid newAsteroid = Asteroid.GenerateAsteroid();
+            AddGameObject(newAsteroid);
             counter = DateTime.Now;
         }
     }
@@ -117,43 +120,147 @@ public class GameLogic
 
     public void AddGameObject(GameObject o)
     {
-        
+        o.RegisterGameLogic(this); //make sure the object has the required reference to this.
+        this.objsToAdd.Add(o);
     }
 
     public void RemoveGameObject(GameObject o)
     {
+        this.objsToRemove.Add(o);
+    }
+
+    public void AddPlayer(Player p)
+    {
+        this.players.Add(p);
+    }
+    public List<GameObject> GetActiveObjects()
+    {
+        return this.activeObjects;
+    }
+
+    public List<GameObject> GetPlayers()
+    {
+        return this.players;
+    }
+
+    public GameObject CreateGameObject(string className, string uid)
+    {
+        GameObject newObj = null;
         
+        // Setup common references (GameManager, etc.)
+        Transform defaultT = new Transform(0,0,0,0);
+
+        // Factory logic based on the ClassName string at index [0]
+        switch (className)
+        {
+            case "Asteroid":
+                newObj = new Asteroid(defaultT, 1);
+                break;
+            case "Projectile":
+                Projectile p = new Projectile(defaultT, new Vector2(0,0));
+                newObj = p;
+                break;
+            // Add more types here as your game grows
+        }
+        newObj.uid = Guid.Parse(uid);
+
+        return newObj;
     }
 
 
-}
+    //Header for simplification
+    public byte[] GetGameState(DateTime frameStamp)
+    {
+        return this.GetGameState(frameStamp, players, activeObjects);
+    }
+
+    public void LoadGameState(byte[] gameState)
+    {
+        this.LoadGameState(gameState, players,activeObjects);
+    }
+    //Go through all groups passed, and, in order, write their meta data and object data.
+    byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
+    {
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
+        {
+            writer.Write(frameStamp.Ticks);
+            foreach (List<GameObject> group in groups)
+            {
+                //write the group size.
+                writer.Write(group.Count);
+                foreach (GameObject go in group)
+                {
+                    go.WriteMetaData(writer);
+                    go.Encode(writer);
 
 
-/*
-    public InputWrapper[] DecodeInputs(byte[] data)
+                }
+            }
+            return ms.ToArray();
+        }
+    }
+    void LoadGameState(byte[] stateData, params List<GameObject>[] localGroups)
     {
 
-        byte[][] playerInputs = NetworkModel.DeserializeJagged(data);
-
-        InputWrapper[] inputs = new InputWrapper[playerInputs.Length];
-
-        for (int i = 0; i < playerInputs.Length; i++)
+        using (MemoryStream ms = new MemoryStream(stateData))
+        using (BinaryReader reader = new BinaryReader(ms))
         {
-            if (playerInputs[i] == null)
-            {
-                Console.WriteLine("Warning: Null player input at index " + i);
-                continue;
-            }
+            DateTime frameStamp = new DateTime(reader.ReadInt64());
 
-            if (playerInputs[i].Length == 0)
+            // Loop through each group list passed in
+            for (int i = 0; i < localGroups.Length; i++)
             {
-                Console.WriteLine("Warning: Empty player input at index " + i);
-                continue;
+                //Console.WriteLine("[LGS] Working on group " + i);
+                List<GameObject> currentGroup = localGroups[i];
+                
+                // 1. Read how many objects are in this specific group
+                int objectCount = reader.ReadInt32();
+                //Console.WriteLine("Group has " + objectCount + " objects.");
+                // Track UIDs so we know what to delete later
+                HashSet<Guid> receivedUids = new HashSet<Guid>();
+
+                for (int j = 0; j < objectCount; j++)
+                {
+                    // 2. Read Metadata BEFORE instantiation
+                    // Note: Ensure your objects write ClassName then UID string in WriteMetaData!
+                    object[] metaData = GameObject.ReadMetaData(reader);
+                    string uidString = (string)metaData[1];
+                    string className = (string)metaData[0];
+                    //Console.WriteLine("checking object: " + uidString + " and " + className);
+                    Guid uid = Guid.Parse(uidString);
+                    
+                    receivedUids.Add(uid);
+
+                    // 3. Look for the object in our local group
+                    // (Note: For massive lists, a Dictionary is faster than .Find, but this is fine for now)
+                    GameObject obj = currentGroup.Find(o => o.uid == uid);
+
+                    // 4. CREATE if it doesn't exist
+                    if (obj == null)
+                    {
+                        //Console.WriteLine("object does not exist, adding object: " + className);
+                        obj = CreateGameObject(className, uidString);
+                        currentGroup.Add(obj);
+                        
+                    }
+                    //Console.WriteLine("Updating object");
+                    // 5. UPDATE the state
+                    obj.Decode(reader);
+                }
+
+                // 6. DELETE (Cleanup) old objects
+                // Iterate backwards to safely remove items from the list
+                for (int k = currentGroup.Count - 1; k >= 0; k--)
+                {
+                    if (!receivedUids.Contains(currentGroup[k].uid))
+                    {
+                        // Call any necessary destroy logic here (e.g., particle effects, physics cleanup)
+                        currentGroup.RemoveAt(k);
+                    }
+                }
             }
-            inputs[i] = InputWrapper.Decode(playerInputs[i]);
-            
         }
-
-        return inputs;
     }
-*/
+    
+}

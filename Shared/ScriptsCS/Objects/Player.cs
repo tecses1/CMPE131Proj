@@ -50,9 +50,11 @@ public class Player : GameObject
         if (e == null){
             return;
         }
+        //Only update player rotation when the input is valid.
+        Vector2 mousePos = new Vector2((float)cInput.MouseXWorld, (float)cInput.MouseYWorld);
+        transform.RotateTo(mousePos); 
+        //Console.WriteLine("Player pos: " + transform.position.X+"," + transform.position.Y + " lookat: " + mousePos.X + ", " + mousePos.Y + ", ROTIATION: " + transform.rotation);
         
-        Vector2 mousePos = new Vector2((float)cInput.MouseX, (float)cInput.MouseY);
-        transform.RotateTo(mousePos);      //we're inside the bounds.
 
 
 

@@ -1,6 +1,8 @@
 
 
 namespace ClientSideWASM.Pages;
+
+using System.Numerics;
 using Blazorex;
 using Shared;
 public partial class Game
@@ -12,7 +14,7 @@ public partial class Game
     private const int CanvasWidth = 1024;
     private const int CanvasHeight = 768;
 
-    public InputWrapper inputWrapper;
+    public ClientInputWrapper inputWrapper;
     public GameManager main;
 
     
@@ -64,7 +66,7 @@ public partial class Game
         );
         //Initialize my stuff.
         main = new GameManager(JS,  nm);
-        inputWrapper = new InputWrapper();
+        inputWrapper = new ClientInputWrapper();
 
     }
 
@@ -132,6 +134,7 @@ public async void OnFrameReady(float timestamp)
             return;
 
         // store the coords in our InputWrapper (MouseMoveEvent.OffsetX/Y are double)
+        //Console.WriteLine("offset: " + e.OffsetX + "," +e.OffsetY);
         inputWrapper.loadMouseMove(e.OffsetX, e.OffsetY);
     }
 

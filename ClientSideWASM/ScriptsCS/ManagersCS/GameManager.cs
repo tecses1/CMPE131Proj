@@ -15,25 +15,12 @@ public class GameManager : RenderManager
 
     public GameLogic gl;
 
-    //Intiialzie the rendre manager
-    //List of different game objects.
-    Player  player;
-    List<GameObject> activeObjects = new List<GameObject>();
-    List<GameObject> backgroundStars = new List<GameObject>();
-    List<GameObject> otherPlayers = new List<GameObject>();
-    //Remove objects after tehy die. Can not happen during the frame, so we save waht dies during the frame to remove after..
-    private List<GameObject> objsToRemove = new List<GameObject>();
-    //Add new objects that spawn.
-    private List<GameObject> objsToAdd = new List<GameObject>();
-    //Request the host to spawn these.
-    private List<GameObject> objsToAddRequest = new List<GameObject>();
-
-
-
+    public LocalPlayer localPlayer;
+    public List<GameObject> backgroundStars = new List<GameObject>();
 
     Text isLocal;
 
-    InputWrapper cInput;
+    ClientInputWrapper cInput;
     
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
@@ -41,10 +28,22 @@ public class GameManager : RenderManager
         this.nm = nm;
         nm.Initialize(this);
         
+        //initialize the game logic which handles the game behavior.
+        this.gl = new GameLogic();
+
+
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
         isLocal = new Text("Playing Locally ", ref t);
         isLocal.worldSpace = false;
+
+        //Create local player, add to GameLogic? 
+        localPlayer = new LocalPlayer(this, new Transform(0,0,100,100));
+        //make sure local player has UID for finding updates.
+        localPlayer.uid = nm.client.assignedUID;
+        localPlayer.isLocalPlayer = true;
+        //Add the local player to the players.
+        gl.AddPlayer(localPlayer);
     }
     
 
@@ -63,7 +62,7 @@ public class GameManager : RenderManager
                     int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize,Settings.minSize, Settings.maxSize);
                     Transform t = new Transform(i,j,size,size);
                     Star s = new Star(t);
-                    s.RegisterGameLogic(gl);
+                    //s.RegisterGameLogic(gl);
                     
                     backgroundStars.Add(s);
                 }
@@ -74,9 +73,32 @@ public class GameManager : RenderManager
     }
 
 
-    public void UpdateInput(InputWrapper e)
+    public void UpdateInput(ClientInputWrapper e)
     {
         this.cInput = e;
+    }
+
+    public override async Task Update()
+    {
+
+        //pass local input to the local player
+        //localPlayer.cInput = this.cInput;
+
+
+        //cast the camera position locally to a world pos, for calculations on server.
+        cInput.OverwriteCameraToWorldPos(this);
+        //make sure our input has our UID.
+        this.cInput.owner = nm.client.assignedUID;
+        //send our input over to the server!
+        this.nm.client.Send("{Input}",cInput.ToBytes());
+    
+        Console.WriteLine(cInput.ToString());
+
+
+        //Update our gamestate from the input.
+        if (nm.gameState != null) //wait for the gamestate to populate.
+        gl.LoadGameState(nm.gameState);
+        else Console.WriteLine("Gamestate is null. Are we recieving? ");
     }
 
 
@@ -88,7 +110,7 @@ public class GameManager : RenderManager
 
     public override async Task Render()
     {
-
+        //Console.WriteLine("Calling render!");
         if (!nm.client.isConnected()) {
             isLocal.Draw(this);
             nm.isHost = true;
@@ -98,43 +120,43 @@ public class GameManager : RenderManager
             isLocal.text = "Playing Solo (No Lobby)";
         }
         
+        //Console.WriteLine("Stars render!");
 
         foreach (GameObject other in backgroundStars)
         {
             AddObjToRender(other);//tell RenderManager to Render the object.
             other.Render(); //Call custom render, if it has one. (Syncs text and rect draw calls)
         }
+        //Console.WriteLine("Players render!");
 
-        foreach (GameObject go in activeObjects)
+        foreach (GameObject go in gl.GetPlayers())
         {
+            if (go.uid == localPlayer.uid) continue; //skip local player.
             AddObjToRender(go); //tell RenderManager to Render the object.
             go.Render();//Call custom render, if it has one. (Syncs text and rect draw calls)
         }   
+        //Console.WriteLine("ACtive Objects render!");
 
-        foreach (GameObject go in otherPlayers)
+        foreach (GameObject go in gl.GetActiveObjects())
         {
             AddObjToRender(go); //tell RenderManager to Render the object.
             go.Render();//Call custom render, if it has one. (Syncs text and rect draw calls)
         }
-        AddObjToRender(player);//tell RenderManager to Render the object.
-        player.Render();//Call custom render, if it has one. (Syncs text and rect draw calls)
-        await base.Render(); //Do whatever the RenderManager wants to do by itself. probably the official render calls.
+                //Console.WriteLine("Local Player render!");
+
+        AddObjToRender(localPlayer);//tell RenderManager to Render the object.
+        localPlayer.Render();//Call custom render, if it has one. (Syncs text and rect draw calls)
+                //Console.WriteLine("Base render!");
+
+        //Do whatever the RenderManager wants to do by itself. probably the official render calls.
+        await base.Render(); 
 
     }
 
     
     //Verify that we did what the host did. If not, we need to correct our gamestate to match the host.
 
-    void Sync()
-    {
-        
-    }
-    public override async Task Update()
-    {
-        //Set the timestamp for this update.
 
-        
-    }
 
 
 

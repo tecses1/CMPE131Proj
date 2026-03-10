@@ -22,6 +22,15 @@
       "command": "dotnet",
       "type": "process",
       "args": ["build", "${workspaceFolder}/ServerSideStandalone/ServerSideStandalone.csproj"]
-    }
+    },
+    {
+    "label": "build-all-sequential",
+    "dependsOrder": "sequence", // This is the magic ingredient
+    "dependsOn": [
+      "build-wpf",
+      "build-wasm"
+    ],
+    "problemMatcher": "$msCompile"
+  }
   ]
 }

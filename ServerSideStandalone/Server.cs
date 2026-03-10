@@ -39,6 +39,26 @@ public class Server
     {
         Console.WriteLine("Server initialized.");
         _ = RunServerAsync(); // Fire and forget
+        _ = UpdateLobbies();
+    }
+
+    public async Task UpdateLobbies()
+    {
+        Console.WriteLine("Lobby thread called...");
+        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(1000f/60f)); //60hz
+
+        while (await timer.WaitForNextTickAsync())        {
+            foreach (Lobby l in openLobbies)
+            {
+                try{
+                l.Update();
+                }catch (Exception ex)
+                {
+                    Console.WriteLine("Error processing lobby: " + ex + " Trace: " + ex.StackTrace);
+                }
+            }
+
+        }
     }
 
     public async Task RunServerAsync()

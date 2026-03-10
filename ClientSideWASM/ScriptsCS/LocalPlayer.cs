@@ -100,11 +100,6 @@ public class LocalPlayer : Player
 
     }
 
-    public static bool IsNearlyZero(float value, float epsilon = 0.0001f)
-    {
-        return Math.Abs(value) < epsilon;
-    }
-
 
 
     public override void Decode(BinaryReader reader)
@@ -233,10 +228,9 @@ public class LocalPlayer : Player
     */
     public override void Render()
     {
-        
         playerName.Draw(gm);
         playerName.text = playerNameString;
-
+        Console.WriteLine("Rotation: " + transform.rotation);
         if (!isLocalPlayer)
         {
             return;
@@ -251,6 +245,9 @@ public class LocalPlayer : Player
         //If we're in the world bounds.
         // added else out of bounds take damage
         bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
+
+        Console.WriteLine(collided[0] + "," + collided[1] + "," + collided[2] + "," + collided[3]);
+        //gm.CenterCameraOn(this.transform);
         if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
         {
             gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
@@ -320,9 +317,7 @@ public class LocalPlayer : Player
     // ship damage
     public void TakeDamage(int damage)
     {
-        base.TakeDamage(damage);
-
-        UpdateHealthBarVisual();
+        UpdateHealthBarVisual(); //damage updates on server.
     
     }
 

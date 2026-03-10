@@ -50,7 +50,7 @@ namespace Shared;
             {
                 transform.position += Velocity;
 
-                if (!this.CollideWith(gm.GetWorldBounds())) //We are outside of bounds. \\
+                if (!this.CollideWith(gl.GetWorldBounds())) //We are outside of bounds. \\
                 {
                     this.Kill();
                     

@@ -1,23 +1,57 @@
+using System.Data;
 using Shared;
+using System;
 
 namespace ServerSideStandalone;
 public class Lobby
 {
     public string Name;
     public byte[] State;
-    public byte[][] playerStates;
+    public InputWrapper[] playerInputs;
 
     List<User> users = new List<User>();
-    
-    
+    //host the game logic on the server. :D
+    GameLogic gl;
+
+    public Lobby()
+    {
+        gl = new GameLogic();
+        Console.WriteLine("Lobby created, gamelogic initialized.");
+    }
 
     public void AddUser(User user)
     {
 
         users.Add(user);
-        playerStates = new byte[users.Count][];
+        playerInputs = new InputWrapper[users.Count];
         
-        Console.WriteLine("user added: " + users.Count + "," + playerStates.Length);
+        //Add a player.
+        Player p = new Player(new Transform(GameConstants.worldSizeX / 2, GameConstants.worldSizeY/2, 50,50));
+        p.uid = user.uid;
+        gl.AddPlayer(p);
+        Console.WriteLine("user added: " + users.Count + "," + playerInputs.Length);
+    }
+
+    public void Update()
+    {
+        DateTime frameStamp = DateTime.Now;
+        //Get the input wrappers for each player.
+        for (int i = 0; i < playerInputs.Length; i++){
+            Player p = gl.getPlayerWithUID(playerInputs[i].owner);
+            if (p != null)
+            {
+                p.cInput = playerInputs[i];
+            }else Console.WriteLine("Player with " + playerInputs[i].owner + " not found. Input not registered!");
+        }
+        //update the world.
+        gl.Update();
+
+        //Create the gamestate to send back.
+        State = gl.GetGameState(frameStamp);
+
+        //Update Gamestate to clients
+        UpdateState(State);
+
     }
     public bool isHost(User user)
     {
@@ -26,21 +60,12 @@ public class Lobby
     //Called when host sends over their gamestate.
     public void UpdateState(byte[] newState)
     {
-        //Send state to all users NOT host.
-        for (int i = 1; i < users.Count; i++)
+        for (int i = 0; i < users.Count; i++)
         {
+            Console.WriteLine ("Sending gamestate to user " + i);
             users[i].Send("{GameStateUpdate}", newState);
         }
 
-        //Send the next inputs to everyone.
-        for (int i = 0; i < users.Count; i++)
-        {
-            if (playerStates[i] != null)
-            {
-                users[i].Send("{InputAll}", NetworkModel.SerializeJagged(playerStates));
-            }
-        }
-        
     }
     
     public void SpawnGameObject(byte[] gameObjectData)
@@ -50,18 +75,6 @@ public class Lobby
         users[0].Send("{SpawnGameObject}", gameObjectData );
         
     }
-    public void UpdateUser(User user, byte[] newState)
-    {
-        //This is where you would update the specific user data. For now we just broadcast it to everyone.
-        //store our spedcific data to send on next gamestate update.
-        for (int i = 0; i < users.Count; i++)
-        {
-            if (user == users[i])
-            {
-                playerStates[i] = newState;
-            }
-        }
-    }
 
     public void AddInput(User user, byte[] inputData)
     {
@@ -69,7 +82,8 @@ public class Lobby
         {
             if (user == users[i])
             {
-                playerStates[i] = inputData;
+                playerInputs[i] = InputWrapper.FromBytes(inputData);
+                //Console.WriteLine("Setting player input to" + playerInputs[i].ToString());
             }
         }
         //send the input to the host to handle. 

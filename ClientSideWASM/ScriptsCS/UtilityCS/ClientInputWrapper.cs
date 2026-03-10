@@ -1,13 +1,15 @@
 namespace Shared;
 using System;
 using Blazorex;
+using System.Numerics;
+using ClientSideWASM;
 
-public class InputWrapperClient : InputWrapper
+public class ClientInputWrapper : InputWrapper
 {
 
     private bool _prevLeftDown = false;
 
-    public InputWrapperClient() { }
+    public ClientInputWrapper() { }
 
     public void loadKeysDown(KeyboardPressEvent keysDown)
 
@@ -70,6 +72,12 @@ public class InputWrapperClient : InputWrapper
         }
     }
 
+    public void OverwriteCameraToWorldPos(GameManager gm)
+    {
+        Vector2 overwrite = gm.CameraToWorldPos(new Vector2((float)MouseX, (float)MouseY));
+        this.MouseXWorld = overwrite.X;
+        this.MouseYWorld = overwrite.Y;
+    }
     // Call at the end of the frame to reset single-frame edges (LeftPressed)
     public void Clear()
     {

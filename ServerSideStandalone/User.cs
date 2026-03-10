@@ -65,9 +65,6 @@ public class User : NetworkModel
                 case "{GameStateUpdate}":
                     myLobby.UpdateState(data);
                     break;
-                case "{PlayerUpdate}":
-                    myLobby.UpdateUser(this,data);
-                    break;
                 case "{SpawnGameObject}":
                     
                     myLobby.SpawnGameObject(data);

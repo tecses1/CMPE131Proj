@@ -236,6 +236,8 @@ public class RenderManager
     }
     public Vector2 CameraToWorldPos(Vector2 v)
     {
+                Console.WriteLine("Offset: " + v.X + " + " +worldOffsetX);
+
         return new Vector2(v.X + worldOffsetX, v.Y + worldOffsetY);
     }
     public Vector2 CameraToWorldPos(float x, float y)
@@ -271,16 +273,7 @@ public class RenderManager
 
         return center;
     }
-    public float[] GetWorldBounds()
-    {
-        float[] bounds = new float[4];
-        bounds[0] = 0; //Top left corner X
-        bounds[1] = 0; //Top left corner Y
-        bounds[2] = GameConstants.worldSizeX; //Bottom right corner X
-        bounds[3] = GameConstants.worldSizeY; //Bottom right corner Y
 
-        return bounds;
-    }
 
     public Transform GetRenderTrasnform(Transform t)
     {

@@ -54,7 +54,7 @@ public class Transform
         Vector2 viewDirection = (pos - position);
         if (viewDirection.LengthSquared() == 0f)
             viewDirection = new Vector2(0, -1);
-
+        
         double angleRadiansView = Math.Atan2(viewDirection.X, viewDirection.Y);
         double angleDegrees = (angleRadiansView) * (180.0 / Math.PI);
         rotation = -(float)angleDegrees;
