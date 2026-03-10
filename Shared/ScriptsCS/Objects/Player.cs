@@ -26,7 +26,7 @@ public class Player : GameObject
     [Network(0)]
     public string playerNameString = "";
 
-    public int CurrentHealth = 100;
+    public int CurrentHealth = 1000;
     
     int guntype = 1;
     bool barrel = true;

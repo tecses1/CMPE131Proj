@@ -92,7 +92,7 @@ public class GameManager : RenderManager
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
     
-        Console.WriteLine(cInput.ToString());
+        //Console.WriteLine(cInput.ToString());
 
 
         //Update our gamestate from the input.

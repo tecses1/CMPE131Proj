@@ -76,24 +76,25 @@ public class LocalPlayer : Player
         barOffsetY = (int)transform.size.Y / 2 + 10;
 
         // health bar in background
-        Transform hbBgTransform = new Transform(transform.position.X + barOffsetX,
-            transform.position.Y + barOffsetY,
+        Transform hbBgTransform = new Transform(
+            Settings.CanvasWidth / 2,
+            Settings.CanvasHeight / 2 + transform.size.Y,
             healthBarWidth,
             healthBarHeight
         );
         healthBarBackground = new Rect(ref hbBgTransform);
         healthBarBackground.setFillColor(Color.DarkGray);
-        healthBarBackground.worldSpace = true;
+        healthBarBackground.worldSpace = false;
 
         Transform hbFillTransform = new Transform(
-            transform.position.X + barOffsetX,
-            transform.position.Y + barOffsetY,
+            Settings.CanvasWidth / 2,
+            Settings.CanvasHeight / 2 + transform.size.Y,
             healthBarWidth,
             healthBarHeight
         );
         healthBarFill = new Rect(ref hbFillTransform);
         healthBarFill.setFillColor(Color.Green);
-        healthBarFill.worldSpace = true;
+        healthBarFill.worldSpace = false;
 
         this.gm = gm;
     
@@ -105,7 +106,6 @@ public class LocalPlayer : Player
     public override void Decode(BinaryReader reader)
     {
         base.Decode(reader);
-        this.playerName.transform.position = this.transform.position + new Vector2(0,-transform.size.Y/2);
     }
     /*
     public override void Update() {
@@ -228,14 +228,16 @@ public class LocalPlayer : Player
     */
     public override void Render()
     {
+        //gm.RenderText(playerName);
         playerName.Draw(gm);
+        Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
         playerName.text = playerNameString;
-        Console.WriteLine("Rotation: " + transform.rotation);
         if (!isLocalPlayer)
         {
             return;
         }
         playerNameString = Settings.name;
+        Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
         scoreText.Draw(gm);
 
         healthBarBackground.Draw(gm);
@@ -246,7 +248,6 @@ public class LocalPlayer : Player
         // added else out of bounds take damage
         bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
 
-        Console.WriteLine(collided[0] + "," + collided[1] + "," + collided[2] + "," + collided[3]);
         //gm.CenterCameraOn(this.transform);
         if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
         {

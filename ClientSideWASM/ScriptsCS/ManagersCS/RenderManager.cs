@@ -141,8 +141,8 @@ public class RenderManager
             alpha = ((float)r.alpha)/255f,
             sizeX = r.transform.size.X, // The box width
             sizeY = r.transform.size.Y, // The box height
-            x = r.worldSpace ? (r.transform.position.X - worldOffsetX) : r.transform.position.X,
-            y = r.worldSpace ? (r.transform.position.Y - worldOffsetY) : r.transform.position.Y,
+            x = r.worldSpace ? (r.transform.position.X + worldOffsetX) : r.transform.position.X,
+            y = r.worldSpace ? (r.transform.position.Y + worldOffsetY) : r.transform.position.Y,
             borderWidth = r.borderWidth,
             borderColor = r.borderColor
         }).ToArray();
@@ -162,8 +162,8 @@ public class RenderManager
             rectAlpha = ((float)t.rectAlpha)/255f,
             sizeX = t.transform.size.X, // The box width
             sizeY = t.transform.size.Y, // The box height
-            x = t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X,
-            y = t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y,
+            x = t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X,
+            y = t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y,
             offX = t.offsetX,
             offY = t.offsetY,
             borderWidth = t.borderWidth,
@@ -175,10 +175,8 @@ public class RenderManager
     }
     public async Task RenderText(Text t)
     {
-        if (!t.worldSpace)
-        {
-            t.transform.position = WorldToCameraPos(t.transform.position);
-        }
+
+        Console.WriteLine("rendering text");
         var textToRender = new[] { new {
                 text = t.text,
                 fontFamily = "Arial",
@@ -188,8 +186,8 @@ public class RenderManager
                 rectAlpha = ((float)t.rectAlpha) / 255f,
                 sizeX = t.transform.size.X,
                 sizeY = t.transform.size.Y,
-                x = t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X,
-                y = t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y,
+                x = t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X,
+                y = t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y,
                 offX = t.offsetX,
                 offY = t.offsetY,
                 borderWidth = t.borderWidth,
@@ -236,7 +234,7 @@ public class RenderManager
     }
     public Vector2 CameraToWorldPos(Vector2 v)
     {
-                Console.WriteLine("Offset: " + v.X + " + " +worldOffsetX);
+                //Console.WriteLine("Offset: " + v.X + " + " +worldOffsetX);
 
         return new Vector2(v.X + worldOffsetX, v.Y + worldOffsetY);
     }
