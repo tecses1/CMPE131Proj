@@ -31,7 +31,7 @@ public class Lobby
         p.uid = user.uid;
         gl.AddPlayer(p);
         p.RegisterGameLogic(gl);
-        Console.WriteLine("user added: " + users.Count + "," + playerInputs.Length);
+        Console.WriteLine("user added: " +user.name + ", Debug: " + users.Count + "," + playerInputs.Length);
     }
 
     public void Update()

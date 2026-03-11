@@ -77,6 +77,7 @@ public partial class Home
             // Saves the current value of 'userInput' to local storage
             
             Settings.name = userInput;
+            await nm.client.Send("{SetName}",null,Settings.name);
             await Save();
         }
 

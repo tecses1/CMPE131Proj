@@ -19,7 +19,7 @@ public class Player : GameObject
     [Network(2)]
     public int Score { get;  set; } = 0;
     [Network(1)]
-    public string playerNameString {get; set;} = "Default";
+    public string playerNameString {get; set;} = "Player";
     //behavior
     float maxSpeed = 5f;
     float acceleration = 0.33f;

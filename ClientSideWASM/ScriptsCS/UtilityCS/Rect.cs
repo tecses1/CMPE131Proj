@@ -14,11 +14,34 @@ public class Rect
     public bool worldSpace = true;
 
 
-    //for procedual cacheing.
-    public Rect(ref Transform t)
+    public Rect()
+    {
+        this.transform = new Transform(0,0,0,0);
+    }
+    public Rect(int sizex, int sizey)
+    {
+        this.transform = new Transform(0,0,sizex,sizey);
+    }
+    public Rect(int posx, int posy, int sizex, int sizey)
+    {
+        this.transform = new Transform(posx,posy,sizex,sizey);
+    }
+    public Rect(Transform t)
     {
         this.transform = t;
 
+    }
+
+    public void SetPosition(float x, float y)
+    {
+        this.transform.position.X = x;
+        this.transform.position.Y = y;
+    }
+
+    public void SetSize(int x, int y)
+    {
+        this.transform.size.X = x;
+        this.transform.size.Y = y;
     }
     public virtual void Draw(RenderManager rm)
     {

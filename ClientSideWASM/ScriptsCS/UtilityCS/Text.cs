@@ -22,8 +22,7 @@ public class Text : Rect
 
 
 
-    //for procedual cacheing.
-    public Text(string text, ref Transform t, float offsetX = 0, float offsetY = 0) : base(ref t)
+    public Text(string text, Transform t, float offsetX = 0, float offsetY = 0) : base( t)
     {
         this.transform = t;
         this.text = text;

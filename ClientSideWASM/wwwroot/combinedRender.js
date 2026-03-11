@@ -97,6 +97,7 @@ window.combinedRender = (canvasId, bgColor, buffer, labels) => {
         }
 
         // 5. Draw
+        //console.log("Pos: " + t.x + ", " + t.y);
         ctx.fillText(t.text, t.x, t.y);
         ctx.restore();
     });

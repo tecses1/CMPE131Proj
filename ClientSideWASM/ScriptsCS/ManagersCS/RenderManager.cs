@@ -72,7 +72,7 @@ public class RenderManager
 
 
         Transform tTransform = new Transform(50,25,100,100);
-        t = new Text("FPS: " + fps, ref tTransform);
+        t = new Text("FPS: " + fps, tTransform);
         t.textAlpha = 150;
         t.worldSpace = false;
         InitializeJSCache();
@@ -289,8 +289,8 @@ public class RenderManager
         // We treat them identically in the buffer to simplify JS
         void PackRect(Rect r) {
             megaBuffer[cursor++] = 1;
-            float x = r.worldSpace ? (r.transform.position.X + worldOffsetX) : r.transform.position.X;
-            float y = r.worldSpace ? (r.transform.position.Y + worldOffsetY) : r.transform.position.Y;
+            float x = r.worldSpace ? (r.transform.position.X - worldOffsetX) : r.transform.position.X;
+            float y = r.worldSpace ? (r.transform.position.Y - worldOffsetY) : r.transform.position.Y;
             megaBuffer[cursor++] = (int)(x * 100);
             megaBuffer[cursor++] = (int)(y * 100);
             megaBuffer[cursor++] = (int)(r.transform.size.X * 100);
@@ -299,10 +299,12 @@ public class RenderManager
             megaBuffer[cursor++] = ColorToAlphaInt(r.borderColor, r.borderAlpha);
             megaBuffer[cursor++] = (int)(r.borderWidth * 100);
         }
-
+        int debug = 0;
         foreach (var r in rectsToRender) {
+            
             if (r.InBounds(GetCanvasBounds()) || r.worldSpace == false) PackRect(r);
         }
+
         foreach (var t in textsToRender) {
             if (t.InBounds(GetCanvasBounds()) || t.worldSpace == false) PackRect(t);
         } // Text inherits from Rect!
@@ -310,8 +312,8 @@ public class RenderManager
         // 3. Prepare ONLY the Text labels
         var textLabels = textsToRender.Where(t => (t.InBounds(GetCanvasBounds()) || t.worldSpace == false)).Select(t => new {
             text = t.text,
-            x = (t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X) + t.offsetX,
-            y = (t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y) + t.offsetY,
+            x = (t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X) + t.offsetX,
+            y = (t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y) + t.offsetY,
             w = t.transform.size.X, // Matches t.w in JS
             h = t.transform.size.Y, // Matches t.h in JS
             tCol = t.fontColor,

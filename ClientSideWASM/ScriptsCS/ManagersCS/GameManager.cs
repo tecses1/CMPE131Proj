@@ -35,11 +35,11 @@ public class GameManager : RenderManager
 
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
-        isLocal = new Text("Playing Locally ", ref t);
+        isLocal = new Text("Playing Locally ", t);
         isLocal.worldSpace = false;
 
         //Create local player, add to GameLogic? 
-        localPlayer = new LocalPlayer(this, new Transform(0,0,100,100));
+        localPlayer = new LocalPlayer(this, new Transform(0,0,50,50));
         //make sure local player has UID for finding updates.
         localPlayer.uid = nm.client.assignedUID;
         localPlayer.isLocalPlayer = true;
@@ -109,9 +109,7 @@ public class GameManager : RenderManager
                 ClientPlayer cp = new ClientPlayer(this, p.transform);
                 //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
                 cp.uid = p.uid;
-                //update its playername, hopefully this is done automaticcaly but we gotta be sure.
-                cp.playerNameString = p.playerNameString;
-
+                cp.playerName.text = p.playerNameString;
                 gl.AddPlayer(cp);
                 clientPlayers.Add(cp);
 
