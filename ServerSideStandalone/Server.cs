@@ -13,7 +13,7 @@ public class Server
 {
     int lobbyCtr = 0;
     public List<User> users = new List<User>();
-    private readonly string _url = "http://127.0.0.1:8888/"; // WebSockets start as HTTP
+    private readonly string _url = "http://*:8888/"; // WebSockets start as HTTP
     private List<Lobby> openLobbies = new List<Lobby>();
 
     public Lobby CreateLobby()
