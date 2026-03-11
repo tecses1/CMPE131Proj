@@ -47,6 +47,12 @@ public class GameLogic
         {
             p.Update();
             eventManager.Register(p);
+
+            //Check if player is out of bounds, if so, damage the player.
+            if (!p.InBounds(this.GetWorldBounds()))
+            {
+                p.TakeDamage(1);
+            }
             
         }
 
@@ -129,6 +135,11 @@ public class GameLogic
         this.objsToRemove.Add(o);
     }
 
+    public void RemovePlayer(Player p)
+    {
+        this.players.Remove(p);
+    }
+
     public void AddPlayer(Player p)
     {
         this.players.Add(p);
@@ -157,13 +168,20 @@ public class GameLogic
                 newObj = new Asteroid(defaultT, 1);
                 break;
             case "Projectile":
-                Projectile p = new Projectile(defaultT, new Vector2(0,0));
-                newObj = p;
+                newObj = new Projectile(defaultT, new Vector2(0,0));
                 break;
+            case "Player":
+                newObj = new Player(defaultT);
+            break;
             // Add more types here as your game grows
         }
-        newObj.uid = Guid.Parse(uid);
+        if (newObj == null)
+        {
+            Console.WriteLine("Could not find match for instantiate: " + className);
+            return null;
+        }
 
+        newObj.uid = Guid.Parse(uid);
         return newObj;
     }
 

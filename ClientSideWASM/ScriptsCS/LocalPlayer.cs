@@ -24,8 +24,6 @@ public class LocalPlayer : Player
     public int MaxHealth = 1000;
     private Rect healthBarBackground;
     private Rect healthBarFill;
-    private int barOffsetX;
-    private int barOffsetY;
     private int healthBarWidth = 70;
     private int healthBarHeight = 10;
     private Color currentHealthColor = Color.Green;
@@ -54,7 +52,7 @@ public class LocalPlayer : Player
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
-        playerName = new Text(Settings.name, ref centerTransform, 0,-transform.size.Y/2*1.25f);
+        playerName = new Text(playerNameString, ref centerTransform, 0,-transform.size.Y/2*1.25f);
         playerName.worldSpace = false;
         Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth/2,Settings.CanvasHeight/2);
         outOfBoundsText = new Text(Settings.OutOfBoundsMessage, ref oobTransform, 0,0);
@@ -71,9 +69,6 @@ public class LocalPlayer : Player
         scoreText = new Text("Score: 0", ref scoreTransform);
         scoreText.worldSpace = false; 
 
-        // offset for health bar relative to player
-        barOffsetX = 0;
-        barOffsetY = (int)transform.size.Y / 2 + 10;
 
         // health bar in background
         Transform hbBgTransform = new Transform(
@@ -85,6 +80,7 @@ public class LocalPlayer : Player
         healthBarBackground = new Rect(ref hbBgTransform);
         healthBarBackground.setFillColor(Color.DarkGray);
         healthBarBackground.worldSpace = false;
+        healthBarBackground.borderWidth = 0;
 
         Transform hbFillTransform = new Transform(
             Settings.CanvasWidth / 2,
@@ -94,6 +90,7 @@ public class LocalPlayer : Player
         );
         healthBarFill = new Rect(ref hbFillTransform);
         healthBarFill.setFillColor(Color.Green);
+        healthBarFill.borderWidth = 0;
         healthBarFill.worldSpace = false;
 
         this.gm = gm;
@@ -228,6 +225,7 @@ public class LocalPlayer : Player
     */
     public override void Render(float deltaTime)
     {
+
         //gm.RenderText(playerName);
         playerName.Draw(gm);
         //Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
@@ -239,7 +237,7 @@ public class LocalPlayer : Player
         playerNameString = Settings.name;
         //Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
         scoreText.Draw(gm);
-
+        this.UpdateHealthBarVisual();
         healthBarBackground.Draw(gm);
         healthBarFill.Draw(gm);
 
@@ -311,16 +309,6 @@ public class LocalPlayer : Player
         }
     }
 
-    
-
-
-
-    // ship damage
-    public void TakeDamage(int damage)
-    {
-        UpdateHealthBarVisual(); //damage updates on server.
-    
-    }
 
     // health bar
     private void UpdateHealthBarVisual()

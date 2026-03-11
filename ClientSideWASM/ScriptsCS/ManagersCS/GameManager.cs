@@ -16,6 +16,7 @@ public class GameManager : RenderManager
     public GameLogic gl;
 
     public LocalPlayer localPlayer;
+    public List<ClientPlayer> clientPlayers = new List<ClientPlayer>();
     public List<GameObject> backgroundStars = new List<GameObject>();
 
     Text isLocal;
@@ -52,6 +53,8 @@ public class GameManager : RenderManager
         RegisterGroupToRender(gl.GetActiveObjects());
         RegisterGroupToRender(gl.GetPlayers());
         RegisterObjToRender(localPlayer);
+
+
     }
     
 
@@ -89,6 +92,36 @@ public class GameManager : RenderManager
     {
         byte[] gamestate = await nm.GetGameState();
         gl.LoadGameState(gamestate);
+
+        //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
+        //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
+        //"On player connected" so we can overwrite the classes it makes by default with render classes.
+        foreach (Player p in gl.GetPlayers())
+        {
+            if (p == localPlayer) continue; //ignore the local player, we already know this one is fixed.
+            if (p.GetType() == typeof(Player)) //the game logic class created a player.
+            {
+                Console.WriteLine("Player class");
+
+                gl.RemovePlayer(p);
+                //replace it with our client player that handles rendering.
+            
+                ClientPlayer cp = new ClientPlayer(this, p.transform);
+                //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
+                cp.uid = p.uid;
+                //update its playername, hopefully this is done automaticcaly but we gotta be sure.
+                cp.playerNameString = p.playerNameString;
+
+                gl.AddPlayer(cp);
+                clientPlayers.Add(cp);
+
+                RegisterObjToRender(cp);//make sure we tell the render manager HEY! This object needs to be rendered!
+                //Because we modififed the collection, we have to close this loop.
+                break;
+
+            }
+
+        }
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
         //make sure our input has our UID.
@@ -117,6 +150,10 @@ public class GameManager : RenderManager
         }
         localPlayer.Render(deltaTime);
 
+        foreach (ClientPlayer cp in clientPlayers)
+        {
+            cp.Render(deltaTime);
+        }
         await base.Render(deltaTime); 
 
     }

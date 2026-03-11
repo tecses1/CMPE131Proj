@@ -16,17 +16,17 @@ public class Player : GameObject
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
-    public int Score { get; private set; } = 0;
-
+    [Network(2)]
+    public int Score { get;  set; } = 0;
+    [Network(1)]
+    public string playerNameString {get; set;} = "Default";
     //behavior
     float maxSpeed = 5f;
     float acceleration = 0.33f;
 
     float drag = 0.05f;
     [Network(0)]
-    public string playerNameString = "";
-
-    public int CurrentHealth = 1000;
+    public int CurrentHealth { get;  set; }= 1000;
     
     int guntype = 1;
     bool barrel = true;
@@ -171,16 +171,17 @@ public class Player : GameObject
         float spawnOffset = MathF.Max(20, MathF.Min(transform.size.X, transform.size.Y) / 2f - 10f);
         
         Vector2 spawnPos = transform.position - dir;// * spawnOffset;
-        Vector2 velocity = dir * bulletSpeed;
+        Vector2 velocity = dir * bulletSpeed * 1.25f; //boost speed for smaller bullets. 
 
         Transform proj1t = new Transform(spawnPos.X-transform.Left().X*16,spawnPos.Y-transform.Left().Y*16, 7,7, transform.rotation);
         Transform proj2t = new Transform(spawnPos.X+transform.Left().X*16,spawnPos.Y+transform.Left().Y*16, 7,7, transform.rotation);
-        var proj = new Projectile( proj1t, velocity, lifetime: 28);
-        var proj2 = new Projectile(proj2t, velocity, lifetime: 28);
+        var proj = new Projectile( proj1t, velocity, lifetime: 20);
+        var proj2 = new Projectile(proj2t, velocity, lifetime: 20);
 
         proj.owner = this.uid;
         proj2.owner = this.uid;
 
+        
         proj.damage = 6;
         proj2.damage = 6;
 
@@ -208,7 +209,7 @@ public class Player : GameObject
 
         var proj = new Projectile(proj1t, velocity, lifetime: 56);
         proj.owner = this.uid;
-        proj.damage = 16;
+        proj.damage = 18;
 
         
         barrel = !barrel;
