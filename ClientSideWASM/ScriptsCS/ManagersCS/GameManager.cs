@@ -46,9 +46,11 @@ public class GameManager : RenderManager
         gl.AddPlayer(localPlayer);
 
         //add groups to render manager by reference.
-        RegisterGroupToRender(gl.GetPlayers());
-        RegisterGroupToRender(gl.GetActiveObjects());
+
+
         RegisterGroupToRender(backgroundStars);
+        RegisterGroupToRender(gl.GetActiveObjects());
+        RegisterGroupToRender(gl.GetPlayers());
         RegisterObjToRender(localPlayer);
     }
     
