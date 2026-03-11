@@ -22,6 +22,7 @@ public partial class Game
     private float _lastTime = 0f;
     private const float _fixedDeltaTime = 1f / 60f; // 0.01666... seconds
 
+    public float lastTime;
     protected override async Task OnInitializedAsync()
     {
         if (!nm.client.isConnected()){
@@ -99,17 +100,19 @@ public async void OnFrameReady(float timestamp)
     }
 
     // 3. Render whenever the browser is ready
-     await main.Render();
+    
+     await main.Render((timestamp - lastTime));
+     lastTime = timestamp;
 }
 
     private async Task FixedUpdate()
     {
         // All physics logic goes here!
         main.UpdateInput(inputWrapper);
-        await main.Update();
-        
         // Clear input only after it has been processed by the physics
         inputWrapper.Clear();
+
+        await main.Update();
     }
 
     private void OnKeyDown(KeyboardPressEvent e)

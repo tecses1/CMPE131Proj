@@ -1,5 +1,6 @@
 namespace ClientSideWASM;
 using Shared;
+using System.Data.Common;
 using System.Net.WebSockets;
 
 
@@ -61,8 +62,8 @@ public class Client : NetworkModel
                 // Logic: Show a popup
                 //if (data == null) Console.WriteLine("WARNING: NULL GAMESTATE???");
                 //Console.WriteLine("Got game state update: " + data.Length);
-
-                this.nm.gameState.Add(data);
+                //this.nm.gm.gl.LoadGameState(data);
+                this.nm.UpdateGameState(data);
                 break;
             case "{InputAll}":
                 // Logic: Show a popup

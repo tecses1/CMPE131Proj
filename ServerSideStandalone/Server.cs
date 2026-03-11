@@ -45,7 +45,7 @@ public class Server
     public async Task UpdateLobbies()
     {
         Console.WriteLine("Lobby thread called...");
-        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(1000f/30f)); //30hz
+        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(1000f/60f)); //60hz
 
         while (await timer.WaitForNextTickAsync())        {
             foreach (Lobby l in openLobbies)

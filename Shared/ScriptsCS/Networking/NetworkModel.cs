@@ -104,56 +104,61 @@ using System.Threading.Tasks;public abstract class NetworkModel
 
     public async Task ReceiveLoopAsync(WebSocket webSocket, CancellationToken ct)
     {
-        if (debug) Console.WriteLine("Starting receive loop...");
         var buffer = new byte[1024 * 4];
+
+        // Wait for connection to be ready
         while (webSocket.State == WebSocketState.Connecting) 
-            {
-                await Task.Delay(100, ct); 
-            }
-
-            if (webSocket.State != WebSocketState.Open) return;
-        if(debug) Console.WriteLine("WebSocket is open, entering receive loop...");
-        while (webSocket.State == WebSocketState.Open && !ct.IsCancellationRequested)
         {
-            using var ms = new MemoryStream();
-            WebSocketReceiveResult result;
+            await Task.Delay(100, ct); 
+        }
 
-            do
+        if (webSocket.State != WebSocketState.Open) return;
+
+        try
+        {
+            while (webSocket.State == WebSocketState.Open && !ct.IsCancellationRequested)
             {
-                if (debug) Console.WriteLine("Waiting for message...");
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
-                if (debug) Console.WriteLine("Message received.");
-                if (result.MessageType == WebSocketMessageType.Close)
+                // 1. Receive a full message
+                using var ms = new MemoryStream();
+                WebSocketReceiveResult result;
+                do
                 {
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct).ConfigureAwait(false);
-                    return;
-                }
-                ms.Write(buffer, 0, result.Count);
-            } 
-            while (!result.EndOfMessage);
+                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
+                    
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
+                        return;
+                    }
+                    
+                    ms.Write(buffer, 0, result.Count);
+                } 
+                while (!result.EndOfMessage);
 
-            byte[] fullMessage = ms.ToArray();
-            Packet p = Packet.Deserialize(fullMessage);
+                // 2. Process the packet
+                byte[] fullMessage = ms.ToArray();
+                Packet p = Packet.Deserialize(fullMessage);
 
-            // --- THE INTERCEPTOR LOGIC ---
-            if (p.IsResponse)
-            {
-                // This is an answer to our CommandAsync! Route it to the TCS.
-                if (_pendingRequests.TryRemove(p.CorrelationId, out var tcs))
+
+                if (p.IsResponse)
                 {
-                    tcs.TrySetResult(p);
+                    if (_pendingRequests.TryRemove(p.CorrelationId, out var tcs))
+                    {
+                        // TrySetResult runs continuations; to keep this loop fast, 
+                        // ensure your TCS continuations aren't doing heavy work.
+                        tcs.TrySetResult(p);
+                    }
                 }
-            }
-            else
-            {
-                // This is a brand new request from the OTHER side.
-                // Put it in the queue for the game loop to process.
-                await queueRecieved.Writer.WriteAsync(p);
+                else
+                {
+                        await queueRecieved.Writer.WriteAsync(p, ct);
+                    
+                }
                 
-                // You could also call an abstract method here like:
-                // _ = HandleIncomingRequestAsync(p);
             }
         }
+        catch (OperationCanceledException) { /* Handle shut down */ }
+        catch (Exception ex) { /* Log connection reset etc */ }
     }
     private async Task ProcessIncomingPackets(CancellationToken ct)
     {

@@ -226,18 +226,18 @@ public class LocalPlayer : Player
         UpdateHealthBarVisual();
 }
     */
-    public override void Render()
+    public override void Render(float deltaTime)
     {
         //gm.RenderText(playerName);
         playerName.Draw(gm);
-        Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
+        //Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
         playerName.text = playerNameString;
         if (!isLocalPlayer)
         {
             return;
         }
         playerNameString = Settings.name;
-        Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
+        //Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
         scoreText.Draw(gm);
 
         healthBarBackground.Draw(gm);
@@ -251,13 +251,13 @@ public class LocalPlayer : Player
         //gm.CenterCameraOn(this.transform);
         if (collided[0] && collided[2]) // if we're inside the bounds on the Y axis
         {
-            gm.CenterCameraOn(this.transform,true,false); //cente camera Y axis only.
+            gm.CenterCameraOnLerp(this.transform,deltaTime, true,false); //cente camera Y axis only.
         } else {
             TakeDamage(1);
         }
         if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
         {
-            gm.CenterCameraOn(this.transform,false,true); //center camera X axis only
+            gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only
         } else {
             TakeDamage(1);
         }

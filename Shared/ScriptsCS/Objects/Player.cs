@@ -145,12 +145,15 @@ public class Player : GameObject
 
                 if (guntype == 0)
                 {
-                    
-                    SpawnGuntype1(mousePos);
+                    GameObject[] shots = SpawnGuntype1(mousePos);
+                    this.gl.AddGameObject(shots[0]);
+                    this.gl.AddGameObject(shots[1]);
+
 
                 }else if (guntype == 1)
                 {
-                    SpawnGuntype2(mousePos);
+                    GameObject shot = SpawnGuntype2(mousePos);
+                    this.gl.AddGameObject(shot);
                 }
 
             lastShotTime = DateTime.UtcNow;

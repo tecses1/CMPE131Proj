@@ -1,16 +1,19 @@
 using Shared;
 using System.Numerics;
 namespace ClientSideWASM;
-
+using System.Threading.Channels;
 //Connection to server, and updates will happen here!
 
 public class NetworkManager
 {
     public Client client;
-    GameManager gm;
+    public GameManager gm;
     public string myLobby = "";
     public bool isHost = false;
-    public List<byte[]> gameState = new List<byte[]>();
+    private readonly Channel<byte[]> _stateChannel = Channel.CreateBounded<byte[]>(
+        new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest }
+    );
+
     public List<byte[]> inputsReceived = new List<byte[]>();
     public List<byte[]> objsToAdd = new List<byte[]>();
     public List<byte[]> serverGameStates = new List<byte[]>();
@@ -19,6 +22,18 @@ public class NetworkManager
         client = new Client(this);
     }
 
+    public void UpdateGameState(byte[] newState)
+    {
+        // TryWrite is non-blocking and instant. 
+        // Because of 'DropOldest', this always succeeds.
+        _stateChannel.Writer.TryWrite(newState);
+    }
+
+    public async Task<byte[]> GetGameState()
+    {
+        // This waits (without a loop) until a state exists, then grabs it.
+        return await _stateChannel.Reader.ReadAsync();
+    }
     public void Initialize(GameManager gm){
         this.gm = gm;
     }

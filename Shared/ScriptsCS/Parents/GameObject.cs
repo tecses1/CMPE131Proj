@@ -96,7 +96,7 @@ public class GameObject : NetworkObject
         
     }
 
-    public virtual void Render()
+    public virtual void Render(float deltaTime)
     {
         
     }

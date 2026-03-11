@@ -29,6 +29,7 @@ public class Lobby
         Player p = new Player(new Transform(GameConstants.worldSizeX / 2, GameConstants.worldSizeY/2, 50,50));
         p.uid = user.uid;
         gl.AddPlayer(p);
+        p.RegisterGameLogic(gl);
         Console.WriteLine("user added: " + users.Count + "," + playerInputs.Length);
     }
 
@@ -37,6 +38,11 @@ public class Lobby
         DateTime frameStamp = DateTime.Now;
         //Get the input wrappers for each player.
         for (int i = 0; i < playerInputs.Length; i++){
+            if (playerInputs[i] == null)
+            {
+                Console.WriteLine("Warning: null player input " + i);
+                continue;
+            }
             Player p = gl.getPlayerWithUID(playerInputs[i].owner);
             if (p != null)
             {
@@ -62,7 +68,7 @@ public class Lobby
     {
         for (int i = 0; i < users.Count; i++)
         {
-            Console.WriteLine ("Sending gamestate to user " + i);
+            //Console.WriteLine ("Sending gamestate to user " + i);
             users[i].Send("{GameStateUpdate}", newState);
         }
 

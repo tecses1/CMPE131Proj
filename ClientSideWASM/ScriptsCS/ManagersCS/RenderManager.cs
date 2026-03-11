@@ -35,6 +35,8 @@ public class RenderManager
     int fps = 0;
     
     Text t;
+    public float cameraSmoothing = 0.125f; 
+
 
     public RenderManager(IJSRuntime js)
      {
@@ -83,6 +85,28 @@ public class RenderManager
         {
             this.worldOffsetY = t.position.Y - Settings.CanvasHeight / 2;
         }
+    }
+
+    public void CenterCameraOnLerp(Transform t, float deltaTime, bool constrainX = false, bool constrainY = false)
+    {   
+        if (!constrainX)
+        {
+            float targetX = t.position.X - Settings.CanvasWidth / 2;
+            // Move a fraction of the way to the target
+            this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
+        }
+        
+        if (!constrainY)
+        {
+            float targetY = t.position.Y - Settings.CanvasHeight / 2;
+            this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
+        }
+    }
+
+    // Simple Lerp helper if your framework doesn't have one
+    private float Lerp(float start, float end, float amount)
+    {
+        return start + (end - start) * amount;
     }
 
     public void MoveCamera(Vector2 direction)
@@ -289,7 +313,7 @@ public class RenderManager
         
     }
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
-    public async virtual Task Render()
+    public async virtual Task Render(float deltaTime)
     {
         //Console.WriteLine("[DEBUG] [RENDERMANAGE] Called at " + DateTime.Now.ToLongTimeString() + ":" + DateTime.Now.Millisecond);
         AssetManager.fps = fps;
