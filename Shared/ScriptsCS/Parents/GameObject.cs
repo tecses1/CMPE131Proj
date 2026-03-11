@@ -12,7 +12,7 @@ public class GameObject : NetworkObject
 
     [Network(-2)]
     public int currentFrame {get;set;} = 0;
-
+    public int baseCacheIndex { get; set; } = -1;
     public bool disableCollision = false;
 
 
@@ -21,7 +21,12 @@ public class GameObject : NetworkObject
         this.transform = transform;
         
     }
-
+    //used on client side to precalc the image cache index.
+    public GameObject (Transform transform, int baseCacheIndex)
+    {
+        this.transform = transform;
+        this.baseCacheIndex = baseCacheIndex;
+    }
     public void RegisterGameLogic(GameLogic gl)
     {
         this.gl  = gl;

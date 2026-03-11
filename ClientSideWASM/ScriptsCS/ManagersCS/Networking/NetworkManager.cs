@@ -11,7 +11,7 @@ public class NetworkManager
     public string myLobby = "";
     public bool isHost = false;
     private readonly Channel<byte[]> _stateChannel = Channel.CreateBounded<byte[]>(
-        new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest }
+        new BoundedChannelOptions(8) { FullMode = BoundedChannelFullMode.DropOldest }
     );
 
     public List<byte[]> inputsReceived = new List<byte[]>();

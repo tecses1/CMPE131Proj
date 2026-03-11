@@ -28,7 +28,7 @@ public static class Settings
 
     // Star Settings
 
-    public const float Sparseness = 0.2f;
+    public const float Sparseness = 0.1f;
     public const int minSize = 1;
     public const int maxSize = 10;
 
@@ -48,8 +48,8 @@ public static class Settings
 
     public const string ErrorText = "#d23118";
     public const string KeyText = "#ffffff";
-    public const string KeyFont = "bold 18px 'Segoe UI', Arial, sans-serif";
-    public const string DefaultFont = "bold 18px 'Segoe UI', Arial, sans-serif";
+    public const string KeyFont = "'Segoe UI', Arial, sans-serif";
+    public const string DefaultFont = "'Segoe UI', Arial, sans-serif";
     public const string DefaultFontColor = "#ffffff";
     public const string DefaultTextBackground = "#ffffff00";
     public const string DefaultTextBorder = "#ffffff00";

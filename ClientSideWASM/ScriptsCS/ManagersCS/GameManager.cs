@@ -44,6 +44,12 @@ public class GameManager : RenderManager
         localPlayer.isLocalPlayer = true;
         //Add the local player to the players.
         gl.AddPlayer(localPlayer);
+
+        //add groups to render manager by reference.
+        RegisterGroupToRender(gl.GetPlayers());
+        RegisterGroupToRender(gl.GetActiveObjects());
+        RegisterGroupToRender(backgroundStars);
+        RegisterObjToRender(localPlayer);
     }
     
 
@@ -77,31 +83,16 @@ public class GameManager : RenderManager
     {
         this.cInput = e;
     }
-
     public override async Task Update()
     {
-
-        //reminder, server runs at HALF our tick rate. When we do interpolation / csp, keep this in mind.
-
-
+        byte[] gamestate = await nm.GetGameState();
+        gl.LoadGameState(gamestate);
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
         //make sure our input has our UID.
         this.cInput.owner = nm.client.assignedUID;
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
-    
-        //Console.WriteLine(cInput.ToString());
-
-
-        //Update our gamestate from the input.Reminder, gamestates are 30hz.
-
-        byte[] gamestate = await nm.GetGameState();
-        gl.LoadGameState(gamestate);
-        
-
-
-        
     }
 
 
@@ -122,36 +113,8 @@ public class GameManager : RenderManager
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-        
-        //Console.WriteLine("Stars render!");
+        localPlayer.Render(deltaTime);
 
-        foreach (GameObject other in backgroundStars)
-        {
-            AddObjToRender(other);//tell RenderManager to Render the object.
-            other.Render(deltaTime); //Call custom render, if it has one. (Syncs text and rect draw calls)
-        }
-        //Console.WriteLine("Players render!");
-
-        foreach (GameObject go in gl.GetPlayers())
-        {
-            if (go.uid == localPlayer.uid) continue; //skip local player.
-            AddObjToRender(go); //tell RenderManager to Render the object.
-            go.Render(deltaTime);//Call custom render, if it has one. (Syncs text and rect draw calls)
-        }   
-        //Console.WriteLine("ACtive Objects render!");
-
-        foreach (GameObject go in gl.GetActiveObjects())
-        {
-            AddObjToRender(go); //tell RenderManager to Render the object.
-            go.Render(deltaTime);//Call custom render, if it has one. (Syncs text and rect draw calls)
-        }
-                //Console.WriteLine("Local Player render!");
-
-        AddObjToRender(localPlayer);//tell RenderManager to Render the object.
-        localPlayer.Render(deltaTime);//Call custom render, if it has one. (Syncs text and rect draw calls)
-                //Console.WriteLine("Base render!");
-
-        //Do whatever the RenderManager wants to do by itself. probably the official render calls.
         await base.Render(deltaTime); 
 
     }

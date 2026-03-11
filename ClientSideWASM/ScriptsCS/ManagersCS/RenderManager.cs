@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Numerics;
 using Blazorex;
 using Microsoft.AspNetCore.Components;
@@ -20,7 +21,8 @@ public class RenderManager
 
     //pass by reference settigns object so all objects use the same one.
     //Objs to render
-    public List<GameObject> objsToRender = new List<GameObject>();
+    public List<List<GameObject>> groupsToRender = new();
+    public List<GameObject> objsToRender = new();
     public List<Text> textsToRender = new List<Text>();
     public List<Rect> rectsToRender = new List<Rect>();
 
@@ -28,7 +30,7 @@ public class RenderManager
     private GameAsset[] assetCache;
     private ElementReference[] imageCache;
 
-    protected IJSRuntime js;
+    protected IJSInProcessRuntime js;
     private CanvasBase mainCanvas;
     DateTime counter = DateTime.Now;
     int frames = 0;
@@ -37,12 +39,23 @@ public class RenderManager
     Text t;
     public float cameraSmoothing = 0.125f; 
 
+    int[] megaBuffer = new int[16384];
+    private Dictionary<string, int> _assetStartingIndex = new();
 
     public RenderManager(IJSRuntime js)
      {
-        this.js = js;
-        //this.gm = gm;
-
+        this.js = (IJSInProcessRuntime)js;
+        int currentGlobalIndex = 0;
+            foreach (var asset in AssetManager._assets)
+            {
+                // Map the asset name (e.g., "Projectile") to its position in the flat JS array
+                _assetStartingIndex[asset.Key] = currentGlobalIndex;
+                
+                // Increment by the number of frames this asset contains
+                currentGlobalIndex += asset.Value.Frames.Length;
+                
+                // (Optional) Add your Console.WriteLine debugs here
+            }
 
         //cache images for batch drawing to JS.
         assetCache = new GameAsset[AssetManager._assets.Count];
@@ -58,16 +71,18 @@ public class RenderManager
         this.imageCache = imageCacheList.ToArray<ElementReference>();
 
 
-        Transform tTransform = new Transform(50,25,100,50);
+        Transform tTransform = new Transform(50,25,100,100);
         t = new Text("FPS: " + fps, ref tTransform);
         t.textAlpha = 150;
         t.worldSpace = false;
         InitializeJSCache();
+
+        groupsToRender.Add(objsToRender);
     }
 
     public void InitializeJSCache()
     {
-        js.InvokeVoidAsync("initializeCache", imageCache);
+        js.InvokeVoid("initializeCache", imageCache);
     }
 
     public Vector2 WorldToCameraPos(Vector2 v)
@@ -130,39 +145,28 @@ public class RenderManager
         this.rectsToRender.Add(rect);
     }
 
+
     int getCacheIndex(GameObject o)
     {
-        int frameSkip = 0;
-        for (int i = 0; i < assetCache.Length; i++)
-        {
-            if (assetCache[i].Name == o.GetType().Name)
-            {
-                //Console.WriteLine(assetCache[i].Name + " found image index: " + (i + o.currentFrame));
-                int adjFrame = i + frameSkip + o.currentFrame;
-                //Console.WriteLine("[RENDERMANAGER] Debug: " + o.GetType().Name + " requested frame: " + adjFrame + ", rane in cache: " + (i + frameSkip) + " to " + (i + frameSkip + assetCache[i].Frames.Length - 1));
-                if (o.currentFrame > assetCache[i].Frames.Length-1)
-                {
-                    // Loop back to the first frame if we've exceeded the number of frames for this asset
-                    string assetFrameRange = i + frameSkip + " to " + (i + frameSkip + assetCache[i].Frames.Length - 1);
+    // 1. Get the name of the class (Projectile, Asteroid, etc.)
+    string typeName = o.GetType().Name;
 
-                    Console.WriteLine("[RENDERMANAGER] Warning: " + o.GetType().Name + " currentFrame exceeded frame count. Clamping to last frame...("+ o.GetType().Name + " requested frame: " + adjFrame + ", available range: " + assetFrameRange + ", cache size: " + imageCache.Length+")");
-                    adjFrame = i + frameSkip + assetCache[i].Frames.Length - 1;
-                    
-
-                }
-                return adjFrame; // Return the index of the image in the cache, adjusted for animation frame
-            }
-            frameSkip += assetCache[i].Frames.Length - 1; // Increment frameSkip by the number of frames in this asset minus one (since the first frame is at index i)
-            //Console.WriteLine("[RENDERMANAGER] Asset: " + assetCache[i].Name + ", frame range in cache: " + (i + frameSkip) + " to " + (i + frameSkip + assetCache[i].Frames.Length - 1) + ", skipping " + (assetCache[i].Frames.Length - 1) + " frames." );
-        }
-        return -1;
+    // 2. Look up the starting index we calculated at boot
+    if (_assetStartingIndex.TryGetValue(typeName, out int baseIndex))
+    {
+        // 3. Add the current frame offset
+        // Ensure you don't overshoot the frame count for this specific asset
+        return baseIndex + o.currentFrame;
     }
-    public async Task RenderRects()
+
+    return -1; // Asset not found
+}
+    public void RenderRects()
     {
 
         var rectToRender = rectsToRender.Select(r => new {
             fillColor = r.fillColor,
-            alpha = ((float)r.alpha)/255f,
+            alpha = ((float)r.fillAlpha)/255f,
             sizeX = r.transform.size.X, // The box width
             sizeY = r.transform.size.Y, // The box height
             x = r.worldSpace ? (r.transform.position.X + worldOffsetX) : r.transform.position.X,
@@ -170,11 +174,11 @@ public class RenderManager
             borderWidth = r.borderWidth,
             borderColor = r.borderColor
         }).ToArray();
-        await js.InvokeVoidAsync("drawRectBatch", mainCanvas.Id, rectToRender);
+        js.InvokeVoid("drawRectBatch", mainCanvas.Id, rectToRender);
         
         rectsToRender.Clear();
     }
-    public async Task RenderTexts()
+    public void RenderTexts()
     {
 
         var textToRender = textsToRender.Select(t => new {
@@ -183,7 +187,7 @@ public class RenderManager
             fillColor = t.fillColor,
             fontColor = t.fontColor,
             textAlpha = ((float)t.textAlpha)/255f,
-            rectAlpha = ((float)t.rectAlpha)/255f,
+            rectAlpha = ((float)t.fillAlpha)/255f,
             sizeX = t.transform.size.X, // The box width
             sizeY = t.transform.size.Y, // The box height
             x = t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X,
@@ -193,48 +197,25 @@ public class RenderManager
             borderWidth = t.borderWidth,
             borderColor = t.borderColor
         }).ToArray();
-        await js.InvokeVoidAsync("drawTextBatch", mainCanvas.Id, textToRender);
+         js.InvokeVoid("drawTextBatch", mainCanvas.Id, textToRender);
         
         textsToRender.Clear();
     }
-    public async Task RenderText(Text t)
+    /*
+    public void RenderGroup() 
     {
 
-        Console.WriteLine("rendering text");
-        var textToRender = new[] { new {
-                text = t.text,
-                fontFamily = "Arial",
-                fillColor = t.fillColor,
-                fontColor = t.fontColor,
-                textAlpha = ((float)t.textAlpha) / 255f,
-                rectAlpha = ((float)t.rectAlpha) / 255f,
-                sizeX = t.transform.size.X,
-                sizeY = t.transform.size.Y,
-                x = t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X,
-                y = t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y,
-                offX = t.offsetX,
-                offY = t.offsetY,
-                borderWidth = t.borderWidth,
-                borderColor = t.borderColor
-            }};
-
-        await js.InvokeVoidAsync("drawTextBatch", mainCanvas.Id, textToRender);
-    }
-    public async Task RenderGroup() 
-    {
-
-        float[] _renderBuffer = new float[objsToRender.Count * 6];
         
         //Create array of all possible images loaded in the game.
         for (int i = 0; i < objsToRender.Count; i++)
         {
+
             GameObject obj = objsToRender[i];//the gameobject.
             int cacheIndex = getCacheIndex(obj);
             int offset = i * 6;
             if (cacheIndex == -1)
             {
-                //Console.WriteLine("Image not found for " + obj.GetType().Name + ": making error icon.");
-                await RenderTexts();
+                Console.WriteLine("Image not found for " + obj.GetType().Name + ".");
                 continue;
             }
 
@@ -246,15 +227,107 @@ public class RenderManager
             _renderBuffer[offset+4] = obj.transform.rotation * (float)Math.PI / 180f;
             _renderBuffer[offset+5] = cacheIndex; // Tell JS which image to use
 
-
-
         }
 
         // Send all images and all data in one go
-        await js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , _renderBuffer);
+        js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , _renderBuffer, objsToRender.Count);
         objsToRender.Clear();
         
-        
+    }*/
+    private int ColorToAlphaInt(string htmlColor, int alpha0to255)
+    {
+        if (string.IsNullOrEmpty(htmlColor)) return 0;
+
+        try
+        {
+            // ColorTranslator.FromHtml handles BOTH "#FFFFFF" and "Red" strings
+            var c = System.Drawing.ColorTranslator.FromHtml(htmlColor);
+            
+            // Pack: AARRGGBB 
+            // We use the alpha0to255 passed from your object, 
+            // ignoring any alpha baked into the HTML string.
+            uint packed = ((uint)alpha0to255 << 24) | ((uint)c.R << 16) | ((uint)c.G << 8) | (uint)c.B;
+            
+            return (int)packed;
+        }
+        catch
+        {
+            return 0; // Transparent black fallback
+        }
+    }
+    public void RenderAll()
+    {
+        if (mainCanvas == null) return;
+
+        int cursor = 0;
+
+
+        // 1. Pack Sprites in obj to render (Type 0)
+        //pack groups by reference.
+        foreach (List<GameObject> group in groupsToRender) {
+            foreach (var obj in group) {
+                    var pos = obj.transform.position;
+                    var size = obj.transform.size;
+
+                // "Loose" Culling: Check if object is roughly in view
+                // If it's outside these bounds, we don't even put it in the int[]
+                if (obj.InBounds(GetCanvasBounds()) == false) {
+                    continue; // Skip rendering this object
+                }
+                int idx = getCacheIndex(obj);
+                if (idx == -1) continue;
+                megaBuffer[cursor++] = 0;
+                megaBuffer[cursor++] = (int)((obj.transform.position.X - worldOffsetX) * 100);
+                megaBuffer[cursor++] = (int)((obj.transform.position.Y - worldOffsetY) * 100);
+                megaBuffer[cursor++] = (int)(obj.transform.size.X * 100);
+                megaBuffer[cursor++] = (int)(obj.transform.size.Y * 100);
+                megaBuffer[cursor++] = (int)(obj.transform.RotationRadians() * 100);
+                megaBuffer[cursor++] = idx;
+            }
+        }
+        // 2. Pack Rects AND Text-Backgrounds (Type 1)
+        // We treat them identically in the buffer to simplify JS
+        void PackRect(Rect r) {
+            megaBuffer[cursor++] = 1;
+            float x = r.worldSpace ? (r.transform.position.X + worldOffsetX) : r.transform.position.X;
+            float y = r.worldSpace ? (r.transform.position.Y + worldOffsetY) : r.transform.position.Y;
+            megaBuffer[cursor++] = (int)(x * 100);
+            megaBuffer[cursor++] = (int)(y * 100);
+            megaBuffer[cursor++] = (int)(r.transform.size.X * 100);
+            megaBuffer[cursor++] = (int)(r.transform.size.Y * 100);
+            megaBuffer[cursor++] = ColorToAlphaInt(r.fillColor, r.fillAlpha); 
+            megaBuffer[cursor++] = ColorToAlphaInt(r.borderColor, r.borderAlpha);
+            megaBuffer[cursor++] = (int)(r.borderWidth * 100);
+        }
+
+        foreach (var r in rectsToRender) {
+            if (r.InBounds(GetCanvasBounds()) || r.worldSpace == false) PackRect(r);
+        }
+        foreach (var t in textsToRender) {
+            if (t.InBounds(GetCanvasBounds()) || t.worldSpace == false) PackRect(t);
+        } // Text inherits from Rect!
+
+        // 3. Prepare ONLY the Text labels
+        var textLabels = textsToRender.Where(t => (t.InBounds(GetCanvasBounds()) || t.worldSpace == false)).Select(t => new {
+            text = t.text,
+            x = (t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X) + t.offsetX,
+            y = (t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y) + t.offsetY,
+            w = t.transform.size.X, // Matches t.w in JS
+            h = t.transform.size.Y, // Matches t.h in JS
+            tCol = t.fontColor,
+            tAlp = t.textAlpha / 255f,
+            fnt = t.font,
+            fontSize = t.fontSize,
+            fillToSize = t.fillToRect
+        }).ToArray();
+
+
+        var activeBuffer = new ArraySegment<int>(megaBuffer, 0, cursor);
+        js.InvokeVoid("combinedRender", mainCanvas.Id, Settings.CanvasBackground, activeBuffer, textLabels);
+
+        //objsToRender.Clear();
+        rectsToRender.Clear();
+        textsToRender.Clear();
     }
     public Vector2 CameraToWorldPos(Vector2 v)
     {
@@ -303,14 +376,18 @@ public class RenderManager
         newT.rotation = t.rotation;
         return newT;
     }
-    public void AddObjToRender(GameObject go)
+    public void RegisterGroupToRender(List<GameObject> go)
     {
         //only render if in canvas camera view.
-        if (go.InBounds(GetCanvasBounds()))
-        {
-            this.objsToRender.Add(go);
-        }
+
+        this.groupsToRender.Add(go);
         
+        
+    }
+
+    public void RegisterObjToRender(GameObject go)
+    {
+        this.objsToRender.Add(go);
     }
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
     public async virtual Task Render(float deltaTime)
@@ -332,12 +409,14 @@ public class RenderManager
         //add text to render pipeline.
         t.Draw((GameManager)this);
         //Clear the background in JS. Faster, and synced.
-        await js.InvokeVoidAsync("clearBackground",mainCanvas.Id ,Settings.CanvasBackground );
+        //js.InvokeVoid("clearBackground",mainCanvas.Id , );
 
         //Render the "objsToRender" group. This group is modified to only include on screen GameObjects.
-         await RenderGroup();
-         await RenderTexts();
-         await RenderRects();
+        //RenderGroup();
+        //RenderTexts();
+        //RenderRects();
+
+        this.RenderAll();
 
     }
 

@@ -82,6 +82,8 @@ public partial class Game
 
 public async void OnFrameReady(float timestamp)
 {
+   // DateTime debug = DateTime.Now;
+
     float currentTime = timestamp / 1000f;
     if (_lastTime == 0) _lastTime = currentTime;
 
@@ -95,13 +97,17 @@ public async void OnFrameReady(float timestamp)
     // This calls your physics exactly 60 times per "simulated" second
     while (_accumulator >= _fixedDeltaTime)
     {
-        await FixedUpdate();
+        await FixedUpdate(); //because its called at a fix time, its unlikely it will not finish by the time the next is called.
         _accumulator -= _fixedDeltaTime;
     }
-
+    //int time1 = (DateTime.Now - debug).Milliseconds;
     // 3. Render whenever the browser is ready
     
      await main.Render((timestamp - lastTime));
+
+    // int time2 = (DateTime.Now - debug).Milliseconds - time1;
+
+     //Console.WriteLine("Time to update: " + time1 + "ms | Time to render: " + time2 + "ms");
      lastTime = timestamp;
 }
 

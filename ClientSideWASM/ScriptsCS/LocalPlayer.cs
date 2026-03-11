@@ -275,7 +275,7 @@ public class LocalPlayer : Player
                 direction = -1;
             }
             alpha += direction;
-            
+            oobScreenFlashRect.setFillColor(Color.Red, alpha);
             oobScreenFlashRect.setBorderColor(Color.Red, alpha);
             oobScreenFlashRect.Draw(gm);
 
@@ -290,7 +290,7 @@ public class LocalPlayer : Player
 
         if(!this.CollideWith(gm.gl.GetWorldBounds())){
             outOfBoundsText.Draw(gm);
-            if (alpha <= 25)
+            if (alpha <= 5)
             {
                 direction = 1;
             }
@@ -299,7 +299,7 @@ public class LocalPlayer : Player
                 direction = -1;
             }
             alpha += direction;
-            
+            oobScreenFlashRect.setFillColor(Color.Red, 0);
             oobScreenFlashRect.setBorderColor(Color.Red, alpha);
             oobScreenFlashRect.Draw(gm);
 

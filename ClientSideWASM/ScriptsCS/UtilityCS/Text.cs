@@ -11,12 +11,14 @@ public class Text : Rect
     public string font = Settings.DefaultFont;
     public string fontColor = Settings.DefaultFontColor;
     public string text = "Placeholder";
-
-    public int rectAlpha = 0;
     public int textAlpha = 255;
+
+    public int fontSize = 16;
 
     public float offsetX;
     public float offsetY;
+    
+    public bool fillToRect = true; //if true, the text will be stretched to fit the rect. If false, it will be drawn at its normal size with the center of the rect's position.
 
 
 
@@ -27,6 +29,10 @@ public class Text : Rect
         this.text = text;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+
+        //text by default has no fill!
+        this.fillAlpha = 0;
+        this.borderAlpha = 0;
 
     }
     public override void Draw(RenderManager rm)

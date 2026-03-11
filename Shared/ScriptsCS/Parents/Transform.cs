@@ -34,6 +34,10 @@ public class Transform
             (float)Math.Cos(radians)
         );
     }
+    public float RotationRadians()
+    {
+        return this.rotation * (float)Math.PI / 180f;
+    }
     public float GetHypotenuse()
     {
         return (float)Math.Sqrt(size.X * size.X + 
