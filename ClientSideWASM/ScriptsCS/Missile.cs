@@ -2,6 +2,7 @@ namespace ClientSideWASM
 {
     using System.Dynamic;
     using System.Numerics;
+    using Shared;
 
     public class Missile : Projectile
     {
