@@ -105,9 +105,15 @@ public class GameManager : RenderManager
             this.gl.Update();
             return;
         }
-
-        byte[] gamestate = nm.GetGameState().Result;
-        gl.LoadGameState(gamestate);
+        try{
+            byte[] gamestate = nm.GetGameState().Result;
+            gl.LoadGameState(gamestate);
+        }catch(Exception e)
+        {
+            Console.WriteLine("WARNING, COULD NOT WAIT FOR GAMESTATE.");
+            
+        }
+        
 
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
