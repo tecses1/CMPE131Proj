@@ -225,15 +225,17 @@ public class RenderManager
                 // Interpolation: Calculate the interpolated position based on previous and current transform
                 float interpolationOffsetX = obj.transform.position.X;
                 float interpolationOffsetY = obj.transform.position.Y;
-                float interpolationRotation = obj.transform.rotation;
+                float interpolationRotation = obj.transform.RotationRadians();
                 if (obj.previousTransform != null) {
                     interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
                     interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
 
-                    /*Things spin like crazy with this, I'll wait for more investigation. Rotation doesn't really bother me right now.
                     float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180; // Shortest angle difference
-                    // 3. Interpolate using the corrected delta
-                    interpolationRotation = obj.previousTransform.rotation + deltaRotation * GetInterpolationFactor();*/
+                    //3. Interpolate using the corrected delta
+                    interpolationRotation = obj.previousTransform.rotation + deltaRotation * GetInterpolationFactor();
+
+                    //Must be in radians.
+                    interpolationRotation = interpolationRotation * (float)Math.PI / 180f;
                 }
 
 

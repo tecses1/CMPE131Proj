@@ -57,30 +57,28 @@ public class GameManager : RenderManager
     }
     
 
-    void GenerateStars()
+void GenerateStars()
+{
+    Random r = new Random();
+    
+    // Calculate total area and desired density
+    long totalArea = (long)GameConstants.worldSizeX * GameConstants.worldSizeY;
+    
+    // Instead of iterating 25 million times, we calculate how many stars we want.
+    // Adjust 'DensityConstant' to get the look you want (e.g., 0.0001 for 1 star per 10k pixels)
+    int starCount = (int)(totalArea * Settings.Sparseness / Math.Sqrt(totalArea)); 
+    Console.WriteLine("spawning " + starCount + " stars for bg");
+    for (int i = 0; i < starCount; i++)
     {
-        //iterate through canvas coordinates.
-        Random r = new Random();
-        for (int i = 0; i < GameConstants.worldSizeX; i++)
-        {
-            for (int j = 0; j < GameConstants.worldSizeY; j++)
-            {   
-                double chance = r.NextDouble();
-                double sizeModifier = Math.Sqrt(GameConstants.worldSizeX * GameConstants.worldSizeY);
-                if (chance < Settings.Sparseness / sizeModifier)
-                {
-                    int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize,Settings.minSize, Settings.maxSize);
-                    Transform t = new Transform(i,j,size,size);
-                    Star s = new Star(t);
-                    //s.RegisterGameLogic(gl);
-                    
-                    backgroundStars.Add(s);
-                }
-
-            }
-        }
+        int x = r.Next(0, GameConstants.worldSizeX);
+        int y = r.Next(0, GameConstants.worldSizeY);
         
+        int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize, Settings.minSize, Settings.maxSize);
+        
+        Transform t = new Transform(x, y, size, size);
+        backgroundStars.Add(new Star(t));
     }
+}
 
 
     public void UpdateInput(ClientInputWrapper e)
