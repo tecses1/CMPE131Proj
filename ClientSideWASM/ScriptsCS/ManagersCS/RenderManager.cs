@@ -104,18 +104,25 @@ public class RenderManager
 
     public void CenterCameraOnLerp(Transform t, float deltaTime, bool constrainX = false, bool constrainY = false)
     {   
-        if (!constrainX)
-        {
-            float targetX = t.position.X - Settings.CanvasWidth / 2;
-            // Move a fraction of the way to the target
-            this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
-        }
+        // fix camera buffering
+        float targetX = t.position.X - Settings.CanvasWidth / 2;
+        // Move a fraction of the way to the target
+        this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
+        float targetY = t.position.Y - Settings.CanvasHeight / 2;
+        this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
+
+        // if (!constrainX)
+        // {
+        //     float targetX = t.position.X - Settings.CanvasWidth / 2;
+        //     // Move a fraction of the way to the target
+        //     this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
+        // }
         
-        if (!constrainY)
-        {
-            float targetY = t.position.Y - Settings.CanvasHeight / 2;
-            this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
-        }
+        // if (!constrainY)
+        // {
+        //     float targetY = t.position.Y - Settings.CanvasHeight / 2;
+        //     this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
+        // }
     }
 
     // Simple Lerp helper if your framework doesn't have one
