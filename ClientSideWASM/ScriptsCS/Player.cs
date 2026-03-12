@@ -271,7 +271,33 @@ public class Player : GameObject
         barrel = !barrel;
 
     }
-    public void AddScore(int points)
+    
+    private void SpawnMissile(Vector2 target)
+    {
+        shotCooldownSeconds = 5.0f;
+
+        Vector2 dir = target - transform.position;
+        //if(dir.LengthSquared() == 0f) dir = new Vector2(0,-1);
+        //dir = Vector2.Normalize(dir);
+
+        Vector2 sideOffset = transform.Left() *20f;
+
+        Vector2 pos1 = transform.position + sideOffset;
+        Vector2 pos2 = transform.position - sideOffset;
+
+        Transform t1 = new Transform(pos1.X, pos1.Y, 20,20);
+        Transform t2 = new Transform(pos2.X, pos2.Y, 20,20);
+        t1.RotateTo(target);
+        t2.RotateTo(target);
+
+        Missile m1 = new Missile(ref gm, t1, dir * bulletSpeed);
+        Missile m2 = new Missile(ref gm, t2, dir * bulletSpeed);
+
+        gm.AddNewGameObject(m1);
+        gm.AddNewGameObject(m2);
+
+    }
+        public void AddScore(int points)
     {
         Score += points;
         scoreText.text = $"Score: {Score}";

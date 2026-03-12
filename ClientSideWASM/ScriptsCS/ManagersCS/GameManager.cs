@@ -187,7 +187,7 @@ public class GameManager : RenderManager
             if (go.CollideWith(collideGO))
             {
                 //Console.WriteLine("We detected a collision between a " + go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
-                if (go.GetType().Name == "Projectile" && collideGO.GetType().Name == "Asteroid")
+                if (go is Projectile && collideGO is Asteroid)
                 {
                     go.Kill();
                     ((Asteroid)collideGO).hp -= ((Projectile)go).damage;
