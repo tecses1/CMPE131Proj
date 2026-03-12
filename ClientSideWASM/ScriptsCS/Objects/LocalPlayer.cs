@@ -112,13 +112,16 @@ public class LocalPlayer : Player
         bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
 
         //gm.CenterCameraOn(this.transform);
-        if (collided[0] && collided[2] && collided[1] && collided[3]) // if we're inside the bounds on the Y axis and X axis now
+        if (collided[0] && collided[2])//Inside Y axis bouynds
         {
             gm.CenterCameraOnLerp(this.transform,deltaTime, true,false); //cente camera Y axis only.
-            gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only
-        } else {
-            TakeDamage(1);
+
         }
+        if (collided[1] && collided[3]) //Inside X axis bounds
+        {
+            gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only
+        } 
+        
         // if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
         // {
         //     gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only

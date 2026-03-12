@@ -37,7 +37,7 @@ public class RenderManager
     int fps = 0;
     
     Text t;
-    public float cameraSmoothing = 0.125f; 
+    public float cameraSmoothing = 0.25f; 
 
     int[] megaBuffer = new int[16384];
     private Dictionary<string, int> _assetStartingIndex = new();
@@ -104,25 +104,21 @@ public class RenderManager
 
     public void CenterCameraOnLerp(Transform t, float deltaTime, bool constrainX = false, bool constrainY = false)
     {   
-        // fix camera buffering
-        float targetX = t.position.X - Settings.CanvasWidth / 2;
-        // Move a fraction of the way to the target
-        this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
-        float targetY = t.position.Y - Settings.CanvasHeight / 2;
-        this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
 
-        // if (!constrainX)
-        // {
-        //     float targetX = t.position.X - Settings.CanvasWidth / 2;
-        //     // Move a fraction of the way to the target
-        //     this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
-        // }
+        //X and Y need to be constrained independently to properly work with world bounds (otherwise camera locks on worldbounds and can't move in one axis even if the other is free).
+
+         if (!constrainX)
+        {
+             float targetX = t.position.X - Settings.CanvasWidth / 2;
+            // Move a fraction of the way to the target
+             this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
+         }
         
-        // if (!constrainY)
-        // {
-        //     float targetY = t.position.Y - Settings.CanvasHeight / 2;
-        //     this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
-        // }
+        if (!constrainY)
+         {
+             float targetY = t.position.Y - Settings.CanvasHeight / 2;
+             this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
+         }
     }
 
     // Simple Lerp helper if your framework doesn't have one
