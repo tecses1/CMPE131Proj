@@ -63,9 +63,9 @@ public class GameLogic
             // Console.WriteLine(go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
             
             if (!go.CollideWith(collideGO)) return;
-            if ((go is Projectile && collideGO is Player) ||
-                (go is Player && collideGO is Projectile))
-                return;
+            //if ((go is Projectile && collideGO is Player) ||
+            //    (go is Player && collideGO is Projectile)) ADDING PVP BABY
+            //    return;
             if (go is Projectile proj && collideGO is Asteroid asteroid)
             {
                 proj.Kill();
@@ -91,6 +91,20 @@ public class GameLogic
             {
                 p.TakeDamage(10);
                 a.Kill();
+            }else if (go is Projectile proj3 && collideGO is Player p2)
+            {
+                if (proj3.owner != p2.uid)
+                {
+                    proj3.Kill();
+                    p2.TakeDamage(proj3.damage);
+                }
+            }else if (go is Player p3 && collideGO is Projectile proj4)
+            {
+                if (proj4.owner != p3.uid)
+                {
+                    proj4.Kill();
+                    p3.TakeDamage(proj4.damage);
+                }
             }
 
         });
