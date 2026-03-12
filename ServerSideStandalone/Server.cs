@@ -63,10 +63,34 @@ public class Server
 
     public async Task RunServerAsync()
     {
-        using HttpListener listener = new HttpListener();
-        listener.Prefixes.Add(_url);
-        listener.Start();
-        Console.WriteLine($"Launching server on {_url}...");
+        HttpListener listener = new HttpListener();
+
+        try 
+        {
+            // Attempt 1: Broadcast mode
+            listener.Prefixes.Add(_url);
+            listener.Start();
+            Console.WriteLine($"Server started in BROADCAST mode at {_url}");
+        }
+        catch (HttpListenerException ex) when (ex.ErrorCode == 5) // Error 5 is "Access Denied"
+        {
+            Console.WriteLine("Broadcast failed (Admin rights required). Falling back to local...");
+            listener.Close();
+            listener = new HttpListener();
+            // Clear the failed prefix and try the local one
+            listener.Prefixes.Clear();
+            listener.Prefixes.Add("http://localhost:8888/");
+            
+            try 
+            {
+                listener.Start();
+                Console.WriteLine($"Server started in LOCAL mode at {"localhost:8888"}");
+            }
+            catch (Exception fallbackEx)
+            {
+                Console.WriteLine($"Critical Failure: {fallbackEx.Message}");
+            }
+        }
 
         while (true)
         {

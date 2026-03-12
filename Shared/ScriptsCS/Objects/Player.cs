@@ -45,9 +45,9 @@ public class Player : GameObject
     public override void Update() {
 
 
-
         InputWrapper e = cInput;
         if (e == null){
+            Console.WriteLine("warning, Null input.");
             return;
         }
         //Only update player rotation when the input is valid.

@@ -39,13 +39,12 @@ public class GameManager : RenderManager
         isLocal.worldSpace = false;
 
         //Create local player, add to GameLogic? 
-        localPlayer = new LocalPlayer(this, new Transform(0,0,50,50));
+        localPlayer = new LocalPlayer(this, new Transform(GameConstants.worldSizeX/2,GameConstants.worldSizeY/2,50,50));
         //make sure local player has UID for finding updates.
         localPlayer.uid = nm.client.assignedUID;
         localPlayer.isLocalPlayer = true;
         //Add the local player to the players.
         gl.AddPlayer(localPlayer);
-
         //add groups to render manager by reference.
 
 
@@ -88,9 +87,26 @@ public class GameManager : RenderManager
     {
         this.cInput = e;
     }
-    public override async Task Update()
+    public virtual void Update()
     {
-        byte[] gamestate = await nm.GetGameState();
+        if (!nm.client.isConnected()) {
+            cInput.OverwriteCameraToWorldPos(this);
+            this.localPlayer.cInput = (InputWrapper)cInput;
+            
+            this.gl.Update();
+            return;
+        }else
+
+        if (nm.myLobby == "")
+        {
+            cInput.OverwriteCameraToWorldPos(this);
+            this.localPlayer.cInput = (InputWrapper)cInput;
+            
+            this.gl.Update();
+            return;
+        }
+
+        byte[] gamestate = nm.GetGameState().Result;
         gl.LoadGameState(gamestate);
 
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
@@ -135,7 +151,7 @@ public class GameManager : RenderManager
     // TODO: Everything run from host perspective, so currently other players manually updated here BUT
     // player scores all go to the host, other players cant take damage, weird stuff happens when refreshing
 
-    public override async Task Render(float deltaTime)
+    public override void Render(float deltaTime)
     {
         //Console.WriteLine("Calling render!");
         if (!nm.client.isConnected()) {
@@ -152,7 +168,7 @@ public class GameManager : RenderManager
         {
             cp.Render(deltaTime);
         }
-        await base.Render(deltaTime); 
+        base.Render(deltaTime); 
 
     }
 

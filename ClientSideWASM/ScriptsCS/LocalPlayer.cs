@@ -12,13 +12,7 @@ public class LocalPlayer : Player
     //move comonly defined fields for classes to the GameObject class.
     //Game object class may be able to handle default rending, image fetching by name, etc.
 
-    public InputWrapper cInput;
     public GameManager gm;
-    private readonly List<Projectile> projectiles = new();
-    private float bulletSpeed = 12f;
-    private double shotCooldownSeconds = 0.12; // ~8 shots/sec
-    private DateTime lastShotTime = DateTime.MinValue;
-    private DateTime lastChange = DateTime.Now;
 
     // for health bar
     public int MaxHealth = 1000;
@@ -28,11 +22,6 @@ public class LocalPlayer : Player
     private int healthBarHeight = 10;
     private Color currentHealthColor = Color.Green;
 
-    //behavior
-    float maxSpeed = 5f;
-    float acceleration = 0.33f;
-
-    float drag = 0.05f;
     [Network(0)]
 
     //UI elements
@@ -40,14 +29,8 @@ public class LocalPlayer : Player
     Text outOfBoundsText;
     Rect oobScreenFlashRect;
     Text scoreText;
-
-    
-    int guntype = 1;
-    bool barrel = true;
-    Vector2 cVelocity = new Vector2(0,0);
     int alpha = 0;
     int direction = 1;
-    int shooting = -1;
 
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
@@ -105,125 +88,6 @@ public class LocalPlayer : Player
     {
         base.Decode(reader);
     }
-    /*
-    public override void Update() {
-
-
-
-        InputWrapper e = cInput;
-        if (e == null){
-            return;
-        }
-        
-        Vector2 mousePos = gm.CameraToWorldPos((float)e.MouseX, (float)e.MouseY);
-        transform.RotateTo(mousePos);      //we're inside the bounds.
-
-
-
-        //Find what sides we're colliding with in closwise order from top. 
-        if (e.keys[0])
-        {
-            cVelocity.Y -= acceleration;
-        }
-        
-        if (e.keys[2])
-        {
-            cVelocity.Y += acceleration;
-        }
-        if (e.keys[1])
-        {
-            cVelocity.X -= acceleration;
-        }
-        if (e.keys[3])
-        {
-            cVelocity.X += acceleration;
-        }
-
-        //clamp velocity.
-        if (cVelocity.X >= maxSpeed)
-        {
-            cVelocity.X = maxSpeed;
-        }
-        if (cVelocity.X <= -maxSpeed)
-        {
-            cVelocity.X = -maxSpeed;
-        }
-        if (cVelocity.Y >= maxSpeed)
-        {
-            cVelocity.Y = maxSpeed;
-        }
-        if (cVelocity.Y <= -maxSpeed)
-        {
-            cVelocity.Y = -maxSpeed;
-        }
-        if (cVelocity.X > 0)
-        {
-            cVelocity.X -= drag * cVelocity.X;
-        }
-
-        if (cVelocity.X < 0)
-        {
-            cVelocity.X += drag * Math.Abs(cVelocity.X);
-        }
-
-        if (cVelocity.Y > 0)
-        {
-            cVelocity.Y -= drag * cVelocity.Y;
-        }
-        if (cVelocity.Y < 0)
-        {
-            cVelocity.Y += drag * Math.Abs(cVelocity.Y);
-        }
-
-        if (IsNearlyZero(cVelocity.X))
-        {
-            cVelocity.X = 0;
-        }
-        if (IsNearlyZero(cVelocity.Y))
-        {
-            cVelocity.Y = 0;
-        }
-        this.transform.position += cVelocity;
-
-
-
-
-    
-        if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
-        {
-            guntype++;
-            if (guntype > 1)
-            {
-                guntype = 0;
-            }
-            lastChange = DateTime.Now;
-        }
-
-        bool shotEdge = e.LeftDown;
-        bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
-        this.shooting = -1;
-        if (shotEdge && canShoot)
-        {        
-
-                if (guntype == 0)
-                {
-                    
-                    SpawnGuntype1(mousePos);
-
-                }else if (guntype == 1)
-                {
-                    SpawnGuntype2(mousePos);
-                }
-
-            lastShotTime = DateTime.UtcNow;
-        }
-
-        // health bar relative to player
-        healthBarBackground.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
-        healthBarFill.transform.position = transform.position + new Vector2(barOffsetX, barOffsetY);
-        UpdateHealthBarVisual();
-}
-    */
     public override void Render(float deltaTime)
     {
 

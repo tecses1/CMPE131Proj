@@ -392,7 +392,7 @@ public class RenderManager
         this.objsToRender.Add(go);
     }
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
-    public async virtual Task Render(float deltaTime)
+    public virtual void Render(float deltaTime)
     {
         //Console.WriteLine("[DEBUG] [RENDERMANAGE] Called at " + DateTime.Now.ToLongTimeString() + ":" + DateTime.Now.Millisecond);
         AssetManager.fps = fps;
@@ -422,7 +422,7 @@ public class RenderManager
 
     }
 
-    public virtual async Task Update()
+    public virtual void  Update()
     {
 
     }

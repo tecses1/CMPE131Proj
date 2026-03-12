@@ -142,6 +142,7 @@ public class GameLogic
 
     public void AddPlayer(Player p)
     {
+        p.RegisterGameLogic(this);
         this.players.Add(p);
     }
     public List<GameObject> GetActiveObjects()

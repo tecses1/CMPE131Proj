@@ -41,7 +41,7 @@ public class Lobby
         for (int i = 0; i < playerInputs.Length; i++){
             if (playerInputs[i] == null)
             {
-                Console.WriteLine("Warning: null player input " + i);
+                //Console.WriteLine("Warning: null player input " + i);
                 continue;
             }
             Player p = gl.getPlayerWithUID(playerInputs[i].owner);

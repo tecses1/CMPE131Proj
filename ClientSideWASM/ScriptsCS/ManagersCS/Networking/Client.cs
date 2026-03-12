@@ -1,7 +1,7 @@
 namespace ClientSideWASM;
 using Shared;
 using System.Net.WebSockets;
-
+using System.Security.Principal;
 
 public class Client : NetworkModel
 {  
@@ -19,9 +19,19 @@ public class Client : NetworkModel
             var cts = new CancellationTokenSource();
             // Note: Use "ws://" for standard or "wss://" for secure connections
             Uri serverUri = new Uri($"ws://{Settings.server}:{Settings.port}");
-            
+            Uri backup = new Uri($"ws://localhost:{Settings.port}");
+
             Console.WriteLine($"Connecting to {serverUri}...");
-            await handler.ConnectAsync(serverUri, cts.Token);
+            try
+            {
+                 await handler.ConnectAsync(serverUri, cts.Token);
+            }
+            catch (Exception)
+            {   
+                handler = new ClientWebSocket();
+                Console.WriteLine("Failed. Conecting to backup.");
+                await handler.ConnectAsync(backup, cts.Token);
+            }
             this.Initialize(handler, cts);
             Console.WriteLine("Connected to server! Connection check: " + handler.State);
 

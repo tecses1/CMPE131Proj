@@ -80,7 +80,7 @@ public partial class Game
     }
 
 
-public async void OnFrameReady(float timestamp)
+public void OnFrameReady(float timestamp)
 {
    // DateTime debug = DateTime.Now;
 
@@ -97,13 +97,13 @@ public async void OnFrameReady(float timestamp)
     // This calls your physics exactly 60 times per "simulated" second
     while (_accumulator >= _fixedDeltaTime)
     {
-        await FixedUpdate(); //because its called at a fix time, its unlikely it will not finish by the time the next is called.
+         FixedUpdate(); //because its called at a fix time, its unlikely it will not finish by the time the next is called.
         _accumulator -= _fixedDeltaTime;
     }
     //int time1 = (DateTime.Now - debug).Milliseconds;
     // 3. Render whenever the browser is ready
     
-     await main.Render((timestamp - lastTime));
+      main.Render((timestamp - lastTime));
 
     // int time2 = (DateTime.Now - debug).Milliseconds - time1;
 
@@ -111,14 +111,15 @@ public async void OnFrameReady(float timestamp)
      lastTime = timestamp;
 }
 
-    private async Task FixedUpdate()
+    private void FixedUpdate()
     {
         // All physics logic goes here!
         main.UpdateInput(inputWrapper);
         // Clear input only after it has been processed by the physics
         inputWrapper.Clear();
 
-        await main.Update();
+        main.Update();
+
     }
 
     private void OnKeyDown(KeyboardPressEvent e)
