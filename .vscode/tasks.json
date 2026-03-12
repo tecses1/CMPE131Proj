@@ -23,10 +23,17 @@
       "type": "process",
       "args": ["build", "${workspaceFolder}/ServerSideStandalone/ServerSideStandalone.csproj"]
     },
+      {
+      "label": "build-shared",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/Shared/Shared.csproj"]
+    },
     {
     "label": "build-all-sequential",
     "dependsOrder": "sequence", // This is the magic ingredient
     "dependsOn": [
+      "build-shared",
       "build-wpf",
       "build-wasm"
     ],

@@ -36,6 +36,7 @@ public class GameLogic
         foreach (GameObject go in activeObjects)
         {
             //Update and register in same lop. No need to run twice. On.
+            go.Store(); //store values for interpolation before update changes them.
             go.Update();
             eventManager.Register(go);
 
@@ -45,6 +46,7 @@ public class GameLogic
         // TODO: probably update this when main player updates???
         foreach (Player p in players)
         {
+            p.Store();
             p.Update();
             eventManager.Register(p);
 
@@ -114,6 +116,8 @@ public class GameLogic
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
             Asteroid newAsteroid = Asteroid.GenerateAsteroid();
+            
+            if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.position);
             AddGameObject(newAsteroid);
             counter = DateTime.Now;
         }
@@ -275,11 +279,20 @@ public class GameLogic
                         //Console.WriteLine("object does not exist, adding object: " + className);
                         obj = CreateGameObject(className, uidString);
                         currentGroup.Add(obj);
-                        
+                        //decode immediately to set initial values.
+                        obj.Decode(reader);
+
+                    }
+                    else
+                    {
+                        //store for interpolation.
+                        obj.Store();
+                        // 5. UPDATE the state
+                        obj.Decode(reader);
                     }
                     //Console.WriteLine("Updating object");
-                    // 5. UPDATE the state
-                    obj.Decode(reader);
+                    //4.5 Store the previous state for interpolation.
+
                 }
 
                 // 6. DELETE (Cleanup) old objects

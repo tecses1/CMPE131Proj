@@ -7,8 +7,8 @@ public class Asteroid : GameObject
     public float rotationSpeed;
     public Vector2 velocity;
     public float speed;
-    public int deathAnimSpeed = 5;
-    int cDeathAnim = 5;
+    public int deathAnimSpeed = 2;
+    int cDeathAnim = 2;
     bool dead = false;
 
     public int hp = 1;
@@ -138,7 +138,7 @@ public class Asteroid : GameObject
 
         }
         Transform t = new Transform(spawnX, spawnY, size, size);
-        Asteroid a = new Asteroid(t,r.Next(1,3));
+        Asteroid a = new Asteroid(t,r.Next(3,6));
         a.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
         return a;
         //gl.AddGameObject(a):

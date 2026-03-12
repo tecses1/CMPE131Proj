@@ -42,6 +42,10 @@ public class RenderManager
     int[] megaBuffer = new int[16384];
     private Dictionary<string, int> _assetStartingIndex = new();
 
+    //interpolation settings
+    private Stopwatch _tickTimer = Stopwatch.StartNew();
+    private const float TICK_MS = 33.33f;
+
     public RenderManager(IJSRuntime js)
      {
         this.js = (IJSInProcessRuntime)js;
@@ -164,79 +168,6 @@ public class RenderManager
 
     return -1; // Asset not found
 }
-    public void RenderRects()
-    {
-
-        var rectToRender = rectsToRender.Select(r => new {
-            fillColor = r.fillColor,
-            alpha = ((float)r.fillAlpha)/255f,
-            sizeX = r.transform.size.X, // The box width
-            sizeY = r.transform.size.Y, // The box height
-            x = r.worldSpace ? (r.transform.position.X + worldOffsetX) : r.transform.position.X,
-            y = r.worldSpace ? (r.transform.position.Y + worldOffsetY) : r.transform.position.Y,
-            borderWidth = r.borderWidth,
-            borderColor = r.borderColor
-        }).ToArray();
-        js.InvokeVoid("drawRectBatch", mainCanvas.Id, rectToRender);
-        
-        rectsToRender.Clear();
-    }
-    public void RenderTexts()
-    {
-
-        var textToRender = textsToRender.Select(t => new {
-            text = t.text,
-            fontFamily = "Arial", // Pass just the name, JS handles the size
-            fillColor = t.fillColor,
-            fontColor = t.fontColor,
-            textAlpha = ((float)t.textAlpha)/255f,
-            rectAlpha = ((float)t.fillAlpha)/255f,
-            sizeX = t.transform.size.X, // The box width
-            sizeY = t.transform.size.Y, // The box height
-            x = t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X,
-            y = t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y,
-            offX = t.offsetX,
-            offY = t.offsetY,
-            borderWidth = t.borderWidth,
-            borderColor = t.borderColor
-        }).ToArray();
-         js.InvokeVoid("drawTextBatch", mainCanvas.Id, textToRender);
-        
-        textsToRender.Clear();
-    }
-    /*
-    public void RenderGroup() 
-    {
-
-        
-        //Create array of all possible images loaded in the game.
-        for (int i = 0; i < objsToRender.Count; i++)
-        {
-
-            GameObject obj = objsToRender[i];//the gameobject.
-            int cacheIndex = getCacheIndex(obj);
-            int offset = i * 6;
-            if (cacheIndex == -1)
-            {
-                Console.WriteLine("Image not found for " + obj.GetType().Name + ".");
-                continue;
-            }
-
-
-            _renderBuffer[offset] = obj.transform.position.X - worldOffsetX;
-            _renderBuffer[offset+1] = obj.transform.position.Y - worldOffsetY;
-            _renderBuffer[offset+2] = obj.transform.size.X;
-            _renderBuffer[offset+3] = obj.transform.size.Y;
-            _renderBuffer[offset+4] = obj.transform.rotation * (float)Math.PI / 180f;
-            _renderBuffer[offset+5] = cacheIndex; // Tell JS which image to use
-
-        }
-
-        // Send all images and all data in one go
-        js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , _renderBuffer, objsToRender.Count);
-        objsToRender.Clear();
-        
-    }*/
     private int ColorToAlphaInt(string htmlColor, int alpha0to255)
     {
         if (string.IsNullOrEmpty(htmlColor)) return 0;
@@ -258,7 +189,21 @@ public class RenderManager
             return 0; // Transparent black fallback
         }
     }
-    public void RenderAll()
+
+
+    public void ResetInterpolationClock() {
+        _tickTimer.Restart(); // Reset the 'bucket'
+    }
+
+    public float GetInterpolationFactor() {
+        // This gives us a value from 0.0 to 1.0 (or higher if the next packet is late)
+        float t = _tickTimer.ElapsedMilliseconds / TICK_MS;
+        
+        // Clamp it to 1.0 to prevent the object from "ghosting" 
+        // past its current logical position while waiting for the next packet.
+        return Math.Min(t, 1.0f);
+    }
+    public void RenderAll(float deltaTime)
     {
         if (mainCanvas == null) return;
 
@@ -277,14 +222,29 @@ public class RenderManager
                 if (obj.InBounds(GetCanvasBounds()) == false) {
                     continue; // Skip rendering this object
                 }
+                // Interpolation: Calculate the interpolated position based on previous and current transform
+                float interpolationOffsetX = obj.transform.position.X;
+                float interpolationOffsetY = obj.transform.position.Y;
+                float interpolationRotation = obj.transform.rotation;
+                if (obj.previousTransform != null) {
+                    interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
+                    interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
+
+                    /*Things spin like crazy with this, I'll wait for more investigation. Rotation doesn't really bother me right now.
+                    float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180; // Shortest angle difference
+                    // 3. Interpolate using the corrected delta
+                    interpolationRotation = obj.previousTransform.rotation + deltaRotation * GetInterpolationFactor();*/
+                }
+
+
                 int idx = getCacheIndex(obj);
                 if (idx == -1) continue;
                 megaBuffer[cursor++] = 0;
-                megaBuffer[cursor++] = (int)((obj.transform.position.X - worldOffsetX) * 100);
-                megaBuffer[cursor++] = (int)((obj.transform.position.Y - worldOffsetY) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetY - worldOffsetY) * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.X * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.Y * 100);
-                megaBuffer[cursor++] = (int)(obj.transform.RotationRadians() * 100);
+                megaBuffer[cursor++] = (int)(interpolationRotation * 100);
                 megaBuffer[cursor++] = idx;
             }
         }
@@ -421,7 +381,7 @@ public class RenderManager
         //RenderTexts();
         //RenderRects();
 
-        this.RenderAll();
+        this.RenderAll(deltaTime);
 
     }
 

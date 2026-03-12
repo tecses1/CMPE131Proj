@@ -1,6 +1,7 @@
 namespace ServerSideStandalone;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.WebSockets;
 using System.Security.RightsManagement;
@@ -16,6 +17,20 @@ public class Server
     private readonly string _url = "http://*:8888/"; // WebSockets start as HTTP
     private List<Lobby> openLobbies = new List<Lobby>();
 
+    Thread updateThread;
+
+
+    
+    public Server()
+    {
+        Console.WriteLine("Server initialized.");
+        _ = RunServerAsync(); // Fire and forget
+
+        //start an actual multithread.
+        updateThread = new Thread( UpdateLobbies);
+        updateThread.IsBackground = true; // Ensure it doesn't block application exit
+        updateThread.Start();
+    }
     public Lobby CreateLobby()
     {
         Lobby newLobby = new Lobby();
@@ -34,30 +49,26 @@ public class Server
         }
         return null;
     }
-    
-    public Server()
-    {
-        Console.WriteLine("Server initialized.");
-        _ = RunServerAsync(); // Fire and forget
-        _ = UpdateLobbies();
-    }
-
-    public async Task UpdateLobbies()
+    public  void UpdateLobbies()
     {
 
         Console.WriteLine("Lobby thread called...");
-        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(1000f/30f)); //60hz
-        while (await timer.WaitForNextTickAsync())        {
-            foreach (Lobby l in openLobbies)
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
+        while (true)
+        {
+            // Update each lobby
+            foreach (Lobby lobby in openLobbies)
             {
-                try{
-                l.Update();
-                }catch (Exception ex)
-                {
-                    Console.WriteLine("Error processing lobby: " + ex + " Trace: " + ex.StackTrace);
-                }
+                lobby.Update();
             }
+
+            // Sleep to maintain a consistent update rate (e.g., 30 FPS)
+            int sleepTime = Math.Max(0, (int)(1000 / 30 - sw.ElapsedMilliseconds));
+            Thread.Sleep(sleepTime);
+            sw.Restart();
         }
+
     }
 
     public async Task RunServerAsync()

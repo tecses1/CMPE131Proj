@@ -20,6 +20,12 @@ public class Transform
         this.size = new Vector2(sizeX, sizeY);
         this.rotation = 0;
     }
+    public Transform(Transform other)
+    {
+        this.position = other.position;
+        this.size = other.size;
+        this.rotation = other.rotation;
+    }
     public Transform(float x, float y, int sizeX, int sizeY, float rotation)
     {
         this.position = new Vector2(x,y);

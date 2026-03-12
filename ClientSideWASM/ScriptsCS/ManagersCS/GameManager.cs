@@ -87,32 +87,11 @@ public class GameManager : RenderManager
     {
         this.cInput = e;
     }
-    public virtual void Update()
-    {
-        if (!nm.client.isConnected()) {
-            cInput.OverwriteCameraToWorldPos(this);
-            this.localPlayer.cInput = (InputWrapper)cInput;
-            
-            this.gl.Update();
-            return;
-        }else
 
-        if (nm.myLobby == "")
-        {
-            cInput.OverwriteCameraToWorldPos(this);
-            this.localPlayer.cInput = (InputWrapper)cInput;
-            
-            this.gl.Update();
-            return;
-        }
-        try{
-            byte[] gamestate = nm.GetGameState().Result;
-            gl.LoadGameState(gamestate);
-        }
-        catch
-        {
-            Console.WriteLine("Failed to get gamestate from server, trying again next tick.");
-        }
+    public void GameStateCheck()
+    {
+        //Reset the interpolation clock every time we recieve and update.
+        ResetInterpolationClock();
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
@@ -140,12 +119,47 @@ public class GameManager : RenderManager
             }
 
         }
+    }
+    public virtual void Update()
+    {
+        //check if we're a local gamestate, if so, update locally. for testing.
+        if (!nm.client.isConnected()) {
+            cInput.OverwriteCameraToWorldPos(this);
+            this.localPlayer.cInput = (InputWrapper)cInput;
+            
+            this.gl.Update();
+            return;
+        }else
+
+        if (nm.myLobby == "")
+        {
+            cInput.OverwriteCameraToWorldPos(this);
+            this.localPlayer.cInput = (InputWrapper)cInput;
+            
+            this.gl.Update();
+            return;
+        }
+
+
+        //if we're a network game, send over our input, and wait for the host to send us the gamestate, then update our gamestate to match the host's.
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
         //make sure our input has our UID.
         this.cInput.owner = nm.client.assignedUID;
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
+        
+        try{
+            byte[] gamestate = nm.GetGameState().Result;
+            gl.LoadGameState(gamestate);
+            GameStateCheck();
+        }
+        catch
+        {
+            Console.WriteLine("Failed to get gamestate from server, trying again next tick.");
+        }
+
+
     }
 
 
