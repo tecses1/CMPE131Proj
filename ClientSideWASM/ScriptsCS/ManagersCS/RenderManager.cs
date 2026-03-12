@@ -32,10 +32,12 @@ public class RenderManager
 
     protected IJSInProcessRuntime js;
     private CanvasBase mainCanvas;
-    DateTime counter = DateTime.Now;
     int frames = 0;
     int fps = 0;
-    
+    int tick = 0;
+    int ticks = 0;
+    Stopwatch fpsTimer = Stopwatch.StartNew();
+    Stopwatch tickTimer = Stopwatch.StartNew();
     Text t;
     public float cameraSmoothing = 0.25f; 
 
@@ -359,20 +361,11 @@ public class RenderManager
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
     public virtual void Render(float deltaTime)
     {
+        frames++;
         //Console.WriteLine("[DEBUG] [RENDERMANAGE] Called at " + DateTime.Now.ToLongTimeString() + ":" + DateTime.Now.Millisecond);
         AssetManager.fps = fps;
         //UPDATE FPS
-        if ( (DateTime.Now-counter).Seconds > 1)
-        {
-            t.text = "FPS: " + fps;
-            counter = DateTime.Now;
-            fps = frames / 2;
-            frames = 0;
-        }
-        else
-        {
-            frames++;
-        }
+
         //add text to render pipeline.
         t.Draw((GameManager)this);
         //Clear the background in JS. Faster, and synced.
@@ -389,6 +382,26 @@ public class RenderManager
 
     public virtual void  Update()
     {
+        tick++;
+        if (tickTimer.ElapsedMilliseconds >= 1000) // Every second
+        {
+            //Console.WriteLine("Tick: " + tick);
+            tickTimer.Restart();
+            ticks = tick;
+            tick = 0;
+
+
+            //calculate fps.
+            double elapsedSeconds = fpsTimer.Elapsed.TotalMilliseconds / 1000.0; // ms bc seconds will be 0.
+            fps = (int)(frames / elapsedSeconds);
+            fpsTimer.Restart();
+            t.text = "FPS: " + fps + "| Ticks: " + ticks;
+            frames = 0;
+
+        }
+
+
+            
 
     }
 }

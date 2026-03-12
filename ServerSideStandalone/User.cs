@@ -28,7 +28,7 @@ public class User : NetworkModel
         switch (purpose)
             {
                 case "{NewLobby}":
-                    Lobby l = server.CreateLobby();
+                    Lobby l = server.CreateLobby(args[0]);
                     l.AddUser(this);
                     myLobby = l;
                     return new string[] {myLobby.Name};

@@ -20,7 +20,7 @@ public partial class Game
 
     
     private double tick = 0;
-    private const float _fixedDeltaTime = 1000f / 30f; //60 hz
+    private const double  _fixedDeltaTime = 1000.0 / 45.0; //45 hz target
 
     public float lastTime = -1;
     protected override async Task OnInitializedAsync()
@@ -87,23 +87,25 @@ public partial class Game
             return;
         }
         float deltaTime = (timestamp - lastTime); //convert to ms;
-        main.Render(deltaTime);
         lastTime = timestamp;
+
         // 2. The Fixed Update Loop
         // This calls your physics exactly 60 times per "simulated" second
         tick += deltaTime;
-        if (tick > _fixedDeltaTime)
-        {
+        Console.WriteLine("DeltaTime: " + deltaTime + "ms, Tick: " + tick);
+        bool updated = false;
+        while (tick > _fixedDeltaTime){
             main.UpdateInput(inputWrapper);
             inputWrapper.Clear();
-            
             main.Update();
-            
+            Console.WriteLine("UDPATE DEBUG");
             tick -= _fixedDeltaTime;
+            updated = true;
         }
+        if (!updated) main.Render(deltaTime); //skip rendering if we updated the game state to try and even out the frames.
 
 
-
+        
 
         
     }

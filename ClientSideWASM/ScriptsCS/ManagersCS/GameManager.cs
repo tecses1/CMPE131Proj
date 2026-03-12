@@ -118,7 +118,7 @@ void GenerateStars()
 
         }
     }
-    public virtual void Update()
+    public override void  Update()
     {
         //check if we're a local gamestate, if so, update locally. for testing.
         if (!nm.client.isConnected()) {
@@ -147,16 +147,16 @@ void GenerateStars()
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
         
-        try{
-            byte[] gamestate = nm.GetGameState().Result;
-            gl.LoadGameState(gamestate);
-            GameStateCheck();
-        }
-        catch
+        byte[] gamestate = nm.GetGameState();
+        if (gamestate == null)
         {
-            Console.WriteLine("Failed to get gamestate from server, trying again next tick.");
+            Console.WriteLine("WARNING: Null game state???");
+            return;
         }
-
+        gl.LoadGameState(gamestate);
+        GameStateCheck();
+        
+        base.Update(); //so render manager can log the tick rate and show it.
 
     }
 

@@ -11,7 +11,7 @@ public class NetworkManager
     public string myLobby = "";
     public bool isHost = false;
     private readonly Channel<byte[]> _stateChannel = Channel.CreateBounded<byte[]>(
-        new BoundedChannelOptions(8) { FullMode = BoundedChannelFullMode.DropOldest }
+        new BoundedChannelOptions(2) { FullMode = BoundedChannelFullMode.DropOldest }
     );
 
     public List<byte[]> inputsReceived = new List<byte[]>();
@@ -29,11 +29,18 @@ public class NetworkManager
         _stateChannel.Writer.TryWrite(newState);
     }
 
-    public async Task<byte[]> GetGameState()
+
+    public byte[] GetGameState()
     {
-        // This waits (without a loop) until a state exists, then grabs it.
-        return await _stateChannel.Reader.ReadAsync();
+        byte[] latest = null;
+        // Drain the whole buffer to get the absolute newest packet
+        while (_stateChannel.Reader.TryRead(out var state))
+        {
+            latest = state;
+        }
+        return latest; 
     }
+    
     public void Initialize(GameManager gm){
         this.gm = gm;
     }
