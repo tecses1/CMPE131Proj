@@ -105,10 +105,14 @@ public class GameManager : RenderManager
             this.gl.Update();
             return;
         }
-
-        byte[] gamestate = nm.GetGameState().Result;
-        gl.LoadGameState(gamestate);
-
+        try{
+            byte[] gamestate = nm.GetGameState().Result;
+            gl.LoadGameState(gamestate);
+        }
+        catch
+        {
+            Console.WriteLine("Failed to get gamestate from server, trying again next tick.");
+        }
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
@@ -162,11 +166,11 @@ public class GameManager : RenderManager
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-        localPlayer.Render(deltaTime);
+        localPlayer.Render(deltaTime); // render local only stuff.
 
         foreach (ClientPlayer cp in clientPlayers)
         {
-            cp.Render(deltaTime);
+            cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
         base.Render(deltaTime); 
 

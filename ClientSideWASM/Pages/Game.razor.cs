@@ -5,6 +5,7 @@ namespace ClientSideWASM.Pages;
 using System.Numerics;
 using Blazorex;
 using Shared;
+using System.Diagnostics;
 public partial class Game
 {
     private CanvasManager? _canvasManager;
@@ -18,11 +19,10 @@ public partial class Game
     public GameManager main;
 
     
-    private float _accumulator = 0f;
-    private float _lastTime = 0f;
-    private const float _fixedDeltaTime = 1f / 60f; // 0.01666... seconds
+    private double tick = 0;
+    private const float _fixedDeltaTime = 1000f / 30f; //60 hz
 
-    public float lastTime;
+    public float lastTime = -1;
     protected override async Task OnInitializedAsync()
     {
         if (!nm.client.isConnected()){
@@ -68,7 +68,6 @@ public partial class Game
         //Initialize my stuff.
         main = new GameManager(JS,  nm);
         inputWrapper = new ClientInputWrapper();
-
     }
 
     private void OnCanvasReady(CanvasBase canvas)
@@ -76,50 +75,37 @@ public partial class Game
 
         main.SetMainCanvas(canvas);
         _context = canvas.RenderContext;
+
         
     }
 
-
-public void OnFrameReady(float timestamp)
-{
-   // DateTime debug = DateTime.Now;
-
-    float currentTime = timestamp / 1000f;
-    if (_lastTime == 0) _lastTime = currentTime;
-
-    float elapsed = currentTime - _lastTime;
-    _lastTime = currentTime;
-
-    // 1. Fill the bucket (cap it to 0.1s to prevent "Spiral of Death" lag)
-    _accumulator += Math.Min(elapsed, 0.1f);
-
-    // 2. The Fixed Update Loop
-    // This calls your physics exactly 60 times per "simulated" second
-    while (_accumulator >= _fixedDeltaTime)
+    public void OnFrameReady(float timestamp)
     {
-         FixedUpdate(); //because its called at a fix time, its unlikely it will not finish by the time the next is called.
-        _accumulator -= _fixedDeltaTime;
-    }
-    //int time1 = (DateTime.Now - debug).Milliseconds;
-    // 3. Render whenever the browser is ready
-    
-      main.Render((timestamp - lastTime));
+        if (lastTime == -1)
+        {
+            lastTime = timestamp;
+            return;
+        }
+        float deltaTime = (timestamp - lastTime); //convert to ms;
+        main.Render(deltaTime);
+        lastTime = timestamp;
+        // 2. The Fixed Update Loop
+        // This calls your physics exactly 60 times per "simulated" second
+        tick += deltaTime;
+        if (tick > _fixedDeltaTime)
+        {
+            main.UpdateInput(inputWrapper);
+            inputWrapper.Clear();
+            
+            main.Update();
+            
+            tick -= _fixedDeltaTime;
+        }
 
-    // int time2 = (DateTime.Now - debug).Milliseconds - time1;
 
-     //Console.WriteLine("Time to update: " + time1 + "ms | Time to render: " + time2 + "ms");
-     lastTime = timestamp;
-}
 
-    private void FixedUpdate()
-    {
-        // All physics logic goes here!
-        main.UpdateInput(inputWrapper);
-        // Clear input only after it has been processed by the physics
-        inputWrapper.Clear();
 
-        main.Update();
-
+        
     }
 
     private void OnKeyDown(KeyboardPressEvent e)
