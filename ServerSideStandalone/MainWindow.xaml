@@ -19,11 +19,29 @@
             <ListBox x:Name="ClientList" Height="200" Background="#2D2D2D" BorderThickness="0" Margin="0,0,0,15">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Expander Foreground="LightGreen" Header="{Binding Username}" Width="210">
+                        <Expander Foreground="LightGreen" Width="500">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Username}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding uid, StringFormat=' (ID: {0})'}" FontSize="10" Foreground="Gray" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </Expander.Header>
+
                             <StackPanel Margin="10,5,0,5">
-                                <TextBlock Text="{Binding IPAddress}" FontSize="11" Foreground="Gray"/>
-                                <TextBlock Text="{Binding Latency}" FontSize="11" Foreground="Gray"/>
-                                <Button Content="Kick Player" Background="#442222" Foreground="White" Margin="0,5,0,0"/>
+                                <TextBlock Text="{Binding IPAddress, StringFormat='IP: {0}'}" FontSize="11" Foreground="Gray"/>
+                                <TextBlock Text="{Binding Latency, StringFormat='Latency: {0}'}" FontSize="11" Foreground="Gray"/>
+                                <TextBlock Text="{Binding Skipped, StringFormat='Skipped: {0}'}" FontSize="11" Foreground="Gray"/>
+                                <Separator Background="#444" Margin="0,5"/>
+                                
+                                <TextBlock Text="{Binding CurrentPage, StringFormat='Page: {0}'}" FontSize="11" Foreground="SkyBlue"/>
+                                <TextBlock Text="{Binding Lobby, StringFormat='Lobby: {0}'}" FontSize="11" Foreground="SkyBlue"/>
+                                
+                                <Button Content="Kick Player" 
+                                        Background="#442222" 
+                                        Foreground="White" 
+                                        Margin="0,8,0,0"
+                                        Padding="5,2"
+                                        Cursor="Hand"/>
                             </StackPanel>
                         </Expander>
                     </DataTemplate>
@@ -38,9 +56,14 @@
                             <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"/>
                             
                             <StackPanel x:Name="DetailsArea" Visibility="Collapsed" Margin="10,5,0,0">
-                                <TextBlock Text="{Binding PlayerCountDisplay}" Foreground="#AAA"/>
-                                <TextBlock Text="{Binding MapName}" Foreground="#AAA"/>
+                                <TextBlock Text="{Binding PlayerCount, StringFormat='Players: {0}'}" Foreground="#AAA"/>
+                                
+                                <TextBlock Text="{Binding tps}" Foreground="#AAA"/>
+                                
                                 <TextBlock Text="{Binding Uptime}" Foreground="#AAA"/>
+                                
+                                <TextBlock Text="{Binding UserList}" Foreground="#777" FontStyle="Italic" TextWrapping="Wrap"/>
+                                
                                 <Button Content="Close Lobby" Margin="0,5,0,0" Click="OnCloseLobbyClick"/>
                             </StackPanel>
                         </StackPanel>

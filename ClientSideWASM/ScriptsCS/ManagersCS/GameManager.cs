@@ -23,6 +23,7 @@ public class GameManager : RenderManager
 
     ClientInputWrapper cInput;
     
+    long lastTick = 0;
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
@@ -137,8 +138,6 @@ void GenerateStars()
             this.gl.Update();
             return;
         }
-
-
         //if we're a network game, send over our input, and wait for the host to send us the gamestate, then update our gamestate to match the host's.
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
@@ -147,13 +146,16 @@ void GenerateStars()
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
         
+
+
         byte[] gamestate = nm.GetGameState();
         if (gamestate == null)
         {
             Console.WriteLine("WARNING: Null game state???");
             return;
         }
-        gl.LoadGameState(gamestate);
+        lastTick = gl.LoadGameState(gamestate);
+        
         GameStateCheck();
         
         base.Update(); //so render manager can log the tick rate and show it.

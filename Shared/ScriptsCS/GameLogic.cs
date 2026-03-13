@@ -211,9 +211,9 @@ public class GameLogic
         return this.GetGameState(frameStamp, players, activeObjects);
     }
 
-    public void LoadGameState(byte[] gameState)
+    public long LoadGameState(byte[] gameState)
     {
-        this.LoadGameState(gameState, players,activeObjects);
+        return this.LoadGameState(gameState, players,activeObjects);
     }
     //Go through all groups passed, and, in order, write their meta data and object data.
     byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
@@ -237,13 +237,13 @@ public class GameLogic
             return ms.ToArray();
         }
     }
-    void LoadGameState(byte[] stateData, params List<GameObject>[] localGroups)
+    long LoadGameState(byte[] stateData, params List<GameObject>[] localGroups)
     {
 
         using (MemoryStream ms = new MemoryStream(stateData))
         using (BinaryReader reader = new BinaryReader(ms))
         {
-            DateTime frameStamp = new DateTime(reader.ReadInt64());
+            long frameStamp = reader.ReadInt64();
 
             // Loop through each group list passed in
             for (int i = 0; i < localGroups.Length; i++)
@@ -306,6 +306,7 @@ public class GameLogic
                     }
                 }
             }
+            return frameStamp;
         }
     }
     

@@ -20,6 +20,14 @@ using System.Threading.Tasks;public abstract class NetworkModel
     protected CancellationTokenSource cts;
 
     public string GetAddress() => handler?.CloseStatusDescription ?? "Unknown";
+
+    int latency = 0;
+
+    public int GetLatency()
+    {
+        // Placeholder for latency measurement logic
+        return 0;
+    }
     public bool isConnected(){
         return handler?.State == WebSocketState.Open;
     }
@@ -138,7 +146,7 @@ using System.Threading.Tasks;public abstract class NetworkModel
                 // 2. Process the packet
                 byte[] fullMessage = ms.ToArray();
                 Packet p = Packet.Deserialize(fullMessage);
-
+                //latency = (int)(DateTime.UtcNow - p.Timestamp).TotalMilliseconds;
 
                 if (p.IsResponse)
                 {

@@ -38,13 +38,21 @@ public class Server
     }
     public void Update()
     {
-        foreach (User u in users)
-        {
-            if (!u.isConnected())
+        while(true){
+            try{
+                foreach (User u in users)
+                {
+                    if (!u.isConnected())
+                    {
+                        users.Remove(u);
+                        break;
+                    }
+                    u.Update(); //update gui   
+                }
+            }catch(InvalidOperationException ex)
             {
-                users.Remove(u);
-                break;
-            }   
+                Console.WriteLine("Skipping tick, users modified.");
+            }
         }
     }
     public  void UpdateLobbies()
@@ -98,18 +106,25 @@ public class Server
         newLobby.Name = name;
         openLobbies.Add(newLobby);
 
-        LobbyNode newLobbyNode = new LobbyNode
-        {
-            Name = name,
-            PlayerCount = 0,
-            tps="Ticks Per Second: None",
-            UserList = "Users: Empty",
-            Lobby = newLobby
-        };
-        mainWindow.Lobbies.Add(newLobbyNode);
-        newLobby.node = newLobbyNode;
-
         //Let the GUI know.
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            LobbyNode newLobbyNode = new LobbyNode
+            {
+                Name = name,
+                PlayerCount = 0,
+                tps="Ticks Per Second: None",
+                UserList = "Users: Empty",
+                Lobby = newLobby
+
+
+            };
+            mainWindow.Lobbies.Add(newLobbyNode);
+            newLobby.node = newLobbyNode;
+        });
+
+
+        
 
         return newLobby;
     }

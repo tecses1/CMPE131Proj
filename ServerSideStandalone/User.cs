@@ -1,7 +1,10 @@
 namespace ServerSideStandalone;
 using Shared;
+using System.Data;
 using System.Net.WebSockets;
 
+using System.Windows;
+using System.Windows.Controls;
 
 public class User : NetworkModel
 {
@@ -10,18 +13,58 @@ public class User : NetworkModel
     public Lobby myLobby ;
     public string currentPage;
     public Guid uid;
+    bool read = false;
+    int skipped = 0;
+    private byte[] _myInputData;
+    public byte[] myInputData
+    {
+        get
+        {   
+            skipped = 0;
+            read = true;
+            return _myInputData;
+        }
+        set
+        {
+            if (!read)
+            {
+                skipped++;
+            }
+            read = false;
+            _myInputData = value;
+        }
+    }
 
-
-
+    ClientNode node;
     public User( Server s)
     {
         this.uid = Guid.NewGuid();
         this.server = s;
-        
+        this.node = new ClientNode() { Username = "New User", IPAddress = GetAddress(), uid = uid.ToString(), CurrentPage = "Init", Lobby = "None", Latency = "placeholder ms" };
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            ((MainWindow)Application.Current.MainWindow).Clients.Add(node);
+        });
         //Initialzie the net code.
 
     }   
-
+    public int GetSkipped()
+    {
+        return skipped;
+    }
+    public void Update()
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            this.node.Username = name;
+            this.node.CurrentPage = currentPage;
+            this.node.Lobby = myLobby != null ? myLobby.Name : "None";
+            this.node.IPAddress = GetAddress();
+            this.node.Latency = "" + GetLatency() + " ms";
+            this.node.uid = uid.ToString();
+            this.node.Skipped = "" + GetSkipped();
+        });
+    }
     protected override async Task<string[]> HandleRecvWithResponse(string purpose, byte[] data, string[] args)
     {
         //Console.WriteLine("Recieved update that requires response." + purpose);
@@ -65,10 +108,6 @@ public class User : NetworkModel
                 case "{GameStateUpdate}":
                     myLobby.UpdateState(data);
                     break;
-                case "{SpawnGameObject}":
-                    
-                    myLobby.SpawnGameObject(data);
-                    break;
                 case "{SetName}":
                     this.name = args[0];
                     break;
@@ -78,7 +117,7 @@ public class User : NetworkModel
 
                 case "{Input}":
                     //We can handle some input on the server, but for now we just send it to the host to handle. 
-                    myLobby.AddInput(this,data);
+                    myInputData = data;
                     break;
 
                 default:
