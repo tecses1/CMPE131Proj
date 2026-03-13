@@ -61,6 +61,7 @@ public class Server
         Console.WriteLine("Lobby thread called...");
         Stopwatch sw = new Stopwatch();
         sw.Start();
+        double targetMs = 1000.0 / GameConstants.updateRate;
         while (true)
         {
             long startTime = sw.ElapsedMilliseconds;
@@ -83,7 +84,7 @@ public class Server
             }
             // Sleep to maintain a consistent update rate (e.g., 30 FPS)
             double processTime = sw.ElapsedMilliseconds - startTime;
-            double targetMs = 1000.0 / 45.0; // 45hz
+            // 45hz
             double sleepTime = Math.Max(0, targetMs - processTime);
 
             Thread.Sleep((int)sleepTime);

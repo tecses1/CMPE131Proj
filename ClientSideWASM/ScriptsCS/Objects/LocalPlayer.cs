@@ -82,11 +82,60 @@ public class LocalPlayer : Player
 
     }
 
+    public void CenterCameraOnMe(float deltaTime)
+    {
+                //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
+        //If we're in the world bounds.
+        // added else out of bounds take damage
+        bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
 
+        //gm.CenterCameraOn(this.transform);
+        if (collided[0] && collided[2])//Inside Y axis bouynds
+        {
+            gm.CenterCameraOnLerp(this.transform, deltaTime, true,false); //cente camera Y axis only.
+
+        }
+        if (collided[1] && collided[3]) //Inside X axis bounds
+        {
+            gm.CenterCameraOnLerp(this.transform, deltaTime, false,true); //center camera X axis only
+        } 
+        
+    }
 
     public override void Decode(BinaryReader reader)
-    {
+    {   
+        float localX = this.transform.position.X;
+        float localY = this.transform.position.Y;
+        float localRotation = this.transform.rotation;
+        // 3. Read the server data. 
+        // This overwrites this.transform with the server's past data.
         base.Decode(reader);
+    // 4. Reconcile (Only for the local player)
+        if (isLocalPlayer) {
+            // Calculate how far the server's reality is from our local reality
+            float dx = localX - this.transform.position.X;
+            float dy = localY - this.transform.position.Y;
+            float distanceSquared = (dx * dx) + (dy * dy); // Faster than Vector2.Distance
+
+            // Threshold: How much error do we tolerate before snapping?
+            // Adjust this based on your game's movement speed. 
+            float snapThresholdSquared = 4.0f; // Equivalent to distance of 2.0
+
+            if (distanceSquared < snapThresholdSquared) {
+                // WE PREDICTED CORRECTLY (or close enough).
+                // Revert the server's old data back to our snappy local data.
+                this.transform.position.X = localX;
+                this.transform.position.Y = localY;
+                this.transform.rotation = localRotation;
+                
+                // You can also reset velocities here if you sync them
+            } else {
+                // SNAP CORRECTION! 
+                // We hit a wall on the server, got teleported, or lagged terribly.
+                // We do NOTHING here, leaving the server's data intact to snap the player.
+                Console.WriteLine($"[CSP] Rubber-banding! Error distance: {Math.Sqrt(distanceSquared)}");
+            }
+        }
     }
     public override void Render(float deltaTime)
     {
@@ -106,22 +155,7 @@ public class LocalPlayer : Player
         healthBarBackground.Draw(gm);
         healthBarFill.Draw(gm);
 
-        //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
-        //If we're in the world bounds.
-        // added else out of bounds take damage
-        bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
 
-        //gm.CenterCameraOn(this.transform);
-        if (collided[0] && collided[2])//Inside Y axis bouynds
-        {
-            gm.CenterCameraOnLerp(this.transform,deltaTime, true,false); //cente camera Y axis only.
-
-        }
-        if (collided[1] && collided[3]) //Inside X axis bounds
-        {
-            gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only
-        } 
-        
         // if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
         // {
         //     gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only
@@ -205,5 +239,6 @@ public class LocalPlayer : Player
             currentHealthColor = newColor;
         }
     }
+
 
 }

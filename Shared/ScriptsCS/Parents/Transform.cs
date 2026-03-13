@@ -30,7 +30,7 @@ public class Transform
     {
         this.position = new Vector2(x,y);
         this.size = new Vector2(sizeX, sizeY);
-        this.rotation = rotation;
+        this.rotation = 0 + rotation;
     }
     public Vector2 Forward()
     {

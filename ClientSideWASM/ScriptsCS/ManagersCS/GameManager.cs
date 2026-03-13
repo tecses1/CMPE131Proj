@@ -3,6 +3,9 @@ using Microsoft.JSInterop;
 using Shared;
 using System.Text.Json;
 using System.Numerics;
+using System.Diagnostics;
+using System.ComponentModel;
+using Microsoft.AspNetCore.Components.Web.Virtualization;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 
@@ -24,6 +27,18 @@ public class GameManager : RenderManager
     ClientInputWrapper cInput;
     
     long lastTick = 0;
+
+    Stopwatch renderTimer = new Stopwatch();
+    Stopwatch updateTimer = new Stopwatch();
+
+    //byte[] gameStateBuffer = new byte[4096]; // Pre-allocated buffer for game state data
+
+    //interpolation
+    private byte[] _pendingStateBuffer = new byte[16384];
+    private byte[] _activeStateBuffer = new byte[16384];
+    private long _pendingTick = -1;
+
+    private Stopwatch _intervalTimer = Stopwatch.StartNew();
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
@@ -90,7 +105,6 @@ void GenerateStars()
     public void GameStateCheck()
     {
         //Reset the interpolation clock every time we recieve and update.
-        ResetInterpolationClock();
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
@@ -121,6 +135,7 @@ void GenerateStars()
     }
     public override void  Update()
     {
+        updateTimer.Restart();
         //check if we're a local gamestate, if so, update locally. for testing.
         if (!nm.client.isConnected()) {
             cInput.OverwriteCameraToWorldPos(this);
@@ -138,6 +153,30 @@ void GenerateStars()
             this.gl.Update();
             return;
         }
+        /*old update.
+
+        if (lastTick == this.nm.PeekTick()) {
+            //Console.WriteLine("Tick " + lastTick + " is the same as the last tick we processed, skipping update to prevent desync.");
+            skipped++;
+            return;
+        }
+
+        int gamestate = nm.GetGameState(gameStateBuffer);
+        if (gamestate == 0)
+        {
+            Console.WriteLine("WARNING: 0 size game state???");
+            skipped++;
+            return;
+        }
+        lastTick = gl.LoadGameState(gameStateBuffer);
+        
+        GameStateCheck();
+        
+        base.Update(); //so render manager can log the tick rate and show it.
+        skipped = 0;
+        this.updateTime = (int)updateTimer.ElapsedMilliseconds;
+        */
+
         //if we're a network game, send over our input, and wait for the host to send us the gamestate, then update our gamestate to match the host's.
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
@@ -145,22 +184,48 @@ void GenerateStars()
         this.cInput.owner = nm.client.assignedUID;
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
-        
+        localPlayer.cInput = (InputWrapper)cInput; //make sure to update our local player with the input wrapper so it can move while we wait for the gamestate update from the server.
+
+        // 1. Is there a new packet on the wire?
+        long incomingTick = nm.PeekTick();
+
+            if (incomingTick != _pendingTick && incomingTick != -1) {
+                if (_pendingTick == -1) {
+                    nm.GetGameState(_pendingStateBuffer);
+                    _pendingTick = incomingTick;
+                    return;
+                }
+
+                // Measure actual arrival time to adapt to server speed
+                float delta = _intervalTimer.ElapsedMilliseconds;
+                _intervalTimer.Restart();
+                _currentDuration = (_currentDuration * 0.8f) + (delta * 0.2f);
+
+                // SWAP: Move Pending to Active
+                Buffer.BlockCopy(_pendingStateBuffer, 0, _activeStateBuffer, 0, _pendingStateBuffer.Length);
+                
+                // This sets obj.previousTransform = current, and current = new
+                lastTick = gl.LoadGameState(_activeStateBuffer); 
+
+                // Refill Pending with the newest data
+                nm.GetGameState(_pendingStateBuffer);
+                _pendingTick = incomingTick;
+
+                // RESET the accumulation, not a stopwatch
+                _timeSinceLastLoad = 0f; 
+
+                skipped = 0;
+                //Console.WriteLine("Player pos: " + this.localPlayer.transform.position.X + "," + this.localPlayer.transform.position.Y + ", prev pos: " + this.localPlayer.previousTransform.position.X + "," + this.localPlayer.previousTransform.position.Y   );
+            }else{
+                skipped++;
+            }
+        base.Update();
+        updateTime = (int)updateTimer.ElapsedMilliseconds;
 
 
-        byte[] gamestate = nm.GetGameState();
-        if (gamestate == null)
-        {
-            Console.WriteLine("WARNING: Null game state???");
-            return;
-        }
-        lastTick = gl.LoadGameState(gamestate);
-        
-        GameStateCheck();
-        
-        base.Update(); //so render manager can log the tick rate and show it.
+}
 
-    }
+    
 
 
 
@@ -171,6 +236,8 @@ void GenerateStars()
 
     public override void Render(float deltaTime)
     {
+        
+        this.renderTimer.Restart();
         //Console.WriteLine("Calling render!");
         if (!nm.client.isConnected()) {
             isLocal.Draw(this);
@@ -187,7 +254,16 @@ void GenerateStars()
             cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
         base.Render(deltaTime); 
+        
+        this.renderTime = (int)renderTimer.ElapsedMilliseconds;
 
+
+        // --- SECTION B: VISUAL INTERPOLATION ---
+        // This happens EVERY FRAME, even if no packet arrived!
+        _timeSinceLastLoad += deltaTime; // Accumulate the frame time
+
+        localPlayer.CenterCameraOnMe(deltaTime);
+        
     }
 
     

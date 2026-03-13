@@ -32,21 +32,27 @@ public class RenderManager
 
     protected IJSInProcessRuntime js;
     private CanvasBase mainCanvas;
-    int frames = 0;
-    int fps = 0;
-    int tick = 0;
-    int ticks = 0;
-    Stopwatch fpsTimer = Stopwatch.StartNew();
-    Stopwatch tickTimer = Stopwatch.StartNew();
+
     Text t;
-    public float cameraSmoothing = 0.25f; 
+    public float cameraSmoothing = 0.115f; 
 
     int[] megaBuffer = new int[16384];
     private Dictionary<string, int> _assetStartingIndex = new();
 
     //interpolation settings
-    private Stopwatch _tickTimer = Stopwatch.StartNew();
-    private const float TICK_MS = 33.33f;
+    protected float _timeSinceLastLoad = 0f; 
+    protected float _currentDuration = 1000.0f / GameConstants.updateRate; // Start with a guess
+    //debug stuff.
+     Stopwatch fpsTimer = Stopwatch.StartNew();
+    Stopwatch tickTimer = Stopwatch.StartNew();
+    int frames = 0;
+    int fps = 0;
+    protected  int skipped = 0;
+    int tick = 0;
+    int ticks = 0;
+    protected int updateTime = 0;
+    protected int renderTime = 0;
+    
 
     public RenderManager(IJSRuntime js)
      {
@@ -77,9 +83,9 @@ public class RenderManager
         this.imageCache = imageCacheList.ToArray<ElementReference>();
 
 
-        Transform tTransform = new Transform(50,25,100,100);
+        Transform tTransform = new Transform(200,25,400,100);
         t = new Text("FPS: " + fps, tTransform);
-        t.textAlpha = 150;
+        t.textAlpha = 100;
         t.worldSpace = false;
         InitializeJSCache();
 
@@ -193,17 +199,14 @@ public class RenderManager
     }
 
 
-    public void ResetInterpolationClock() {
-        _tickTimer.Restart(); // Reset the 'bucket'
-    }
+    public float GetInterpolationFactor() 
+    {
+        // t = (Time passed since packet) / (Time we expect the packet to take)
+        float t = _timeSinceLastLoad / _currentDuration;
 
-    public float GetInterpolationFactor() {
-        // This gives us a value from 0.0 to 1.0 (or higher if the next packet is late)
-        float t = _tickTimer.ElapsedMilliseconds / TICK_MS;
-        
-        // Clamp it to 1.0 to prevent the object from "ghosting" 
-        // past its current logical position while waiting for the next packet.
-        return Math.Min(t, 1.0f);
+        // Clamp to 1.0 to stop at the target, 
+        // or 1.1 to allow a tiny bit of "prediction" if the packet is late.
+        return Math.Clamp(t, 0f, 1.0f); 
     }
     public void RenderAll(float deltaTime)
     {
@@ -224,28 +227,39 @@ public class RenderManager
                 if (obj.InBounds(GetCanvasBounds()) == false) {
                     continue; // Skip rendering this object
                 }
+
                 // Interpolation: Calculate the interpolated position based on previous and current transform
-                float interpolationOffsetX = obj.transform.position.X;
-                float interpolationOffsetY = obj.transform.position.Y;
+                float interpolationOffsetX = obj.transform.position.X - worldOffsetX;
+                float interpolationOffsetY = obj.transform.position.Y - worldOffsetY;
                 float interpolationRotation = obj.transform.RotationRadians();
                 if (obj.previousTransform != null) {
-                    interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
-                    interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
+                    float prevRelX = obj.previousTransform.position.X - worldOffsetX;
+                    float prevRelY = obj.previousTransform.position.Y - worldOffsetY;
+                    
+                    float currRelX = obj.transform.position.X - worldOffsetX;
+                    float currRelY = obj.transform.position.Y - worldOffsetY;
 
-                    float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180; // Shortest angle difference
-                    //3. Interpolate using the corrected delta
-                    interpolationRotation = obj.previousTransform.rotation + deltaRotation * GetInterpolationFactor();
+                    // 2. Interpolate between the RELATIVE points
+                    float t = GetInterpolationFactor();
+                    interpolationOffsetX = prevRelX + (currRelX - prevRelX) * t;
+                    interpolationOffsetY = prevRelY + (currRelY - prevRelY) * t;
 
-                    //Must be in radians.
-                    interpolationRotation = interpolationRotation * (float)Math.PI / 180f;
+
+                    //interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
+                    //interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
+                    float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180;
+                    float smoothedRotation = obj.previousTransform.rotation + (deltaRotation * GetInterpolationFactor());
+
+                    // Apply to the actual Render transform
+                    interpolationRotation = smoothedRotation * (float)(Math.PI / 180.0);
                 }
 
 
                 int idx = getCacheIndex(obj);
                 if (idx == -1) continue;
                 megaBuffer[cursor++] = 0;
-                megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);
-                megaBuffer[cursor++] = (int)((interpolationOffsetY - worldOffsetY) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetX) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetY) * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.X * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.Y * 100);
                 megaBuffer[cursor++] = (int)(interpolationRotation * 100);
@@ -361,20 +375,12 @@ public class RenderManager
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
     public virtual void Render(float deltaTime)
     {
+
         frames++;
-        //Console.WriteLine("[DEBUG] [RENDERMANAGE] Called at " + DateTime.Now.ToLongTimeString() + ":" + DateTime.Now.Millisecond);
         AssetManager.fps = fps;
-        //UPDATE FPS
 
         //add text to render pipeline.
         t.Draw((GameManager)this);
-        //Clear the background in JS. Faster, and synced.
-        //js.InvokeVoid("clearBackground",mainCanvas.Id , );
-
-        //Render the "objsToRender" group. This group is modified to only include on screen GameObjects.
-        //RenderGroup();
-        //RenderTexts();
-        //RenderRects();
 
         this.RenderAll(deltaTime);
 
@@ -395,7 +401,7 @@ public class RenderManager
             double elapsedSeconds = fpsTimer.Elapsed.TotalMilliseconds / 1000.0; // ms bc seconds will be 0.
             fps = (int)(frames / elapsedSeconds);
             fpsTimer.Restart();
-            t.text = "FPS: " + fps + "| Ticks: " + ticks;
+            t.text = "FPS: " + fps + " | Ticks: " + ticks +" | Skipped: " + skipped +" | UT: " + updateTime + "ms | RT: " + renderTime + "ms";
             frames = 0;
 
         }

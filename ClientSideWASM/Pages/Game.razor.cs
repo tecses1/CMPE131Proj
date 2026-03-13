@@ -20,7 +20,7 @@ public partial class Game
 
     
     private double tick = 0;
-    private const double  _fixedDeltaTime = 1000.0 / 50.0; //45 hz target +5hz to be slighly faster then server for better input responsiveness, and faster gamestate updates....
+    private readonly double  _fixedDeltaTime = 1000.0 / GameConstants.updateRate; //45 hz target +5hz to be slighly faster then server for better input responsiveness, and faster gamestate updates....
     //Need to make the gamestate updater smarter. skip ones we've already loaded. I think thats why it jitters.
 
     public float lastTime = -1;
@@ -93,15 +93,16 @@ public partial class Game
         // 2. The Fixed Update Loop
         // This calls your physics exactly 60 times per "simulated" second
         tick += deltaTime;
-        bool updated = false;
+
         while (tick > _fixedDeltaTime){
             main.UpdateInput(inputWrapper);
             inputWrapper.Clear();
             main.Update();
             tick -= _fixedDeltaTime;
-            updated = true;
+
         }
-        if (!updated) main.Render(deltaTime); //skip rendering if we updated the game state to try and even out the frames.
+        
+        main.Render(deltaTime); //skip rendering if we updated the game state to try and even out the frames.
 
 
         
