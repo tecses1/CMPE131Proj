@@ -7,6 +7,7 @@ public class GameObject : NetworkObject
     //sizing
     [Network(-1)]
     public Transform transform {get;set;}
+    public Transform previousTransform {get;set;}
     //game manager reference. This class makes many frequent callbacks.
     protected GameLogic gl;
 
@@ -100,7 +101,12 @@ public class GameObject : NetworkObject
     {
         
     }
-
+    //store values for interpolation.
+    public virtual void Store()
+    {
+        previousTransform = new Transform(transform);
+        
+    }
     public virtual void Render(float deltaTime)
     {
         

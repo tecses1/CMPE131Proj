@@ -12,7 +12,7 @@ public class Player : GameObject
     //Game object class may be able to handle default rending, image fetching by name, etc.
 
     public InputWrapper cInput;
-    private float bulletSpeed = 12f;
+    private float bulletSpeed = 30f;
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastChange = DateTime.Now;
@@ -21,10 +21,10 @@ public class Player : GameObject
     [Network(1)]
     public string playerNameString {get; set;} = "Player";
     //behavior
-    float maxSpeed = 5f;
-    float acceleration = 0.33f;
+    float maxSpeed = 6f;
+    float acceleration = 2f;
 
-    float drag = 0.05f;
+    float drag = 0.11f;
     [Network(0)]
     public int CurrentHealth { get;  set; }= 1000;
     
@@ -41,6 +41,8 @@ public class Player : GameObject
     {
         return Math.Abs(value) < epsilon;
     }
+
+
 
     public override void Update() {
 
@@ -59,68 +61,24 @@ public class Player : GameObject
 
 
         //Find what sides we're colliding with in closwise order from top. 
-        if (e.keys[0])
-        {
-            cVelocity.Y -= acceleration;
-        }
-        
-        if (e.keys[2])
-        {
-            cVelocity.Y += acceleration;
-        }
-        if (e.keys[1])
-        {
-            cVelocity.X -= acceleration;
-        }
-        if (e.keys[3])
-        {
-            cVelocity.X += acceleration;
-        }
+        // 1. Movement Input (Calculates direction * acceleration)
+        cVelocity.Y += (e.keys[2] ? acceleration : 0) - (e.keys[0] ? acceleration : 0);
+        cVelocity.X += (e.keys[3] ? acceleration : 0) - (e.keys[1] ? acceleration : 0);
 
-        //clamp velocity.
-        if (cVelocity.X >= maxSpeed)
-        {
-            cVelocity.X = maxSpeed;
-        }
-        if (cVelocity.X <= -maxSpeed)
-        {
-            cVelocity.X = -maxSpeed;
-        }
-        if (cVelocity.Y >= maxSpeed)
-        {
-            cVelocity.Y = maxSpeed;
-        }
-        if (cVelocity.Y <= -maxSpeed)
-        {
-            cVelocity.Y = -maxSpeed;
-        }
-        if (cVelocity.X > 0)
-        {
-            cVelocity.X -= drag * cVelocity.X;
-        }
+        // 2. Clamp Velocity (Native C# function)
+        cVelocity.X = Math.Clamp(cVelocity.X, -maxSpeed, maxSpeed);
+        cVelocity.Y = Math.Clamp(cVelocity.Y, -maxSpeed, maxSpeed);
 
-        if (cVelocity.X < 0)
-        {
-            cVelocity.X += drag * Math.Abs(cVelocity.X);
-        }
+        // 3. Apply Drag (Reduces velocity by a percentage)
+        //Only when keys are not being pressed (slow to stop)
+        if ((e.keys[0] || e.keys[2]) == false) cVelocity.Y *= (1 - drag);
+        if ((e.keys[1] || e.keys[3]) == false) cVelocity.X *= (1 - drag);
 
-        if (cVelocity.Y > 0)
-        {
-            cVelocity.Y -= drag * cVelocity.Y;
-        }
-        if (cVelocity.Y < 0)
-        {
-            cVelocity.Y += drag * Math.Abs(cVelocity.Y);
-        }
 
-        if (IsNearlyZero(cVelocity.X))
-        {
-            cVelocity.X = 0;
-        }
-        if (IsNearlyZero(cVelocity.Y))
-        {
-            cVelocity.Y = 0;
-        }
+        // 4. Zero-out and Move
+        if (Math.Abs(cVelocity.X) < 0.01f) cVelocity.X = 0;
+        if (Math.Abs(cVelocity.Y) < 0.01f) cVelocity.Y = 0;
+
         this.transform.position += cVelocity;
 
 

@@ -28,7 +28,7 @@ public partial class Home
 
     public async Task RequestNewLobby()
     {
-        var response = await nm.client.SendWithResponse("{NewLobby}");
+        var response = await nm.client.SendWithResponse("{NewLobby}",null,requestedLobby);
 
         if (response != null)
         {

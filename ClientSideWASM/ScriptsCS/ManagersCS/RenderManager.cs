@@ -32,15 +32,27 @@ public class RenderManager
 
     protected IJSInProcessRuntime js;
     private CanvasBase mainCanvas;
-    DateTime counter = DateTime.Now;
-    int frames = 0;
-    int fps = 0;
-    
+
     Text t;
-    public float cameraSmoothing = 0.125f; 
+    public float cameraSmoothing = 0.115f; 
 
     int[] megaBuffer = new int[16384];
     private Dictionary<string, int> _assetStartingIndex = new();
+
+    //interpolation settings
+    protected float _timeSinceLastLoad = 0f; 
+    protected float _currentDuration = 1000.0f / GameConstants.updateRate; // Start with a guess
+    //debug stuff.
+     Stopwatch fpsTimer = Stopwatch.StartNew();
+    Stopwatch tickTimer = Stopwatch.StartNew();
+    int frames = 0;
+    int fps = 0;
+    protected  int skipped = 0;
+    int tick = 0;
+    int ticks = 0;
+    protected int updateTime = 0;
+    protected int renderTime = 0;
+    
 
     public RenderManager(IJSRuntime js)
      {
@@ -71,9 +83,9 @@ public class RenderManager
         this.imageCache = imageCacheList.ToArray<ElementReference>();
 
 
-        Transform tTransform = new Transform(50,25,100,100);
+        Transform tTransform = new Transform(200,25,400,100);
         t = new Text("FPS: " + fps, tTransform);
-        t.textAlpha = 150;
+        t.textAlpha = 100;
         t.worldSpace = false;
         InitializeJSCache();
 
@@ -104,25 +116,21 @@ public class RenderManager
 
     public void CenterCameraOnLerp(Transform t, float deltaTime, bool constrainX = false, bool constrainY = false)
     {   
-        // fix camera buffering
-        float targetX = t.position.X - Settings.CanvasWidth / 2;
-        // Move a fraction of the way to the target
-        this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
-        float targetY = t.position.Y - Settings.CanvasHeight / 2;
-        this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
 
-        // if (!constrainX)
-        // {
-        //     float targetX = t.position.X - Settings.CanvasWidth / 2;
-        //     // Move a fraction of the way to the target
-        //     this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
-        // }
+        //X and Y need to be constrained independently to properly work with world bounds (otherwise camera locks on worldbounds and can't move in one axis even if the other is free).
+
+         if (!constrainX)
+        {
+             float targetX = t.position.X - Settings.CanvasWidth / 2;
+            // Move a fraction of the way to the target
+             this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
+         }
         
-        // if (!constrainY)
-        // {
-        //     float targetY = t.position.Y - Settings.CanvasHeight / 2;
-        //     this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
-        // }
+        if (!constrainY)
+         {
+             float targetY = t.position.Y - Settings.CanvasHeight / 2;
+             this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
+         }
     }
 
     // Simple Lerp helper if your framework doesn't have one
@@ -168,79 +176,6 @@ public class RenderManager
 
     return -1; // Asset not found
 }
-    public void RenderRects()
-    {
-
-        var rectToRender = rectsToRender.Select(r => new {
-            fillColor = r.fillColor,
-            alpha = ((float)r.fillAlpha)/255f,
-            sizeX = r.transform.size.X, // The box width
-            sizeY = r.transform.size.Y, // The box height
-            x = r.worldSpace ? (r.transform.position.X + worldOffsetX) : r.transform.position.X,
-            y = r.worldSpace ? (r.transform.position.Y + worldOffsetY) : r.transform.position.Y,
-            borderWidth = r.borderWidth,
-            borderColor = r.borderColor
-        }).ToArray();
-        js.InvokeVoid("drawRectBatch", mainCanvas.Id, rectToRender);
-        
-        rectsToRender.Clear();
-    }
-    public void RenderTexts()
-    {
-
-        var textToRender = textsToRender.Select(t => new {
-            text = t.text,
-            fontFamily = "Arial", // Pass just the name, JS handles the size
-            fillColor = t.fillColor,
-            fontColor = t.fontColor,
-            textAlpha = ((float)t.textAlpha)/255f,
-            rectAlpha = ((float)t.fillAlpha)/255f,
-            sizeX = t.transform.size.X, // The box width
-            sizeY = t.transform.size.Y, // The box height
-            x = t.worldSpace ? (t.transform.position.X + worldOffsetX) : t.transform.position.X,
-            y = t.worldSpace ? (t.transform.position.Y + worldOffsetY) : t.transform.position.Y,
-            offX = t.offsetX,
-            offY = t.offsetY,
-            borderWidth = t.borderWidth,
-            borderColor = t.borderColor
-        }).ToArray();
-         js.InvokeVoid("drawTextBatch", mainCanvas.Id, textToRender);
-        
-        textsToRender.Clear();
-    }
-    /*
-    public void RenderGroup() 
-    {
-
-        
-        //Create array of all possible images loaded in the game.
-        for (int i = 0; i < objsToRender.Count; i++)
-        {
-
-            GameObject obj = objsToRender[i];//the gameobject.
-            int cacheIndex = getCacheIndex(obj);
-            int offset = i * 6;
-            if (cacheIndex == -1)
-            {
-                Console.WriteLine("Image not found for " + obj.GetType().Name + ".");
-                continue;
-            }
-
-
-            _renderBuffer[offset] = obj.transform.position.X - worldOffsetX;
-            _renderBuffer[offset+1] = obj.transform.position.Y - worldOffsetY;
-            _renderBuffer[offset+2] = obj.transform.size.X;
-            _renderBuffer[offset+3] = obj.transform.size.Y;
-            _renderBuffer[offset+4] = obj.transform.rotation * (float)Math.PI / 180f;
-            _renderBuffer[offset+5] = cacheIndex; // Tell JS which image to use
-
-        }
-
-        // Send all images and all data in one go
-        js.InvokeVoidAsync("batchDrawMulti",mainCanvas.Id , _renderBuffer, objsToRender.Count);
-        objsToRender.Clear();
-        
-    }*/
     private int ColorToAlphaInt(string htmlColor, int alpha0to255)
     {
         if (string.IsNullOrEmpty(htmlColor)) return 0;
@@ -262,7 +197,18 @@ public class RenderManager
             return 0; // Transparent black fallback
         }
     }
-    public void RenderAll()
+
+
+    public float GetInterpolationFactor() 
+    {
+        // t = (Time passed since packet) / (Time we expect the packet to take)
+        float t = _timeSinceLastLoad / _currentDuration;
+
+        // Clamp to 1.0 to stop at the target, 
+        // or 1.1 to allow a tiny bit of "prediction" if the packet is late.
+        return Math.Clamp(t, 0f, 1.0f); 
+    }
+    public void RenderAll(float deltaTime)
     {
         if (mainCanvas == null) return;
 
@@ -281,14 +227,42 @@ public class RenderManager
                 if (obj.InBounds(GetCanvasBounds()) == false) {
                     continue; // Skip rendering this object
                 }
+
+                // Interpolation: Calculate the interpolated position based on previous and current transform
+                float interpolationOffsetX = obj.transform.position.X - worldOffsetX;
+                float interpolationOffsetY = obj.transform.position.Y - worldOffsetY;
+                float interpolationRotation = obj.transform.RotationRadians();
+                if (obj.previousTransform != null) {
+                    float prevRelX = obj.previousTransform.position.X - worldOffsetX;
+                    float prevRelY = obj.previousTransform.position.Y - worldOffsetY;
+                    
+                    float currRelX = obj.transform.position.X - worldOffsetX;
+                    float currRelY = obj.transform.position.Y - worldOffsetY;
+
+                    // 2. Interpolate between the RELATIVE points
+                    float t = GetInterpolationFactor();
+                    interpolationOffsetX = prevRelX + (currRelX - prevRelX) * t;
+                    interpolationOffsetY = prevRelY + (currRelY - prevRelY) * t;
+
+
+                    //interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
+                    //interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
+                    float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180;
+                    float smoothedRotation = obj.previousTransform.rotation + (deltaRotation * GetInterpolationFactor());
+
+                    // Apply to the actual Render transform
+                    interpolationRotation = smoothedRotation * (float)(Math.PI / 180.0);
+                }
+
+
                 int idx = getCacheIndex(obj);
                 if (idx == -1) continue;
                 megaBuffer[cursor++] = 0;
-                megaBuffer[cursor++] = (int)((obj.transform.position.X - worldOffsetX) * 100);
-                megaBuffer[cursor++] = (int)((obj.transform.position.Y - worldOffsetY) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetX) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetY) * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.X * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.Y * 100);
-                megaBuffer[cursor++] = (int)(obj.transform.RotationRadians() * 100);
+                megaBuffer[cursor++] = (int)(interpolationRotation * 100);
                 megaBuffer[cursor++] = idx;
             }
         }
@@ -401,36 +375,39 @@ public class RenderManager
     //Render call. To update a GameObject, add it to a List<GameObject> and pass it with 'await RenderGroup(List<GameObject> objectList)'. This will batch render all objects in the list with one call to JS, which is much faster then individual calls for each object.
     public virtual void Render(float deltaTime)
     {
-        //Console.WriteLine("[DEBUG] [RENDERMANAGE] Called at " + DateTime.Now.ToLongTimeString() + ":" + DateTime.Now.Millisecond);
+
+        frames++;
         AssetManager.fps = fps;
-        //UPDATE FPS
-        if ( (DateTime.Now-counter).Seconds > 1)
-        {
-            t.text = "FPS: " + fps;
-            counter = DateTime.Now;
-            fps = frames / 2;
-            frames = 0;
-        }
-        else
-        {
-            frames++;
-        }
+
         //add text to render pipeline.
         t.Draw((GameManager)this);
-        //Clear the background in JS. Faster, and synced.
-        //js.InvokeVoid("clearBackground",mainCanvas.Id , );
 
-        //Render the "objsToRender" group. This group is modified to only include on screen GameObjects.
-        //RenderGroup();
-        //RenderTexts();
-        //RenderRects();
-
-        this.RenderAll();
+        this.RenderAll(deltaTime);
 
     }
 
     public virtual void  Update()
     {
+        tick++;
+        if (tickTimer.ElapsedMilliseconds >= 1000) // Every second
+        {
+            //Console.WriteLine("Tick: " + tick);
+            tickTimer.Restart();
+            ticks = tick;
+            tick = 0;
+
+
+            //calculate fps.
+            double elapsedSeconds = fpsTimer.Elapsed.TotalMilliseconds / 1000.0; // ms bc seconds will be 0.
+            fps = (int)(frames / elapsedSeconds);
+            fpsTimer.Restart();
+            t.text = "FPS: " + fps + " | Ticks: " + ticks +" | Skipped: " + skipped +" | UT: " + updateTime + "ms | RT: " + renderTime + "ms";
+            frames = 0;
+
+        }
+
+
+            
 
     }
 }

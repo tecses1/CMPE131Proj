@@ -3,6 +3,9 @@ using Microsoft.JSInterop;
 using Shared;
 using System.Text.Json;
 using System.Numerics;
+using System.Diagnostics;
+using System.ComponentModel;
+using Microsoft.AspNetCore.Components.Web.Virtualization;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 
@@ -23,6 +26,19 @@ public class GameManager : RenderManager
 
     ClientInputWrapper cInput;
     
+    long lastTick = 0;
+
+    Stopwatch renderTimer = new Stopwatch();
+    Stopwatch updateTimer = new Stopwatch();
+
+    //byte[] gameStateBuffer = new byte[4096]; // Pre-allocated buffer for game state data
+
+    //interpolation
+    private byte[] _pendingStateBuffer = new byte[16384];
+    private byte[] _activeStateBuffer = new byte[16384];
+    private long _pendingTick = -1;
+
+    private Stopwatch _intervalTimer = Stopwatch.StartNew();
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
@@ -57,30 +73,28 @@ public class GameManager : RenderManager
     }
     
 
-    void GenerateStars()
+void GenerateStars()
+{
+    Random r = new Random();
+    
+    // Calculate total area and desired density
+    long totalArea = (long)GameConstants.worldSizeX * GameConstants.worldSizeY;
+    
+    // Instead of iterating 25 million times, we calculate how many stars we want.
+    // Adjust 'DensityConstant' to get the look you want (e.g., 0.0001 for 1 star per 10k pixels)
+    int starCount = (int)(totalArea * Settings.Sparseness / Math.Sqrt(totalArea)); 
+    Console.WriteLine("spawning " + starCount + " stars for bg");
+    for (int i = 0; i < starCount; i++)
     {
-        //iterate through canvas coordinates.
-        Random r = new Random();
-        for (int i = 0; i < GameConstants.worldSizeX; i++)
-        {
-            for (int j = 0; j < GameConstants.worldSizeY; j++)
-            {   
-                double chance = r.NextDouble();
-                double sizeModifier = Math.Sqrt(GameConstants.worldSizeX * GameConstants.worldSizeY);
-                if (chance < Settings.Sparseness / sizeModifier)
-                {
-                    int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize,Settings.minSize, Settings.maxSize);
-                    Transform t = new Transform(i,j,size,size);
-                    Star s = new Star(t);
-                    //s.RegisterGameLogic(gl);
-                    
-                    backgroundStars.Add(s);
-                }
-
-            }
-        }
+        int x = r.Next(0, GameConstants.worldSizeX);
+        int y = r.Next(0, GameConstants.worldSizeY);
         
+        int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize, Settings.minSize, Settings.maxSize);
+        
+        Transform t = new Transform(x, y, size, size);
+        backgroundStars.Add(new Star(t));
     }
+}
 
 
     public void UpdateInput(ClientInputWrapper e)
@@ -105,15 +119,9 @@ public class GameManager : RenderManager
             this.gl.Update();
             return;
         }
-        try{
-            byte[] gamestate = nm.GetGameState().Result;
-            gl.LoadGameState(gamestate);
-        }catch(Exception e)
-        {
-            Console.WriteLine("WARNING, COULD NOT WAIT FOR GAMESTATE.");
-            
-        }
-        
+
+        byte[] gamestate = nm.GetGameState().Result;
+        gl.LoadGameState(gamestate);
 
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
@@ -142,13 +150,100 @@ public class GameManager : RenderManager
             }
 
         }
+    }
+    public override void  Update()
+    {
+        updateTimer.Restart();
+        //check if we're a local gamestate, if so, update locally. for testing.
+        if (!nm.client.isConnected()) {
+            cInput.OverwriteCameraToWorldPos(this);
+            this.localPlayer.cInput = (InputWrapper)cInput;
+            
+            this.gl.Update();
+            return;
+        }else
+
+        if (nm.myLobby == "")
+        {
+            cInput.OverwriteCameraToWorldPos(this);
+            this.localPlayer.cInput = (InputWrapper)cInput;
+            
+            this.gl.Update();
+            return;
+        }
+        /*old update.
+
+        if (lastTick == this.nm.PeekTick()) {
+            //Console.WriteLine("Tick " + lastTick + " is the same as the last tick we processed, skipping update to prevent desync.");
+            skipped++;
+            return;
+        }
+
+        int gamestate = nm.GetGameState(gameStateBuffer);
+        if (gamestate == 0)
+        {
+            Console.WriteLine("WARNING: 0 size game state???");
+            skipped++;
+            return;
+        }
+        lastTick = gl.LoadGameState(gameStateBuffer);
+        
+        GameStateCheck();
+        
+        base.Update(); //so render manager can log the tick rate and show it.
+        skipped = 0;
+        this.updateTime = (int)updateTimer.ElapsedMilliseconds;
+        */
+
+        //if we're a network game, send over our input, and wait for the host to send us the gamestate, then update our gamestate to match the host's.
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
         //make sure our input has our UID.
         this.cInput.owner = nm.client.assignedUID;
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
-    }
+        localPlayer.cInput = (InputWrapper)cInput; //make sure to update our local player with the input wrapper so it can move while we wait for the gamestate update from the server.
+
+        // 1. Is there a new packet on the wire?
+        long incomingTick = nm.PeekTick();
+
+            if (incomingTick != _pendingTick && incomingTick != -1) {
+                if (_pendingTick == -1) {
+                    nm.GetGameState(_pendingStateBuffer);
+                    _pendingTick = incomingTick;
+                    return;
+                }
+
+                // Measure actual arrival time to adapt to server speed
+                float delta = _intervalTimer.ElapsedMilliseconds;
+                _intervalTimer.Restart();
+                _currentDuration = (_currentDuration * 0.8f) + (delta * 0.2f);
+
+                // SWAP: Move Pending to Active
+                Buffer.BlockCopy(_pendingStateBuffer, 0, _activeStateBuffer, 0, _pendingStateBuffer.Length);
+                
+                // This sets obj.previousTransform = current, and current = new
+                lastTick = gl.LoadGameState(_activeStateBuffer); 
+
+                // Refill Pending with the newest data
+                nm.GetGameState(_pendingStateBuffer);
+                _pendingTick = incomingTick;
+
+                // RESET the accumulation, not a stopwatch
+                _timeSinceLastLoad = 0f; 
+
+                skipped = 0;
+                //Console.WriteLine("Player pos: " + this.localPlayer.transform.position.X + "," + this.localPlayer.transform.position.Y + ", prev pos: " + this.localPlayer.previousTransform.position.X + "," + this.localPlayer.previousTransform.position.Y   );
+            }else{
+                skipped++;
+            }
+        base.Update();
+        updateTime = (int)updateTimer.ElapsedMilliseconds;
+
+
+}
+
+    
 
 
 
@@ -159,6 +254,8 @@ public class GameManager : RenderManager
 
     public override void Render(float deltaTime)
     {
+        
+        this.renderTimer.Restart();
         //Console.WriteLine("Calling render!");
         if (!nm.client.isConnected()) {
             isLocal.Draw(this);
@@ -168,14 +265,23 @@ public class GameManager : RenderManager
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-        localPlayer.Render(deltaTime);
+        localPlayer.Render(deltaTime); // render local only stuff.
 
         foreach (ClientPlayer cp in clientPlayers)
         {
-            cp.Render(deltaTime);
+            cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
         base.Render(deltaTime); 
+        
+        this.renderTime = (int)renderTimer.ElapsedMilliseconds;
 
+
+        // --- SECTION B: VISUAL INTERPOLATION ---
+        // This happens EVERY FRAME, even if no packet arrived!
+        _timeSinceLastLoad += deltaTime; // Accumulate the frame time
+
+        localPlayer.CenterCameraOnMe(deltaTime);
+        
     }
 
     
