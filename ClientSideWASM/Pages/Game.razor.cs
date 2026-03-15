@@ -102,7 +102,7 @@ public partial class Game
 
         }
         
-        main.Render(deltaTime); //skip rendering if we updated the game state to try and even out the frames.
+        main.Render( timestamp); //skip rendering if we updated the game state to try and even out the frames.
 
 
         

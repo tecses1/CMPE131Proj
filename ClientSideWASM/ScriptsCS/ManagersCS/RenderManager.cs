@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using Blazorex;
+using ClientSideWASM.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Shared;
@@ -41,7 +42,11 @@ public class RenderManager
 
     //interpolation settings
     protected float _timeSinceLastLoad = 0f; 
-    protected float _currentDuration = 1000.0f / GameConstants.updateRate; // Start with a guess
+    protected double _lastTransformTime = 0; // Arrival time of the state currently in 'transform'
+    protected double _nextTransformTime = 0; // Arrival time of the state we are moving TOWARD
+    protected float _currentInterpolationDuration = GameConstants.updateRate; // Fallback   
+    protected Queue<(byte[] Data, double ArrivalTime)> _stateQueue = new();
+    protected const float InterpolationDelay = 100f; // 100ms buffer
     //debug stuff.
      Stopwatch fpsTimer = Stopwatch.StartNew();
     Stopwatch tickTimer = Stopwatch.StartNew();
@@ -201,12 +206,9 @@ public class RenderManager
 
     public float GetInterpolationFactor() 
     {
-        // t = (Time passed since packet) / (Time we expect the packet to take)
-        float t = _timeSinceLastLoad / _currentDuration;
-
-        // Clamp to 1.0 to stop at the target, 
-        // or 1.1 to allow a tiny bit of "prediction" if the packet is late.
-        return Math.Clamp(t, 0f, 1.0f); 
+        // No more constants! We use the measured gap between the packets.
+        // We still add a tiny bit of "slack" (e.g., 0.5ms) just in case of float rounding.
+        return Math.Clamp(_timeSinceLastLoad / (_currentInterpolationDuration + 0.5f), 0f, 1.0f); 
     }
     public void RenderAll(float deltaTime)
     {

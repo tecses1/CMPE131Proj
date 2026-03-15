@@ -26,7 +26,7 @@ public class GameManager : RenderManager
 
     ClientInputWrapper cInput;
     
-    long lastTick = 0;
+   float lastTime = 0;
 
     Stopwatch renderTimer = new Stopwatch();
     Stopwatch updateTimer = new Stopwatch();
@@ -39,6 +39,8 @@ public class GameManager : RenderManager
     private long _pendingTick = -1;
 
     private Stopwatch _intervalTimer = Stopwatch.StartNew();
+
+
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
     {
@@ -101,56 +103,7 @@ void GenerateStars()
     {
         this.cInput = e;
     }
-    public virtual void Update()
-    {
-        if (!nm.client.isConnected()) {
-            cInput.OverwriteCameraToWorldPos(this);
-            this.localPlayer.cInput = (InputWrapper)cInput;
-            
-            this.gl.Update();
-            return;
-        }else
 
-        if (nm.myLobby == "")
-        {
-            cInput.OverwriteCameraToWorldPos(this);
-            this.localPlayer.cInput = (InputWrapper)cInput;
-            
-            this.gl.Update();
-            return;
-        }
-
-        byte[] gamestate = nm.GetGameState().Result;
-        gl.LoadGameState(gamestate);
-
-        //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
-        //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
-        //"On player connected" so we can overwrite the classes it makes by default with render classes.
-        foreach (Player p in gl.GetPlayers())
-        {
-            if (p == localPlayer) continue; //ignore the local player, we already know this one is fixed.
-            if (p.GetType() == typeof(Player)) //the game logic class created a player.
-            {
-                Console.WriteLine("Player class");
-
-                gl.RemovePlayer(p);
-                //replace it with our client player that handles rendering.
-            
-                ClientPlayer cp = new ClientPlayer(this, p.transform);
-                //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
-                cp.uid = p.uid;
-                cp.playerName.text = p.playerNameString;
-                gl.AddPlayer(cp);
-                clientPlayers.Add(cp);
-
-                RegisterObjToRender(cp);//make sure we tell the render manager HEY! This object needs to be rendered!
-                //Because we modififed the collection, we have to close this loop.
-                break;
-
-            }
-
-        }
-    }
     public override void  Update()
     {
         updateTimer.Restart();
@@ -171,30 +124,6 @@ void GenerateStars()
             this.gl.Update();
             return;
         }
-        /*old update.
-
-        if (lastTick == this.nm.PeekTick()) {
-            //Console.WriteLine("Tick " + lastTick + " is the same as the last tick we processed, skipping update to prevent desync.");
-            skipped++;
-            return;
-        }
-
-        int gamestate = nm.GetGameState(gameStateBuffer);
-        if (gamestate == 0)
-        {
-            Console.WriteLine("WARNING: 0 size game state???");
-            skipped++;
-            return;
-        }
-        lastTick = gl.LoadGameState(gameStateBuffer);
-        
-        GameStateCheck();
-        
-        base.Update(); //so render manager can log the tick rate and show it.
-        skipped = 0;
-        this.updateTime = (int)updateTimer.ElapsedMilliseconds;
-        */
-
         //if we're a network game, send over our input, and wait for the host to send us the gamestate, then update our gamestate to match the host's.
         //cast the camera position locally to a world pos, for calculations on server.
         cInput.OverwriteCameraToWorldPos(this);
@@ -203,40 +132,10 @@ void GenerateStars()
         //send our input over to the server!
         this.nm.client.Send("{Input}",cInput.ToBytes());
         localPlayer.cInput = (InputWrapper)cInput; //make sure to update our local player with the input wrapper so it can move while we wait for the gamestate update from the server.
+        //update the local player immediately exactly as game logic would.
+        localPlayer.UpdateBase();
 
-        // 1. Is there a new packet on the wire?
-        long incomingTick = nm.PeekTick();
 
-            if (incomingTick != _pendingTick && incomingTick != -1) {
-                if (_pendingTick == -1) {
-                    nm.GetGameState(_pendingStateBuffer);
-                    _pendingTick = incomingTick;
-                    return;
-                }
-
-                // Measure actual arrival time to adapt to server speed
-                float delta = _intervalTimer.ElapsedMilliseconds;
-                _intervalTimer.Restart();
-                _currentDuration = (_currentDuration * 0.8f) + (delta * 0.2f);
-
-                // SWAP: Move Pending to Active
-                Buffer.BlockCopy(_pendingStateBuffer, 0, _activeStateBuffer, 0, _pendingStateBuffer.Length);
-                
-                // This sets obj.previousTransform = current, and current = new
-                lastTick = gl.LoadGameState(_activeStateBuffer); 
-
-                // Refill Pending with the newest data
-                nm.GetGameState(_pendingStateBuffer);
-                _pendingTick = incomingTick;
-
-                // RESET the accumulation, not a stopwatch
-                _timeSinceLastLoad = 0f; 
-
-                skipped = 0;
-                //Console.WriteLine("Player pos: " + this.localPlayer.transform.position.X + "," + this.localPlayer.transform.position.Y + ", prev pos: " + this.localPlayer.previousTransform.position.X + "," + this.localPlayer.previousTransform.position.Y   );
-            }else{
-                skipped++;
-            }
         base.Update();
         updateTime = (int)updateTimer.ElapsedMilliseconds;
 
@@ -252,9 +151,11 @@ void GenerateStars()
     // TODO: Everything run from host perspective, so currently other players manually updated here BUT
     // player scores all go to the host, other players cant take damage, weird stuff happens when refreshing
 
-    public override void Render(float deltaTime)
+    public override void Render(float timestamp)
     {
-        
+        float deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
+
         this.renderTimer.Restart();
         //Console.WriteLine("Calling render!");
         if (!nm.client.isConnected()) {
@@ -271,17 +172,59 @@ void GenerateStars()
         {
             cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
-        base.Render(deltaTime); 
-        
-        this.renderTime = (int)renderTimer.ElapsedMilliseconds;
 
+        // 1. Is there a new packet on the wire?
+        long incomingTick = nm.PeekTick();
+
+        if (incomingTick != _pendingTick && incomingTick != -1) {
+            if (_pendingTick == -1) {
+                nm.GetGameState(_pendingStateBuffer);
+                _pendingTick = incomingTick;
+                skipped++;
+                return;
+            }
+            // Get the data into a fresh buffer (or use a pool to avoid GC)
+            byte[] newData = new byte[_pendingStateBuffer.Length];
+            nm.GetGameState(newData);
+
+            // Stash it with the current time
+            float delta = (float)_intervalTimer.Elapsed.TotalMilliseconds;
+            _stateQueue.Enqueue((newData, delta));
+            _pendingTick = incomingTick;
+            skipped = 0;
+        }
+        else
+        {
+            skipped++;
+        }
 
         // --- SECTION B: VISUAL INTERPOLATION ---
         // This happens EVERY FRAME, even if no packet arrived!
-        _timeSinceLastLoad += deltaTime; // Accumulate the frame time
 
-        localPlayer.CenterCameraOnMe(deltaTime);
         
+        double renderTime = timestamp - InterpolationDelay;
+
+            // While the next packet in line is "due" to be played...
+        while (_stateQueue.Count > 0 && _stateQueue.Peek().ArrivalTime <= renderTime) {
+            var state = _stateQueue.Dequeue();
+            
+            // We need to know the time gap between the state we are LEAVING
+            // and the state we just LOADED.
+            _lastTransformTime = _nextTransformTime;
+            _nextTransformTime = state.ArrivalTime;
+
+            gl.LoadGameState(state.Data);
+        }
+        if (_stateQueue.Count > 0) {
+            _timeSinceLastLoad += deltaTime;
+        }
+        localPlayer.CenterCameraOnMe((float)renderTime);
+
+
+
+        base.Render(deltaTime); 
+    
+        this.renderTime = (int)renderTimer.ElapsedMilliseconds;
     }
 
     
