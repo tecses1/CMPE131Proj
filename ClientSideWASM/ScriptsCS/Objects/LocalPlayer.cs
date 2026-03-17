@@ -37,6 +37,8 @@ public class LocalPlayer : Player
     private float respawnCountdown = 5f; // seconds
     private Text deathScreenText;
     private bool justDied = false;
+    private Rect deathModalBackground;
+    private Text deathModalText;
 
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
@@ -85,6 +87,17 @@ public class LocalPlayer : Player
 
         this.gm = gm;
     
+    Transform modalTransform = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, Settings.CanvasWidth, Settings.CanvasHeight);
+    deathModalBackground = new Rect(modalTransform);
+    deathModalBackground.setFillColor(Color.FromArgb(200, Color.Black)); // semi-transparent black
+    deathModalBackground.borderWidth = 0;
+    deathModalBackground.worldSpace = false;
+
+    Transform textTransform = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 400, 50);
+    deathModalText = new Text("", textTransform);
+    deathModalText.setTextColor(Color.Red, 255);
+    deathModalText.fontSize = 24;
+    deathModalText.worldSpace = false;
 
     }
 
@@ -151,6 +164,12 @@ public class LocalPlayer : Player
     {
 
         Console.WriteLine($"Render: IsDead={IsDead}, CollideWith={this.CollideWith(gm.gl.GetWorldBounds())}");
+       
+           if (this.IsDead())
+            {
+                RenderDeathScreen(deltaTime); // only show the modal
+                return; // skip all other rendering
+            }
         //Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
         playerName.text = playerNameString;
         //gm.RenderText(playerName);
@@ -285,9 +304,13 @@ public class LocalPlayer : Player
     private void RenderDeathScreen(float deltaTime)
     {
         if (!IsDead) return;
-        // respawnCountdown -= 1f / 60f; // decrement per frame (~60fps)
-        // deathScreenText.text = $"DEAD: Respawning in {(int)Math.Ceiling(respawnCountdown)}...";
-        // deathScreenText.Draw(gm);
+        respawnCountdown -= deltaTime;
+        int secondsLeft = (int)Math.Ceiling(respawnCountdown);
+        deathModalText.text = $"YOU DIED\nRespawning in {secondsLeft}...";
+
+        // Draw modal
+        deathModalBackground.Draw(gm);
+        deathModalText.Draw(gm);
 
         if (respawnCountdown <= 0)
         {
