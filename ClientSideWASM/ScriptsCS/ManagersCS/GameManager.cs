@@ -50,6 +50,19 @@ public class GameManager : RenderManager
         //initialize the game logic which handles the game behavior.
         this.gl = new GameLogic();
 
+        // Pre-populate asteroids
+        for (int i = 0; i < 50; i++) // choose a number based on density
+        {
+            Asteroid a = Asteroid.GenerateAsteroid();
+            gl.AddGameObject(a);
+        }
+
+        // Pre-populate health packs
+        for (int i = 0; i < 10; i++) // fewer than asteroids, to avoid clutter
+        {
+            Healthpack hp = Healthpack.GenerateHealthPack();
+            gl.AddGameObject(hp);
+        }
 
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
