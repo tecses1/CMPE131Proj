@@ -204,7 +204,7 @@ public class Player : GameObject
     public void Heal(int heal)
     {
         if (_isDead) return;
-        CurrentHealth += heal;
+        CurrentHealth = Math.Min(CurrentHealth + heal, defaultHealth);
         // if (CurrentHealth <= 0)
         // {
         //     CurrentHealth = 0;

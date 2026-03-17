@@ -13,7 +13,7 @@ public class Healthpack : GameObject
 
     // public int hp = 1;
     public int healAmount = 200;
-    public int LifetimeFrames = 1000; // how long we live outside of bounds.
+    public int LifetimeFrames = 1000; 
     bool collected = false;
     
     public Healthpack(Transform t) : base( t)
@@ -59,7 +59,7 @@ public class Healthpack : GameObject
     public static Healthpack GenerateHealthPack()
     {
         Random r = new Random();
-        int size = 40; // health pack size
+        int size = 20; // health pack size
 
         // Spawn fully inside world bounds
         int spawnX = r.Next(size, GameConstants.worldSizeX - size);
