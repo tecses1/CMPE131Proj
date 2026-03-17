@@ -33,6 +33,16 @@ public class Player : GameObject
     Vector2 cVelocity = new Vector2(0,0);
     int shooting = -1;
 
+    // death animation
+    private bool _isDead = false;
+    private DateTime deathTime;
+    private TimeSpan respawnDelay = TimeSpan.FromSeconds(5);
+
+    private Vector2 spawnPoint = new Vector2(512, 384); // center of map
+    private Vector2 defaultSize = new Vector2(50, 50);
+    private int defaultHealth = 1000;
+    public bool IsDead() => _isDead;
+
     public Player(Transform transform) : base(transform ) {
 
     }
@@ -45,6 +55,16 @@ public class Player : GameObject
 
 
     public override void Update() {
+
+        if (_isDead)
+        {
+            // Check if respawn time has passed
+            if (DateTime.Now - deathTime >= respawnDelay)
+            {
+                Respawn();
+            }
+            return; // skip input & movement while dead
+        }
 
 
         InputWrapper e = cInput;
@@ -183,16 +203,31 @@ public class Player : GameObject
     // ship damage
     public void TakeDamage(int damage)
     {
+        if (_isDead) return;
         CurrentHealth -= damage;
-        if (CurrentHealth < 0) CurrentHealth = 0;
-
-        // check death
-        if (CurrentHealth == 0)
-        {  
-            this.Kill();
-            Console.WriteLine("Should be dead but no respawn yet");
+        if (CurrentHealth <= 0)
+        {
+            CurrentHealth = 0;
+            Kill();
         }
     }
-
+    public void Kill()
+    {
+        if (_isDead) return;
+        _isDead = true;
+        deathTime = DateTime.Now;
+        disableCollision = true;
+        cVelocity = Vector2.Zero;
+        Console.WriteLine($"{playerNameString} died!");
+    }
+    private void Respawn()
+    {
+        transform.position = spawnPoint;
+        transform.size = defaultSize;
+        CurrentHealth = defaultHealth;
+        _isDead = false;
+        disableCollision = false;
+        Console.WriteLine($"{playerNameString} respawned at {spawnPoint.X},{spawnPoint.Y}");
+    }
 
 }

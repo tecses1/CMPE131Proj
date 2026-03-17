@@ -32,6 +32,12 @@ public class LocalPlayer : Player
     int alpha = 0;
     int direction = 1;
 
+    // Death screen
+    public bool IsDead { get; private set; } = false;
+    private float respawnCountdown = 5f; // seconds
+    private Text deathScreenText;
+    private bool justDied = false;
+
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
@@ -144,14 +150,23 @@ public class LocalPlayer : Player
     public override void Render(float deltaTime)
     {
 
-        //gm.RenderText(playerName);
-        playerName.Draw(gm);
+        Console.WriteLine($"Render: IsDead={IsDead}, CollideWith={this.CollideWith(gm.gl.GetWorldBounds())}");
         //Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
         playerName.text = playerNameString;
+        //gm.RenderText(playerName);
+        playerName.Draw(gm);
         if (!isLocalPlayer)
         {
             return;
         }
+
+        if (IsDead || justDied)
+        {
+            RenderDeathScreen(deltaTime);
+            justDied = false; // reset the flag after first render
+            return; // Skip health, score, OOB
+        }
+        
         playerNameString = Settings.name;
         //Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
         scoreText.Draw(gm);
@@ -169,51 +184,26 @@ public class LocalPlayer : Player
         
 
 
-        if(!this.CollideWith(gm.gl.GetWorldBounds())){
+
+        if(!this.CollideWith(gm.gl.GetWorldBounds()))
+        {
             outOfBoundsText.Draw(gm);
-            if (alpha <= 25)
-            {
+
+            if (alpha <= 20)
                 direction = 1;
-            }
             else if (alpha >= 75)
-            {
                 direction = -1;
-            }
+
             alpha += direction;
             oobScreenFlashRect.setFillColor(Color.Red, alpha);
             oobScreenFlashRect.setBorderColor(Color.Red, alpha);
             oobScreenFlashRect.Draw(gm);
-
-
         }
         else
         {
             alpha = 0;
         }
-        
-
-
-        if(!this.CollideWith(gm.gl.GetWorldBounds())){
-            outOfBoundsText.Draw(gm);
-            if (alpha <= 5)
-            {
-                direction = 1;
-            }
-            else if (alpha >= 75)
-            {
-                direction = -1;
-            }
-            alpha += direction;
-            oobScreenFlashRect.setFillColor(Color.Red, 0);
-            oobScreenFlashRect.setBorderColor(Color.Red, alpha);
-            oobScreenFlashRect.Draw(gm);
-
-
-        }
-        else
-        {
-            alpha = 0;
-        }
+    
     }
 
 
@@ -275,4 +265,42 @@ public class LocalPlayer : Player
             return new Transform(interpolationOffsetX, interpolationOffsetY, (int)this.transform.size.X, (int)this.transform.size.Y, interpolationRotation);
     }
 
+
+    public void Kill()
+    {
+        if (!IsDead)
+        {
+            IsDead = true;
+            justDied = true; // Flag to indicate death happened THIS frame
+            respawnCountdown = 5f;
+
+            Transform deathT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 300, 50); // wider for text
+            deathScreenText = new Text($"DEAD: Respawning in {respawnCountdown}", deathT);
+            deathScreenText.setTextColor(Color.Red, 255);
+            deathScreenText.worldSpace = false;
+        }
+    }
+
+    // Call this in the Render loop
+    private void RenderDeathScreen(float deltaTime)
+    {
+        if (!IsDead) return;
+        respawnCountdown -= 1f / 60f; // decrement per frame (~60fps)
+        deathScreenText.text = $"DEAD: Respawning in {(int)Math.Ceiling(respawnCountdown)}...";
+        deathScreenText.Draw(gm);
+
+        if (respawnCountdown <= 0)
+        {
+            Respawn();
+        }
+    }
+
+    private void Respawn()
+    {
+        IsDead = false;
+        CurrentHealth = MaxHealth;
+        transform.position = new Vector2(Settings.CanvasWidth/2, Settings.CanvasHeight/2);
+        deathScreenText = null;
+        Console.WriteLine($"{playerNameString} respawned.");
+    }
 }
