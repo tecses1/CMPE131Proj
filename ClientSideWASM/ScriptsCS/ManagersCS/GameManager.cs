@@ -179,12 +179,7 @@ void GenerateStars()
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-        localPlayer.Render(deltaTime); // render local only stuff.
 
-        foreach (ClientPlayer cp in clientPlayers)
-        {
-            cp.Render(deltaTime); //render local only stuff, like names and healthbars.
-        }
 
         // 1. Is there a new packet on the wire?
         long incomingTick = nm.PeekTick();
@@ -231,9 +226,14 @@ void GenerateStars()
         if (_stateQueue.Count > 0) {
             _timeSinceLastLoad += deltaTime;
         }
-        localPlayer.CenterCameraOnMe((float)renderTime);
+        localPlayer.CenterCameraOnMe(0);//(float)renderTime);
 
+        localPlayer.Render(deltaTime); // render local only stuff.
 
+        foreach (ClientPlayer cp in clientPlayers)
+        {
+            cp.Render(deltaTime); //render local only stuff, like names and healthbars.
+        }
 
         base.Render(deltaTime); 
     

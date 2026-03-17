@@ -217,7 +217,7 @@ public class GameLogic
             case "Player":
                 newObj = new Player(defaultT);
                 break;
-            case "HealthPack":
+            case "Healthpack":
                 newObj = new Healthpack(defaultT);
                 break;
             // Add more types here as your game grows
