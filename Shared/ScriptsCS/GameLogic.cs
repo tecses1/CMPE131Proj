@@ -144,11 +144,7 @@ public class GameLogic
             Healthpack hp = Healthpack.GenerateHealthPack();
             AddGameObject(hp);
 
-        // Log spawn position and direction
-        Console.WriteLine($"[HealthPack] Spawned at X={hp.transform.position.X}, Y={hp.transform.position.Y}, dir=({hp.velocity.X:F2},{hp.velocity.Y:F2})");
-
             healthPackCounter = DateTime.Now;
-
         }
     }
     public float[] GetWorldBounds()

@@ -82,7 +82,7 @@ public class Healthpack : GameObject
     public void Collect(Player player)
     {
         player.Heal(this.healAmount); // use the Player's Heal() method
-        Console.WriteLine($"[HealthPack] Collected by {player.playerNameString} (UID: {player.uid}), +{healAmount} HP, now {player.CurrentHealth}");
+        // Console.WriteLine($"[HealthPack] Collected by {player.playerNameString} (UID: {player.uid}), +{healAmount} HP, now {player.CurrentHealth}");
         this.Kill(); // remove the health pack
     }
 }
