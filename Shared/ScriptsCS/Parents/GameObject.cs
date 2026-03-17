@@ -16,7 +16,7 @@ public class GameObject : NetworkObject
     public int baseCacheIndex { get; set; } = -1;
     public bool disableCollision = false;
 
-
+    public bool disableRender = false;
     public GameObject (Transform transform)
     {
         this.transform = transform;

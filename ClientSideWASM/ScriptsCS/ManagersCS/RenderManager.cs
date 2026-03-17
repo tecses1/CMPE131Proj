@@ -230,6 +230,8 @@ public class RenderManager
                     continue; // Skip rendering this object
                 }
 
+                if (obj.disableRender) continue; // Skip if object has rendering disabled (e.g., for invisible hitboxes or optimization)
+
                 // Interpolation: Calculate the interpolated position based on previous and current transform
                 float interpolationOffsetX = obj.transform.position.X - worldOffsetX;
                 float interpolationOffsetY = obj.transform.position.Y - worldOffsetY;

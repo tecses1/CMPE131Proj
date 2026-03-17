@@ -226,7 +226,7 @@ void GenerateStars()
         if (_stateQueue.Count > 0) {
             _timeSinceLastLoad += deltaTime;
         }
-        localPlayer.CenterCameraOnMe(0);//(float)renderTime);
+        localPlayer.CenterCameraOnMe((float)renderTime);
 
         localPlayer.Render(deltaTime); // render local only stuff.
 
