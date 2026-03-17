@@ -38,7 +38,10 @@ public static class AssetManager
                                                                                 "images/projectileExplosion/explode4.png", 
                                                                                 "images/projectileExplosion/explode5.png", 
                                                                                 "images/projectileExplosion/explode6.png"  } } }
+                                                                                    
+        { "HealthPack", new GameAsset { Name = "HealthPack", FrameRefs = new[] { "images/healthpack.png" } } }
     };
+
 
 }
 
