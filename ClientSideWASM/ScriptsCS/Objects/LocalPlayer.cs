@@ -274,10 +274,10 @@ public class LocalPlayer : Player
             justDied = true; // Flag to indicate death happened THIS frame
             respawnCountdown = 5f;
 
-            Transform deathT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 300, 50); // wider for text
-            deathScreenText = new Text($"DEAD: Respawning in {respawnCountdown}", deathT);
-            deathScreenText.setTextColor(Color.Red, 255);
-            deathScreenText.worldSpace = false;
+            // Transform deathT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 300, 50); // wider for text
+            // deathScreenText = new Text($"DEAD: Respawning in {respawnCountdown}");
+            // deathScreenText.setTextColor(Color.Red, 255);
+            // deathScreenText.worldSpace = false;
         }
     }
 
@@ -285,9 +285,9 @@ public class LocalPlayer : Player
     private void RenderDeathScreen(float deltaTime)
     {
         if (!IsDead) return;
-        respawnCountdown -= 1f / 60f; // decrement per frame (~60fps)
-        deathScreenText.text = $"DEAD: Respawning in {(int)Math.Ceiling(respawnCountdown)}...";
-        deathScreenText.Draw(gm);
+        // respawnCountdown -= 1f / 60f; // decrement per frame (~60fps)
+        // deathScreenText.text = $"DEAD: Respawning in {(int)Math.Ceiling(respawnCountdown)}...";
+        // deathScreenText.Draw(gm);
 
         if (respawnCountdown <= 0)
         {
