@@ -220,7 +220,7 @@ public class RenderManager
         // 1. Pack Sprites in obj to render (Type 0)
         //pack groups by reference.
         foreach (List<GameObject> group in groupsToRender) {
-            foreach (var obj in group) {
+            foreach (var obj in group) {               
                     var pos = obj.transform.position;
                     var size = obj.transform.size;
 

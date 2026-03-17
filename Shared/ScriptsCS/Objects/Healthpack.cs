@@ -6,14 +6,14 @@ public class Healthpack : GameObject
 {
     // public float rotationSpeed;
     public Vector2 velocity;
-    public float speed = 0.1f;
+    public float speed = 0.3f;
     // public int deathAnimSpeed = 2;
     // int cDeathAnim = 2;
     // bool dead = false;
 
     // public int hp = 1;
-    public int healAmount = 25;
-    public int LifetimeFrames = 90; // how long we live outside of bounds.
+    public int healAmount = 200;
+    public int LifetimeFrames = 1000; // how long we live outside of bounds.
     bool collected = false;
     
     public Healthpack(Transform t) : base( t)
@@ -58,44 +58,31 @@ public class Healthpack : GameObject
 
     public static Healthpack GenerateHealthPack()
     {
-
         Random r = new Random();
-        int size = 20;
-        
-        int spawnX, spawnY;
-        int edge = r.Next(0,4);
-        switch (edge)
-        {
-            case 0: // top
-                spawnX = r.Next(0, GameConstants.worldSizeX);
-                spawnY = -size;
-                break;
-            case 1: // right
-                spawnX = GameConstants.worldSizeX + size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
-                break;
-            case 2: // bottom
-                spawnX = r.Next(0, GameConstants.worldSizeX);
-                spawnY = GameConstants.worldSizeY + size;
-                break;
-            case 3: // left
-                spawnX = -size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
-                break;
-            default:
-                spawnX = -size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
-                break;
-        }
+        int size = 40; // health pack size
+
+        // Spawn fully inside world bounds
+        int spawnX = r.Next(size, GameConstants.worldSizeX - size);
+        int spawnY = r.Next(size, GameConstants.worldSizeY - size);
 
         Transform t = new Transform(spawnX, spawnY, size, size);
-        HealthPack hp = new HealthPack(t);
+        Healthpack hp = new Healthpack(t);
 
-        // Set a random float direction
+        // Random direction
         double randomAngle = 2 * Math.PI * r.NextDouble();
         Vector2 randomDirection = new Vector2((float)Math.Cos(randomAngle), (float)Math.Sin(randomAngle));
         hp.SetDirection(randomDirection);
-        
+
+        // Long lifetime for testing
+        hp.LifetimeFrames = 3600; // e.g., 1 minute at 60 updates/sec
+
         return hp;
+    }
+
+    public void Collect(Player player)
+    {
+        player.Heal(this.healAmount); // use the Player's Heal() method
+        Console.WriteLine($"[HealthPack] Collected by {player.playerNameString} (UID: {player.uid}), +{healAmount} HP, now {player.CurrentHealth}");
+        this.Kill(); // remove the health pack
     }
 }

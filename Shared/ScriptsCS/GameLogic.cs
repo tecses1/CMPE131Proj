@@ -15,8 +15,14 @@ public class GameLogic
     List<GameObject> objsToAdd = new List<GameObject>();
 
 
-     DateTime counter = DateTime.Now;
+    DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
+
+    DateTime healthPackCounter = DateTime.Now; 
+
+    // spawn less for real game but testing needs many
+    float HealthPackSpawnCooldownSeconds = 1f; 
+
     public void Update()
     {
         foreach (GameObject go in objsToRemove)
@@ -100,13 +106,23 @@ public class GameLogic
                     proj3.Kill();
                     p2.TakeDamage(proj3.damage);
                 }
-            }else if (go is Player p3 && collideGO is Projectile proj4)
+            } else if (go is Player p3 && collideGO is Projectile proj4)
             {
                 if (proj4.owner != p3.uid)
                 {
                     proj4.Kill();
                     p3.TakeDamage(proj4.damage);
                 }
+            }
+            else if (go is Healthpack hp && collideGO is Player player)
+            {
+                hp.Collect(player);
+                return; // we’re done here
+            }
+            else if (go is Player player2 && collideGO is Healthpack hp2)
+            {
+                hp2.Collect(player2);
+                return;
             }
 
         });
@@ -120,6 +136,19 @@ public class GameLogic
             if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.position);
             AddGameObject(newAsteroid);
             counter = DateTime.Now;
+        }
+
+        // Healthpack spawning
+        if ((DateTime.Now - healthPackCounter).TotalSeconds >= HealthPackSpawnCooldownSeconds)
+        {
+            Healthpack hp = Healthpack.GenerateHealthPack();
+            AddGameObject(hp);
+
+        // Log spawn position and direction
+        Console.WriteLine($"[HealthPack] Spawned at X={hp.transform.position.X}, Y={hp.transform.position.Y}, dir=({hp.velocity.X:F2},{hp.velocity.Y:F2})");
+
+            healthPackCounter = DateTime.Now;
+
         }
     }
     public float[] GetWorldBounds()
@@ -191,7 +220,10 @@ public class GameLogic
                 break;
             case "Player":
                 newObj = new Player(defaultT);
-            break;
+                break;
+            case "HealthPack":
+                newObj = new Healthpack(defaultT);
+                break;
             // Add more types here as your game grows
         }
         if (newObj == null)

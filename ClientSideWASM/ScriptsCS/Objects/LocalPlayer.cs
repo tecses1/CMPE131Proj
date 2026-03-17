@@ -163,7 +163,7 @@ public class LocalPlayer : Player
     public override void Render(float deltaTime)
     {
 
-        Console.WriteLine($"Render: IsDead={IsDead}, CollideWith={this.CollideWith(gm.gl.GetWorldBounds())}");
+        // Console.WriteLine($"Render: IsDead={IsDead}, CollideWith={this.CollideWith(gm.gl.GetWorldBounds())}");
        
            if (this.IsDead())
             {

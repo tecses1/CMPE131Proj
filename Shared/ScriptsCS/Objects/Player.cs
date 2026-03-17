@@ -201,6 +201,16 @@ public class Player : GameObject
     }
 
     // ship damage
+    public void Heal(int heal)
+    {
+        if (_isDead) return;
+        CurrentHealth += heal;
+        // if (CurrentHealth <= 0)
+        // {
+        //     CurrentHealth = 0;
+        //     Kill();
+        // }
+    }
     public void TakeDamage(int damage)
     {
         if (_isDead) return;
