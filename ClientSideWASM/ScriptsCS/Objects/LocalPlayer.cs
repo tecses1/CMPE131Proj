@@ -177,11 +177,11 @@ public class LocalPlayer : Player
     {
 
         // Console.WriteLine($"Render: IsDead={IsDead}, CollideWith={this.CollideWith(gm.gl.GetWorldBounds())}");
-        if (justDied)
-        {
-            this.respawnCountdown = 5f;
-            justDied = false;
-        }
+        // if (justDied)
+        // {
+        //     this.respawnCountdown = 5f;
+        //     justDied = false;
+        // }
            if (this.IsDead)
             {
                 justDied = true;
@@ -325,7 +325,7 @@ public class LocalPlayer : Player
     {
         if (!IsDead) return;
         
-        respawnCountdown -= deltaTime; //should work.
+        respawnCountdown -= deltaTime / 1200f; //should work.
         deathModalText.text = $"YOU DIED...Respawning in {(int)respawnCountdown}...";
 
         // Draw modal

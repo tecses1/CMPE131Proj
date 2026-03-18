@@ -59,7 +59,7 @@ public class GameLogic
             //Check if player is out of bounds, if so, damage the player.
             if (!p.InBounds(this.GetWorldBounds()) && !p.IsDead)
             {
-                p.TakeDamage(1);
+                p.TakeDamage(10);
             }
             
         }
