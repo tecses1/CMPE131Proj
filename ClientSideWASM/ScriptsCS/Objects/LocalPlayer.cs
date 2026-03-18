@@ -33,11 +33,10 @@ public class LocalPlayer : Player
     int direction = 1;
 
     // Death screen
-    public bool IsDead { get; private set; } = false;
+    //public bool IsDead { get; private set; } = false; now uses server side IsDead, its set by GameLogic.
     private float respawnCountdown = 5f; // seconds
-    private Text deathScreenText;
     private bool justDied = false;
-    private Rect deathModalBackground;
+    //private Rect deathModalBackground;
     private Text deathModalText;
 
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
@@ -86,18 +85,32 @@ public class LocalPlayer : Player
         healthBarFill.worldSpace = false;
 
         this.gm = gm;
+
+    /*
     
     Transform modalTransform = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, Settings.CanvasWidth, Settings.CanvasHeight);
     deathModalBackground = new Rect(modalTransform);
     deathModalBackground.setFillColor(Color.FromArgb(200, Color.Black)); // semi-transparent black
     deathModalBackground.borderWidth = 0;
     deathModalBackground.worldSpace = false;
-
+    */
+    //Texts come with rect support, because they extend rect! No need to make another rect background. :)
+    //I added fontSize override though, so that way it doesn't auto scale.
     Transform textTransform = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 400, 50);
     deathModalText = new Text("", textTransform);
-    deathModalText.setTextColor(Color.Red, 255);
+    deathModalText.setTextColor(Color.Red, 150);
     deathModalText.fontSize = 24;
     deathModalText.worldSpace = false;
+    deathModalText.fillToRect = false;//overwrite to use font size.
+
+    //register all of our things
+    healthBarBackground.Register(gm);
+    healthBarFill.Register(gm);
+    playerName.Register(gm);
+    deathModalText.Register(gm);
+    oobScreenFlashRect.Register(gm);
+    outOfBoundsText.Register(gm);
+    scoreText.Register(gm);
 
     }
 
@@ -164,50 +177,57 @@ public class LocalPlayer : Player
     {
 
         // Console.WriteLine($"Render: IsDead={IsDead}, CollideWith={this.CollideWith(gm.gl.GetWorldBounds())}");
-       
-           if (this.IsDead())
+        if (justDied)
+        {
+            this.respawnCountdown = 5f;
+            justDied = false;
+        }
+           if (this.IsDead)
             {
-                RenderDeathScreen(deltaTime); // only show the modal
+                justDied = true;
+                this.disableRender = true;
+                 // only show the modal
+                this.healthBarBackground.disableRender = true;
+                this.healthBarFill.disableRender = true;
+                this.playerName.disableRender = true;
+                this.oobScreenFlashRect.disableRender = true;
+                this.outOfBoundsText.disableRender = true;
+
+
+
+                //this.deathModalBackground.disableRender = false;
+                this.deathModalText.disableRender = false;
+                RenderDeathScreen(deltaTime);
                 return; // skip all other rendering
-            }
+        }
+        else
+        {
+            respawnCountdown = 5f; //reset when not dead.
+            this.disableRender = false;
+            //this.deathModalBackground.disableRender = true;
+            this.deathModalText.disableRender = true;
+        }
         //Console.WriteLine("Playername pos: " + playerName.transform.position.X +"," +playerName.transform.position.Y);
         playerName.text = playerNameString;
         //gm.RenderText(playerName);
-        playerName.Draw(gm);
-        if (!isLocalPlayer)
-        {
-            return;
-        }
+        //playerName.Draw(gm);
+        playerName.disableRender = false;
 
-        if (IsDead || justDied)
-        {
-            RenderDeathScreen(deltaTime);
-            justDied = false; // reset the flag after first render
-            return; // Skip health, score, OOB
-        }
         
         playerNameString = Settings.name;
         //Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
-        scoreText.Draw(gm);
+        scoreText.disableRender = false;
         this.UpdateHealthBarVisual();
-        healthBarBackground.Draw(gm);
-        healthBarFill.Draw(gm);
+        healthBarBackground.disableRender = false;
+        healthBarFill.disableRender = false;
 
-
-        // if (collided[1] && collided[3]) // if we're inside the bounds on the X axis
-        // {
-        //     gm.CenterCameraOnLerp(this.transform,deltaTime, false,true); //center camera X axis only
-        // } else {
-        //     TakeDamage(1);
-        // }
-        
 
 
 
         if(!this.CollideWith(gm.gl.GetWorldBounds()))
         {
-            outOfBoundsText.Draw(gm);
-
+            //outOfBoundsText.Draw(gm);
+            outOfBoundsText.disableRender = false;
             if (alpha <= 20)
                 direction = 1;
             else if (alpha >= 75)
@@ -216,10 +236,13 @@ public class LocalPlayer : Player
             alpha += direction;
             oobScreenFlashRect.setFillColor(Color.Red, alpha);
             oobScreenFlashRect.setBorderColor(Color.Red, alpha);
-            oobScreenFlashRect.Draw(gm);
+            //oobScreenFlashRect.Draw(gm);
+            oobScreenFlashRect.disableRender = false;
         }
         else
         {
+            outOfBoundsText.disableRender = true;
+            oobScreenFlashRect.disableRender = true;
             alpha = 0;
         }
     
@@ -293,10 +316,7 @@ public class LocalPlayer : Player
             justDied = true; // Flag to indicate death happened THIS frame
             respawnCountdown = 5f;
 
-            // Transform deathT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 300, 50); // wider for text
-            // deathScreenText = new Text($"DEAD: Respawning in {respawnCountdown}");
-            // deathScreenText.setTextColor(Color.Red, 255);
-            // deathScreenText.worldSpace = false;
+            
         }
     }
 
@@ -304,18 +324,16 @@ public class LocalPlayer : Player
     private void RenderDeathScreen(float deltaTime)
     {
         if (!IsDead) return;
-        respawnCountdown -= deltaTime;
-        int secondsLeft = (int)Math.Ceiling(respawnCountdown);
-        deathModalText.text = $"YOU DIED\nRespawning in {secondsLeft}...";
+        
+        respawnCountdown -= deltaTime; //should work.
+        deathModalText.text = $"YOU DIED...Respawning in {(int)respawnCountdown}...";
 
         // Draw modal
-        deathModalBackground.Draw(gm);
-        deathModalText.Draw(gm);
+        //deathModalBackground.Draw(gm);
+        //deathModalText.Draw(gm);
 
-        if (respawnCountdown <= 0)
-        {
-            Respawn();
-        }
+        //deathModalBackground.disableRender = false;
+
     }
 
     private void Respawn()
@@ -323,7 +341,6 @@ public class LocalPlayer : Player
         IsDead = false;
         CurrentHealth = MaxHealth;
         transform.position = new Vector2(Settings.CanvasWidth/2, Settings.CanvasHeight/2);
-        deathScreenText = null;
         Console.WriteLine($"{playerNameString} respawned.");
     }
 }

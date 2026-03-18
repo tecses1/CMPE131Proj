@@ -34,12 +34,15 @@ public class Text : Rect
         this.borderAlpha = 0;
 
     }
-    public override void Draw(RenderManager rm)
+    public override void Register(RenderManager rm)
     {
-        rm.AddTextToRender(this);
+        rm.RegisterTextToRender(this);
            
     }
-
+    public virtual void Unregister(RenderManager rm)
+    {
+        rm.UnregisterText(this);
+    }
     public void setTextColor(Color c,int alpha)
     {
         this.fontColor = ColorTranslator.ToHtml(c);

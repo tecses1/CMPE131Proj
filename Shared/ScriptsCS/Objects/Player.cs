@@ -34,14 +34,14 @@ public class Player : GameObject
     int shooting = -1;
 
     // death animation
-    private bool _isDead = false;
+    [Network(3)] // Add _isDead to the network.
+    public bool IsDead {get; set;} = false;
     private DateTime deathTime;
     private TimeSpan respawnDelay = TimeSpan.FromSeconds(5);
 
     private Vector2 spawnPoint = new Vector2(512, 384); // center of map
     private Vector2 defaultSize = new Vector2(50, 50);
     private int defaultHealth = 1000;
-    public bool IsDead() => _isDead;
 
     public Player(Transform transform) : base(transform ) {
 
@@ -56,7 +56,7 @@ public class Player : GameObject
 
     public override void Update() {
 
-        if (_isDead)
+        if (IsDead)
         {
             // Check if respawn time has passed
             if (DateTime.Now - deathTime >= respawnDelay)
@@ -203,7 +203,7 @@ public class Player : GameObject
     // ship damage
     public void Heal(int heal)
     {
-        if (_isDead) return;
+        if (IsDead) return;
         CurrentHealth = Math.Min(CurrentHealth + heal, defaultHealth);
         // if (CurrentHealth <= 0)
         // {
@@ -213,7 +213,7 @@ public class Player : GameObject
     }
     public void TakeDamage(int damage)
     {
-        if (_isDead) return;
+        if (IsDead) return;
         CurrentHealth -= damage;
         if (CurrentHealth <= 0)
         {
@@ -223,8 +223,8 @@ public class Player : GameObject
     }
     public void Kill()
     {
-        if (_isDead) return;
-        _isDead = true;
+        if (IsDead) return;
+        IsDead = true;
         deathTime = DateTime.Now;
         disableCollision = true;
         cVelocity = Vector2.Zero;
@@ -235,7 +235,7 @@ public class Player : GameObject
         transform.position = spawnPoint;
         transform.size = defaultSize;
         CurrentHealth = defaultHealth;
-        _isDead = false;
+        IsDead = false;
         disableCollision = false;
         Console.WriteLine($"{playerNameString} respawned at {spawnPoint.X},{spawnPoint.Y}");
     }

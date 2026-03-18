@@ -13,6 +13,7 @@ public class Rect
 
     public bool worldSpace = true;
 
+    public bool disableRender = false;
 
     public Rect()
     {
@@ -43,10 +44,14 @@ public class Rect
         this.transform.size.X = x;
         this.transform.size.Y = y;
     }
-    public virtual void Draw(RenderManager rm)
+    public virtual void Register(RenderManager rm)
     {
-        rm.AddRectToRender(this);
+        rm.RegisterRectToRender(this);
            
+    }
+    public virtual void Unregister(RenderManager rm)
+    {
+        rm.UnregisterRect(this);
     }
     public void setBorderColor(Color c)
     {

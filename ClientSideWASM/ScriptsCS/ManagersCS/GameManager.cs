@@ -156,7 +156,36 @@ void GenerateStars()
 }
 
     
+    public void GameStateCheck()
+    {
+        //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
+        //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
+        //"On player connected" so we can overwrite the classes it makes by default with render classes.
+        foreach (Player p in gl.GetPlayers())
+        {
+            if (p == localPlayer) continue; //ignore the local player, we already know this one is fixed.
+            if (p.GetType() == typeof(Player)) //the game logic class created a player.
+            {
+                Console.WriteLine("Player class");
 
+                gl.RemovePlayer(p);
+                //replace it with our client player that handles rendering.
+            
+                ClientPlayer cp = new ClientPlayer(this, p.transform);
+                //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
+                cp.uid = p.uid;
+                cp.playerName.text = p.playerNameString;
+                gl.AddPlayer(cp);
+                clientPlayers.Add(cp);
+
+                RegisterObjToRender(cp);//make sure we tell the render manager HEY! This object needs to be rendered!
+                //Because we modififed the collection, we have to close this loop.
+                break;
+
+            }
+
+        }
+    }
 
 
 
@@ -172,8 +201,13 @@ void GenerateStars()
         this.renderTimer.Restart();
         //Console.WriteLine("Calling render!");
         if (!nm.client.isConnected()) {
-            isLocal.Draw(this);
+            //isLocal.Draw(this);
+            isLocal.disableRender = false;
             nm.isHost = true;
+        }
+        else
+        {
+            isLocal.disableRender = true;
         }
         if (nm.myLobby == "")
         {
@@ -222,6 +256,7 @@ void GenerateStars()
             _nextTransformTime = state.ArrivalTime;
 
             gl.LoadGameState(state.Data);
+            GameStateCheck();
         }
         if (_stateQueue.Count > 0) {
             _timeSinceLastLoad += deltaTime;

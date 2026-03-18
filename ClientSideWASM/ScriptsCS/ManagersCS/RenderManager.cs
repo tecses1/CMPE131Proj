@@ -92,8 +92,10 @@ public class RenderManager
         t = new Text("FPS: " + fps, tTransform);
         t.textAlpha = 100;
         t.worldSpace = false;
-        InitializeJSCache();
 
+        RegisterTextToRender(t);
+
+        InitializeJSCache();
         groupsToRender.Add(objsToRender);
     }
 
@@ -155,16 +157,24 @@ public class RenderManager
         this.mainCanvas = c;
     }
 
-    public void AddTextToRender(Text text)
+    public void RegisterTextToRender(Text text)
     {
         this.textsToRender.Add(text);
     }
-    public void AddRectToRender(Rect rect)
+    public void RegisterRectToRender(Rect rect)
     {
         
         this.rectsToRender.Add(rect);
     }
-
+    public void UnregisterText(Text text)
+    {
+        this.textsToRender.Remove(text);
+    }
+    public void UnregisterRect(Rect rect)
+    {
+        
+        this.rectsToRender.Remove(rect);
+    }
 
     int getCacheIndex(GameObject o)
     {
@@ -272,6 +282,7 @@ public class RenderManager
         }
         // 2. Pack Rects AND Text-Backgrounds (Type 1)
         // We treat them identically in the buffer to simplify JS
+
         void PackRect(Rect r) {
             megaBuffer[cursor++] = 1;
             float x = r.worldSpace ? (r.transform.position.X - worldOffsetX) : r.transform.position.X;
@@ -284,19 +295,18 @@ public class RenderManager
             megaBuffer[cursor++] = ColorToAlphaInt(r.borderColor, r.borderAlpha);
             megaBuffer[cursor++] = (int)(r.borderWidth * 100);
         }
-        int debug = 0;
         foreach (var r in rectsToRender) {
             
-            if (r.InBounds(GetCanvasBounds()) || r.worldSpace == false) PackRect(r);
+            if ((r.InBounds(GetCanvasBounds()) || r.worldSpace == false) && !r.disableRender) PackRect(r);
         }
 
         foreach (var t in textsToRender) {
-            if (t.InBounds(GetCanvasBounds()) || t.worldSpace == false) PackRect(t);
+            if ((t.InBounds(GetCanvasBounds()) || t.worldSpace == false) && !t.disableRender) PackRect(t);
         } // Text inherits from Rect!
-
         // 3. Prepare ONLY the Text labels
+        /*
         var textLabels = textsToRender.Where(t => (t.InBounds(GetCanvasBounds()) || t.worldSpace == false)).Select(t => new {
-            text = t.text,
+            text = (t.disableRender ? t.text : ""),
             x = (t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X) + t.offsetX,
             y = (t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y) + t.offsetY,
             w = t.transform.size.X, // Matches t.w in JS
@@ -306,15 +316,40 @@ public class RenderManager
             fnt = t.font,
             fontSize = t.fontSize,
             fillToSize = t.fillToRect
-        }).ToArray();
+        }).ToArray();*/
+        var textList = new List<object>();
+
+        foreach (var t in textsToRender)
+        {
+            // SKIP: if explicitly disabled OR if it's world-space and off-screen
+            if (t.disableRender) continue;
+            if (!(t.InBounds(GetCanvasBounds()) || t.worldSpace == false)) continue;
+
+            // Only process the math for items we are actually going to show
+            textList.Add(new {
+                text = t.text,
+                x = (t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X) + t.offsetX,
+                y = (t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y) + t.offsetY,
+                w = t.transform.size.X,
+                h = t.transform.size.Y,
+                tCol = t.fontColor,
+                tAlp = t.textAlpha / 255f,
+                fnt = t.font,
+                fontSize = t.fontSize,
+                fillToSize = t.fillToRect
+            });
+        }
+
+        // Convert to array for the JS Interop call
+        var textLabels = textList.ToArray();
 
 
         var activeBuffer = new ArraySegment<int>(megaBuffer, 0, cursor);
         js.InvokeVoid("combinedRender", mainCanvas.Id, Settings.CanvasBackground, activeBuffer, textLabels);
 
         //objsToRender.Clear();
-        rectsToRender.Clear();
-        textsToRender.Clear();
+        //rectsToRender.Clear();
+        //textsToRender.Clear();
     }
     public Vector2 CameraToWorldPos(Vector2 v)
     {
@@ -384,7 +419,7 @@ public class RenderManager
         AssetManager.fps = fps;
 
         //add text to render pipeline.
-        t.Draw((GameManager)this);
+        //t.Draw((GameManager)this);
 
         this.RenderAll(deltaTime);
 

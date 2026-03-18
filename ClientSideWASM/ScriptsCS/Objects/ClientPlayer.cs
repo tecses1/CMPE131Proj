@@ -48,22 +48,39 @@ public class ClientPlayer : Player
         healthBarFill.setFillColor(Color.Green,100);
         healthBarFill.borderWidth = 0;
         healthBarFill.worldSpace = true;
+
+        //register all of our things
+        healthBarBackground.Register(gm);
+        healthBarFill.Register(gm);
+        playerName.Register(gm);
+
     }
 
 
     public override void Render(float deltaTime)
     {
-        
+        if (IsDead)
+        {
+            this.healthBarBackground.disableRender = true;
+            this.healthBarFill.disableRender = true;
+            this.playerName.disableRender = true;
+            this.disableRender = true;
+            return;
+        }
+        this.disableRender = false;
         this.UpdateHealthBarVisual();
 
         //draw our healthbar.
         this.healthBarBackground.SetPosition(this.transform.position.X, this.transform.position.Y + this.transform.size.Y);
-        this.healthBarBackground.Draw(gm);
+        this.healthBarBackground.disableRender = false;
+        //this.healthBarBackground.Draw(gm);
         this.healthBarFill.SetPosition(this.transform.position.X, this.transform.position.Y + this.transform.size.Y);
-        this.healthBarFill.Draw(gm);
+        this.healthBarFill.disableRender = false;
+        //this.healthBarFill.Draw(gm);
         //draw our name!
         this.playerName.SetPosition(this.transform.position.X, this.transform.position.Y - this.transform.size.Y);
-        this.playerName.Draw(gm);
+        this.playerName.disableRender = false;
+        //this.playerName.Draw(gm);
 
         //Console.WriteLine("Drawing: " + playerName.text + " @ " + playerName.transform.position.X + ", " + playerName.transform.position.Y);
     }

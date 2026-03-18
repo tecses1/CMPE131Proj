@@ -20,7 +20,7 @@ public static class Settings
 
     //Server settings to connect to.
 
-    public const string server = "10.251.180.202"; // Server address (localhost)
+    public const string server = "localhost"; // Server address (localhost)
     public const int port = 8888; // Port number
 
     //Game Settings for client
