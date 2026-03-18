@@ -261,7 +261,6 @@ void GenerateStars()
         if (_stateQueue.Count > 0) {
             _timeSinceLastLoad += deltaTime;
         }
-        localPlayer.CenterCameraOnMe((float)renderTime);
 
         localPlayer.Render(deltaTime); // render local only stuff.
 
@@ -269,7 +268,8 @@ void GenerateStars()
         {
             cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
-
+        //localPlayer.CenterCameraOnMe((float)renderTime);
+        localPlayer.CenterCameraOnMe();
         base.Render(deltaTime); 
     
         this.renderTime = (int)renderTimer.ElapsedMilliseconds;

@@ -35,7 +35,7 @@ public class RenderManager
     private CanvasBase mainCanvas;
 
     Text t;
-    public float cameraSmoothing = 0.115f; 
+    public float cameraSmoothing = 0.128f; 
 
     int[] megaBuffer = new int[16384];
     private Dictionary<string, int> _assetStartingIndex = new();
@@ -113,10 +113,12 @@ public class RenderManager
     {   
         if (!constrainX)
         {
+            this.prevWorldOffsetX = this.worldOffsetX;
             this.worldOffsetX = t.position.X  - Settings.CanvasWidth / 2;
         }
         if (!constrainY)
         {
+            this.prevWorldOffsetY = worldOffsetY;
             this.worldOffsetY = t.position.Y - Settings.CanvasHeight / 2;
         }
     }
@@ -247,8 +249,8 @@ public class RenderManager
                 float interpolationOffsetY = obj.transform.position.Y - worldOffsetY;
                 float interpolationRotation = obj.transform.RotationRadians();
                 if (obj.previousTransform != null) {
-                    float prevRelX = obj.previousTransform.position.X - worldOffsetX;
-                    float prevRelY = obj.previousTransform.position.Y - worldOffsetY;
+                    float prevRelX = obj.previousTransform.position.X - prevWorldOffsetX;
+                    float prevRelY = obj.previousTransform.position.Y - prevWorldOffsetY;
                     
                     float currRelX = obj.transform.position.X - worldOffsetX;
                     float currRelY = obj.transform.position.Y - worldOffsetY;
