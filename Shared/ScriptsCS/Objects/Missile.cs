@@ -7,7 +7,7 @@ namespace Shared
     {
         public Missile(Transform transform, Vector2 velocity) : base (transform,velocity)
         {
-            this.damage = 5;
+            this.damage = 15;
             this.Velocity *= 0.5f;
         }
     }
