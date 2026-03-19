@@ -2,7 +2,10 @@ using Shared;
 using System.Numerics;
 namespace ClientSideWASM;
 using System.Threading.Channels;
+using System.Diagnostics;
 using System.Buffers.Binary; // Required for BinaryPrimitives
+using System.ComponentModel.DataAnnotations;
+
 //Connection to server, and updates will happen here!
 
 public class NetworkManager
@@ -11,67 +14,32 @@ public class NetworkManager
     public GameManager gm;
     public string myLobby = "";
     public bool isHost = false;
-    private readonly object _stateLock = new object();
-    private byte[] _latestStateBuffer = new byte[4096]; // Initialize with an expected size
-    private int _latestStateSize = 0; // Track the actual size of the latest state
-    private bool _hasData = false;
-
+    public StateManager StateQueue = new StateManager(8,65536);
+        private Stopwatch _intervalTimer = Stopwatch.StartNew();
 
     public List<byte[]> inputsReceived = new List<byte[]>();
     public List<byte[]> objsToAdd = new List<byte[]>();
-    public List<byte[]> serverGameStates = new List<byte[]>();
     public NetworkManager()
     {
         client = new Client(this);
     }
 
-    public void UpdateGameState(ReadOnlySpan<byte> newState)
+    public void UpdateGameState(byte[] newState)
     {
-        lock (_stateLock)
-        {
-            // 1. Resize only if the new data is actually bigger than our capacity
-            if (newState.Length > _latestStateBuffer.Length)
-            {
-                _latestStateBuffer = new byte[newState.Length];
-                Console.WriteLine("overhead warning, we've exceeded the default buffer size of 1024.");
-            }
+        this.StateQueue.PushState(newState,_intervalTimer.ElapsedMilliseconds);
 
-            // 2. High-speed memory copy into the existing array
-            newState.CopyTo(_latestStateBuffer);
-            _latestStateSize = newState.Length;
-        }
     }
 
-    public int GetGameState(Span<byte> destination)
+    public  byte[] GetGameState(out long arrivalTime)
     {
-        lock (_stateLock)
-        {
-            if (_latestStateSize == 0) return 0;
-
-            // Ensure the caller's buffer is big enough
-            if (destination.Length < _latestStateSize)
-                throw new ArgumentException("Provided buffer is too small");
-
-            // Direct copy from our internal storage to the caller's memory
-            _latestStateBuffer.AsSpan(0, _latestStateSize).CopyTo(destination);
-            
-            return _latestStateSize;
-        }
+        return StateQueue.TryPopState(out arrivalTime);
     }
-    public long PeekTick()
-    {
-        lock (_stateLock)
-        {
-            // A 'long' is 8 bytes. Ensure we actually have that much data.
-            if (_latestStateSize < 8) 
-            {
-                return -1; // Or throw an exception
-            }
 
-            // Create a span of the first 8 bytes and read it as a Little Endian long
-            ReadOnlySpan<byte> tickSpan = _latestStateBuffer.AsSpan(0, 8);
-            return BinaryPrimitives.ReadInt64LittleEndian(tickSpan);
-        }
+    public long PeekArrivalTime()
+    {
+        
+        return this.StateQueue.PeekArrivalTime();
+
     }
     public void Initialize(GameManager gm){
         this.gm = gm;
@@ -96,14 +64,4 @@ public class NetworkManager
         }
     }
 
-
-
-
-
-
-
-    public void loadGameState( ref List<GameObject> activeObjects)
-    {
-        
-    }
 }

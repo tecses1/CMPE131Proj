@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Numerics;
 using Blazorex;
@@ -14,11 +15,14 @@ public class RenderManager
     
 
     //World offset, for rendering.
-    public float worldOffsetX = 0;
-    public float worldOffsetY = 0;
+    public float targetWorldOffsetX = 0; //for interpolation
+    public float targetWorldOffsetY = 0; //for interpolation.
 
-    protected float prevWorldOffsetX = 0;
-    protected float prevWorldOffsetY = 0;
+    public float worldOffsetX = 0; //the current offset
+    public float worldOffsetY = 0; //the current offset
+
+    protected float prevWorldOffsetX = 0; //for interpolation
+    protected float prevWorldOffsetY = 0; // for interpolation
 
     //pass by reference settigns object so all objects use the same one.
     //Objs to render
@@ -35,7 +39,7 @@ public class RenderManager
     private CanvasBase mainCanvas;
 
     Text t;
-    public float cameraSmoothing = 0.128f; 
+    public float cameraSmoothing = 0.8f; 
 
     int[] megaBuffer = new int[16384];
     private Dictionary<string, int> _assetStartingIndex = new();
@@ -45,8 +49,7 @@ public class RenderManager
     protected double _lastTransformTime = 0; // Arrival time of the state currently in 'transform'
     protected double _nextTransformTime = 0; // Arrival time of the state we are moving TOWARD
     protected float _currentInterpolationDuration = GameConstants.updateRate; // Fallback   
-    protected Queue<(byte[] Data, double ArrivalTime)> _stateQueue = new();
-    protected const float InterpolationDelay = 100f; // 100ms buffer
+    protected  float InterpolationDelay = GameConstants.updateRate * 2; // Buffer 2 updates.
     //debug stuff.
      Stopwatch fpsTimer = Stopwatch.StartNew();
     Stopwatch tickTimer = Stopwatch.StartNew();
@@ -57,6 +60,8 @@ public class RenderManager
     int ticks = 0;
     protected int updateTime = 0;
     protected int renderTime = 0;
+
+    protected int stateSize;
     
 
     public RenderManager(IJSRuntime js)
@@ -113,33 +118,35 @@ public class RenderManager
     {   
         if (!constrainX)
         {
-            this.prevWorldOffsetX = this.worldOffsetX;
             this.worldOffsetX = t.position.X  - Settings.CanvasWidth / 2;
         }
         if (!constrainY)
         {
-            this.prevWorldOffsetY = worldOffsetY;
             this.worldOffsetY = t.position.Y - Settings.CanvasHeight / 2;
         }
     }
 
-    public void CenterCameraOnLerp(Transform t, float deltaTime, bool constrainX = false, bool constrainY = false)
-    {   
-
-        //X and Y need to be constrained independently to properly work with world bounds (otherwise camera locks on worldbounds and can't move in one axis even if the other is free).
-
-         if (!constrainX)
+    public void LerpCamera()
+    {
+       // Console.WriteLine("previous offset: " + prevWorldOffsetX + "," + prevWorldOffsetY + " | target offset: " + targetWorldOffsetX + "," + targetWorldOffsetY);  
+        this.worldOffsetX = Lerp(this.prevWorldOffsetX, this.targetWorldOffsetX, this.GetInterpolationFactor() * cameraSmoothing);
+        this.worldOffsetY = Lerp(this.prevWorldOffsetY, this.targetWorldOffsetY, this.GetInterpolationFactor() * cameraSmoothing);
+        //Console.WriteLine("Camera Offset: " + worldOffsetX + "," + worldOffsetY + " | Interpolation Factor: " + GetInterpolationFactor());
+    }
+    public void SetCameraTarget(Vector2 target, bool constrainX = false, bool constrainY = false    )
+    {
+        if (!constrainX)
         {
-             float targetX = t.position.X - Settings.CanvasWidth / 2;
-            // Move a fraction of the way to the target
-             this.worldOffsetX = Lerp(this.worldOffsetX, targetX, cameraSmoothing);
-         }
-        
+            this.prevWorldOffsetX = targetWorldOffsetX;
+            this.targetWorldOffsetX = target.X - Settings.CanvasWidth / 2;
+        }
         if (!constrainY)
-         {
-             float targetY = t.position.Y - Settings.CanvasHeight / 2;
-             this.worldOffsetY = Lerp(this.worldOffsetY, targetY, cameraSmoothing);
-         }
+        {
+            //our current offset is the previous for interpolatio nto not jump.
+            this.prevWorldOffsetY = targetWorldOffsetY;
+            //create a dir vector for where we wanna be
+            this.targetWorldOffsetY = target.Y - Settings.CanvasHeight / 2;
+        }
     }
 
     // Simple Lerp helper if your framework doesn't have one
@@ -220,9 +227,15 @@ public class RenderManager
     {
         // No more constants! We use the measured gap between the packets.
         // We still add a tiny bit of "slack" (e.g., 0.5ms) just in case of float rounding.
-        return Math.Clamp(_timeSinceLastLoad / (_currentInterpolationDuration + 0.5f), 0f, 1.0f); 
+        if (_currentInterpolationDuration <= 0.0001f) {
+            Console.WriteLine("error: divide by 0 prevention, _cUD = " + _currentInterpolationDuration);
+            return 1f; // Avoid division by zero, snap to target.
+        }
+        float raw = _timeSinceLastLoad / _currentInterpolationDuration ;
+        float clamped = Math.Clamp(raw, 0f, 1.0f); // prevent divide by 0 situation.
+        return clamped;
     }
-    public void RenderAll(float deltaTime)
+    public void RenderAll()
     {
         if (mainCanvas == null) return;
 
@@ -243,6 +256,7 @@ public class RenderManager
                 }
 
                 if (obj.disableRender) continue; // Skip if object has rendering disabled (e.g., for invisible hitboxes or optimization)
+
 
                 // Interpolation: Calculate the interpolated position based on previous and current transform
                 float interpolationOffsetX = obj.transform.position.X;
@@ -269,7 +283,10 @@ public class RenderManager
                     // Apply to the actual Render transform
                     interpolationRotation = smoothedRotation * (float)(Math.PI / 180.0);
                 }
-
+                //if (obj.GetType() == typeof(Projectile)) {
+                //    // For the local player, we want to use the actual position for rendering, not the interpolated one.
+                //    Console.WriteLine("Target: " + obj.transform.position.X + "," + obj.transform.position.Y + " | Interpolated: " + interpolationOffsetX + "," + interpolationOffsetY + " | Interpolation Factor: " + GetInterpolationFactor() + " Prev: " + obj.previousTransform?.position.X + "," + obj.previousTransform?.position.Y);
+                //}
 
                 int idx = getCacheIndex(obj);
                 if (idx == -1) continue;
@@ -422,8 +439,10 @@ public class RenderManager
 
         //add text to render pipeline.
         //t.Draw((GameManager)this);
+        this.LerpCamera();
+        this.RenderAll();
+        
 
-        this.RenderAll(deltaTime);
 
     }
 
@@ -442,7 +461,8 @@ public class RenderManager
             double elapsedSeconds = fpsTimer.Elapsed.TotalMilliseconds / 1000.0; // ms bc seconds will be 0.
             fps = (int)(frames / elapsedSeconds);
             fpsTimer.Restart();
-            t.text = "FPS: " + fps + " | Ticks: " + ticks +" | Skipped: " + skipped +" | UT: " + updateTime + "ms | RT: " + renderTime + "ms";
+            double percent = Math.Round(((double)stateSize * 100) / 65536.0,1);
+            t.text = "FPS: " + fps + " | Ticks: " + ticks +" | UT: " + updateTime + "ms | RT: " + renderTime + "ms" + "| SZ: " + this.stateSize + "b(" + percent +"%)";
             frames = 0;
 
         }

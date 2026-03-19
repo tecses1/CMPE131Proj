@@ -119,39 +119,18 @@ public class LocalPlayer : Player
         //If we're in the world bounds.
         // added else out of bounds take damage
         bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
-
+        Transform lerpTsf = this.GetLerpPosition();
         //gm.CenterCameraOn(this.transform);
         if (collided[0] && collided[2])//Inside Y axis bouynds
         {
-            gm.CenterCameraOn(this.GetLerpPosition(),true,false);
-           // gm.CenterCameraOnLerp(this.GetLerpPosition(), deltaTime, true,false); //cente camera Y axis only.
+            //gm.CenterCameraOn(this.transform,true,false);
+            gm.SetCameraTarget(lerpTsf.position, true, false);   
 
         }
         if (collided[1] && collided[3]) //Inside X axis bounds
         {
-            //gm.CenterCameraOnLerp(this.GetLerpPosition(), deltaTime, false,true); //center camera X axis only
-            gm.CenterCameraOn(this.GetLerpPosition(), false,true);
-        } 
-        
-    }
-    public void CenterCameraOnMe(float deltaTime)
-    {
-                //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
-        //If we're in the world bounds.
-        // added else out of bounds take damage
-        bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
-
-        //gm.CenterCameraOn(this.transform);
-        if (collided[0] && collided[2])//Inside Y axis bouynds
-        {
-            //gm.CenterCameraOn(this.GetLerpPosition(),true,false);
-            gm.CenterCameraOnLerp(this.GetLerpPosition(), deltaTime, true,false); //cente camera Y axis only.
-
-        }
-        if (collided[1] && collided[3]) //Inside X axis bounds
-        {
-            gm.CenterCameraOnLerp(this.GetLerpPosition(), deltaTime, false,true); //center camera X axis only
-            //gm.CenterCameraOn(this.GetLerpPosition(), false,true);
+            //gm.CenterCameraOn(this.transform, false,true);
+            gm.SetCameraTarget(lerpTsf.position, false, true);   
         } 
         
     }
