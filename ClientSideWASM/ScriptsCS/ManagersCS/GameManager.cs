@@ -269,7 +269,7 @@ void GenerateStars()
             cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
         //localPlayer.CenterCameraOnMe((float)renderTime);
-        localPlayer.CenterCameraOnMe();
+        localPlayer.CenterCameraOnMe(deltaTime);
         base.Render(deltaTime); 
     
         this.renderTime = (int)renderTimer.ElapsedMilliseconds;

@@ -245,15 +245,15 @@ public class RenderManager
                 if (obj.disableRender) continue; // Skip if object has rendering disabled (e.g., for invisible hitboxes or optimization)
 
                 // Interpolation: Calculate the interpolated position based on previous and current transform
-                float interpolationOffsetX = obj.transform.position.X - worldOffsetX;
-                float interpolationOffsetY = obj.transform.position.Y - worldOffsetY;
+                float interpolationOffsetX = obj.transform.position.X;
+                float interpolationOffsetY = obj.transform.position.Y;
                 float interpolationRotation = obj.transform.RotationRadians();
                 if (obj.previousTransform != null) {
-                    float prevRelX = obj.previousTransform.position.X - prevWorldOffsetX;
-                    float prevRelY = obj.previousTransform.position.Y - prevWorldOffsetY;
+                    float prevRelX = obj.previousTransform.position.X;
+                    float prevRelY = obj.previousTransform.position.Y;
                     
-                    float currRelX = obj.transform.position.X - worldOffsetX;
-                    float currRelY = obj.transform.position.Y - worldOffsetY;
+                    float currRelX = obj.transform.position.X;
+                    float currRelY = obj.transform.position.Y ;
 
                     // 2. Interpolate between the RELATIVE points
                     float t = GetInterpolationFactor();
@@ -274,8 +274,8 @@ public class RenderManager
                 int idx = getCacheIndex(obj);
                 if (idx == -1) continue;
                 megaBuffer[cursor++] = 0;
-                megaBuffer[cursor++] = (int)((interpolationOffsetX) * 100);
-                megaBuffer[cursor++] = (int)((interpolationOffsetY) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);
+                megaBuffer[cursor++] = (int)((interpolationOffsetY - worldOffsetY) * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.X * 100);
                 megaBuffer[cursor++] = (int)(obj.transform.size.Y * 100);
                 megaBuffer[cursor++] = (int)(interpolationRotation * 100);
