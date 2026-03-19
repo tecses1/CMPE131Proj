@@ -12,7 +12,7 @@ public class Healthpack : GameObject
     // bool dead = false;
 
     // public int hp = 1;
-    public int healAmount = 50;
+    public int healAmount = 250;
     public int LifetimeFrames = 1000; 
     bool collected = false;
     
@@ -21,6 +21,8 @@ public class Healthpack : GameObject
         // this.speed = speed;
         transform.rotation = (float)(Random.Shared.NextDouble() * 360);
         // hp = (int)this.transform.size.X ;
+
+        this.transform.size = new Vector2(20,20); //fixed size for health packs.
     }
     public void SetDirection(Vector2 v)
     {

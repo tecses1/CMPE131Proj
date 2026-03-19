@@ -84,20 +84,31 @@ public class Asteroid : GameObject
                 dead = true;
                 this.disableCollision = true;
                 cDeathAnim = deathAnimSpeed;
-            float hypo = this.transform.GetHypotenuse();
-            if (hypo > 40)
-            {
-                for (int i = 0; i < 3; i++)
+                
+                if (Random.Shared.NextInt64(0,20) == 1) //5% chance to drop health pack on death. lots of asteroids. makes sense.
                 {
-                    float randomAngle = (float)(Math.PI * 2 * Random.Shared.NextDouble());
-                    Vector2 randomDirection = new Vector2((float)Math.Cos(randomAngle),(float)Math.Sin(randomAngle));
-                    randomDirection = Vector2.Normalize(randomDirection + this.velocity);
-                    Transform t = new Transform(this.transform.position.X, this.transform.position.Y, (int)hypo / 3, (int)hypo / 3);
-                    Asteroid newAsteroid = new Asteroid(t, this.speed / 3);
-                    newAsteroid.SetDirection(randomDirection);
-                    gl.AddGameObject(newAsteroid);
+                    Transform hpTrans = new Transform(this.transform.position.X, this.transform.position.Y, 20, 20);
+                    Healthpack hp = new Healthpack(hpTrans);
+                    hp.velocity = this.velocity / 4; // float away from explosion a bit.
+                    gl.AddGameObject(hp);
                 }
-            }
+                float hypo = this.transform.GetHypotenuse();
+                if (hypo > 40) // if we're big enough to split.
+                {
+
+                    for (int i = 0; i < 3; i++)
+                    {
+
+
+                        float randomAngle = (float)(Math.PI * 2 * Random.Shared.NextDouble());
+                        Vector2 randomDirection = new Vector2((float)Math.Cos(randomAngle),(float)Math.Sin(randomAngle));
+                        randomDirection = Vector2.Normalize(randomDirection + this.velocity);
+                        Transform t = new Transform(this.transform.position.X, this.transform.position.Y, (int)hypo / 3, (int)hypo / 3);
+                        Asteroid newAsteroid = new Asteroid(t, this.speed / 3);
+                        newAsteroid.SetDirection(randomDirection);
+                        gl.AddGameObject(newAsteroid);
+                    }
+                }
             }
 
     }

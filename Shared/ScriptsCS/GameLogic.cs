@@ -139,6 +139,7 @@ public class GameLogic
         }
 
         // Healthpack spawning
+        /*
         if ((DateTime.Now - healthPackCounter).TotalSeconds >= HealthPackSpawnCooldownSeconds)
         {
             Healthpack hp = Healthpack.GenerateHealthPack();
@@ -146,6 +147,7 @@ public class GameLogic
 
             healthPackCounter = DateTime.Now;
         }
+        mvoe to asteroid death! :D */
     }
     public float[] GetWorldBounds()
     {
