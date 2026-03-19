@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
+using System.Text.RegularExpressions;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 
@@ -220,11 +221,21 @@ void GenerateStars()
             _lastTransformTime = _nextTransformTime;
             _nextTransformTime = arrivalTime;
 
+            _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
+            _timeSinceLastLoad = 0;
+
             gl.LoadGameState(gameState);
             GameStateCheck();
-        }else{
+            //CenterCameraOn(this.localPlayer.transform, false, false);
+            localPlayer.CenterCameraOnMe();
+
+        }
+        else
+        {
             _timeSinceLastLoad += deltaTime;
         }
+        
+        
 
         localPlayer.Render(deltaTime); // render local only stuff.
 
@@ -233,7 +244,7 @@ void GenerateStars()
             cp.Render(deltaTime); //render local only stuff, like names and healthbars.
         }
         //localPlayer.CenterCameraOnMe((float)renderTime);
-        localPlayer.CenterCameraOnMe(deltaTime);
+        //localPlayer.CenterCameraOnMe(deltaTime);
         base.Render(deltaTime); 
     
         this.renderTime = (int)renderTimer.ElapsedMilliseconds;
