@@ -31,15 +31,6 @@ public class GameManager : RenderManager
     Stopwatch renderTimer = new Stopwatch();
     Stopwatch updateTimer = new Stopwatch();
 
-    //byte[] gameStateBuffer = new byte[4096]; // Pre-allocated buffer for game state data
-
-    //interpolation
-    private byte[] _pendingStateBuffer = new byte[16384];
-    private byte[] _activeStateBuffer = new byte[16384];
-    private long _pendingTick = -1;
-
-    private Stopwatch _intervalTimer = Stopwatch.StartNew();
-
 
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
@@ -150,6 +141,7 @@ void GenerateStars()
 
 
         base.Update();
+        this.stateSize = nm.StateQueue.lastSize;
         updateTime = (int)updateTimer.ElapsedMilliseconds;
 
 
@@ -213,52 +205,24 @@ void GenerateStars()
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-
-
-        // 1. Is there a new packet on the wire?
-        long incomingTick = nm.PeekTick();
-
-        if (incomingTick != _pendingTick && incomingTick != -1) {
-            if (_pendingTick == -1) {
-                nm.GetGameState(_pendingStateBuffer);
-                _pendingTick = incomingTick;
-                skipped++;
-                return;
-            }
-            // Get the data into a fresh buffer (or use a pool to avoid GC)
-            byte[] newData = new byte[_pendingStateBuffer.Length];
-            nm.GetGameState(newData);
-
-            // Stash it with the current time
-            float delta = (float)_intervalTimer.Elapsed.TotalMilliseconds;
-            _stateQueue.Enqueue((newData, delta));
-            _pendingTick = incomingTick;
-            skipped = 0;
-        }
-        else
-        {
-            skipped++;
-        }
-
-        // --- SECTION B: VISUAL INTERPOLATION ---
-        // This happens EVERY FRAME, even if no packet arrived!
-
         
         double renderTime = timestamp - InterpolationDelay;
-
+        long arrivalTime = nm.PeekArrivalTime();
+        //Console.WriteLine("Arrival time: " + arrivalTime + ", Rendertime: " + renderTime);
             // While the next packet in line is "due" to be played...
-        while (_stateQueue.Count > 0 && _stateQueue.Peek().ArrivalTime <= renderTime) {
-            var state = _stateQueue.Dequeue();
+        if (arrivalTime != -1 && arrivalTime <= renderTime) {
+            //Console.WriteLine("loading tick: " + nm.PeekTick());
+            byte[] gameState = nm.GetGameState(out arrivalTime); //redundant. will fix if really truly unneccesary.
             
+            //Console.WriteLine("DEBUG: PROCESSING GAME STATE!!!!");
             // We need to know the time gap between the state we are LEAVING
             // and the state we just LOADED.
             _lastTransformTime = _nextTransformTime;
-            _nextTransformTime = state.ArrivalTime;
+            _nextTransformTime = arrivalTime;
 
-            gl.LoadGameState(state.Data);
+            gl.LoadGameState(gameState);
             GameStateCheck();
-        }
-        if (_stateQueue.Count > 0) {
+        }else{
             _timeSinceLastLoad += deltaTime;
         }
 

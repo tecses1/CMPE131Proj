@@ -18,8 +18,8 @@ public class Client : NetworkModel
             ClientWebSocket handler = new ClientWebSocket();
             var cts = new CancellationTokenSource();
             // Note: Use "ws://" for standard or "wss://" for secure connections
-            Uri serverUri = new Uri($"ws://{Settings.server}:{Settings.port}");
-            Uri backup = new Uri($"ws://localhost:{Settings.port}");
+            Uri serverUri = new Uri($"ws://{Settings.server}:{Settings.port}/");
+            Uri backup = new Uri($"ws://localhost:{Settings.port}/");
 
             Console.WriteLine($"Connecting to {serverUri}...");
             try

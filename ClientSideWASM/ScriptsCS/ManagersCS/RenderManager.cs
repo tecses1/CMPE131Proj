@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Numerics;
 using Blazorex;
@@ -45,7 +46,6 @@ public class RenderManager
     protected double _lastTransformTime = 0; // Arrival time of the state currently in 'transform'
     protected double _nextTransformTime = 0; // Arrival time of the state we are moving TOWARD
     protected float _currentInterpolationDuration = GameConstants.updateRate; // Fallback   
-    protected Queue<(byte[] Data, double ArrivalTime)> _stateQueue = new();
     protected const float InterpolationDelay = 100f; // 100ms buffer
     //debug stuff.
      Stopwatch fpsTimer = Stopwatch.StartNew();
@@ -57,6 +57,8 @@ public class RenderManager
     int ticks = 0;
     protected int updateTime = 0;
     protected int renderTime = 0;
+
+    protected int stateSize;
     
 
     public RenderManager(IJSRuntime js)
@@ -442,7 +444,8 @@ public class RenderManager
             double elapsedSeconds = fpsTimer.Elapsed.TotalMilliseconds / 1000.0; // ms bc seconds will be 0.
             fps = (int)(frames / elapsedSeconds);
             fpsTimer.Restart();
-            t.text = "FPS: " + fps + " | Ticks: " + ticks +" | Skipped: " + skipped +" | UT: " + updateTime + "ms | RT: " + renderTime + "ms";
+            double percent = Math.Round(((double)stateSize * 100) / 65536.0,1);
+            t.text = "FPS: " + fps + " | Ticks: " + ticks +" | UT: " + updateTime + "ms | RT: " + renderTime + "ms" + "| SZ: " + this.stateSize + "b(" + percent +"%)";
             frames = 0;
 
         }
