@@ -12,7 +12,7 @@ public class Healthpack : GameObject
     // bool dead = false;
 
     // public int hp = 1;
-    public int healAmount = 200;
+    public int healAmount = 50;
     public int LifetimeFrames = 1000; 
     bool collected = false;
     
