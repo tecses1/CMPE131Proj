@@ -200,7 +200,7 @@ public class Player : GameObject
 
  private Missile SpawnMissile(Vector2 target)
 {
-    shotCooldownSeconds = 5.0f;
+    shotCooldownSeconds = 2.0f;
 
     Transform t = new Transform(transform.position.X, transform.position.Y, 15, 20);
     t.RotateTo(target);
