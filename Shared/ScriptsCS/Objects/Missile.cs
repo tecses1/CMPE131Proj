@@ -5,7 +5,7 @@ public class Missile : GameObject
 {
     public Vector2 velocity;
     public Guid owner;
-
+    public int damage = 50;
     public Missile(Transform t) : base(t)
     {
     }
