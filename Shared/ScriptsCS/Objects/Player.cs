@@ -198,25 +198,16 @@ public class Player : GameObject
         return proj;
     }
 
-    private Missile SpawnMissile(Vector2 target)
-    {
-        shotCooldownSeconds = 5.0f;
+ private Missile SpawnMissile(Vector2 target)
+{
+    Transform t = new Transform(transform.position.X, transform.position.Y, 30, 12);
+    t.RotateTo(target);
 
-        Vector2 dir = target - transform.position;
-        if(dir.LengthSquared() == 0f) dir = new Vector2(0,-1);
-        dir = Vector2.Normalize(dir);
-
-        Transform proj1T = new Transform(transform.position.X, transform.position.Y, 15, 15);
-        proj1T.RotateTo(target);
-
-        Vector2 velocity = proj1T.Forward() * bulletSpeed;
-
-        var proj = new Missile(proj1T, velocity);
-
-        proj.owner = this.uid;
-        return proj;
-    }
-
+    Missile m = new Missile(t);
+    m.velocity = t.Forward() * 10f;
+    m.owner = this.uid;
+    return m;
+}
     //score
     public void AddScore(int points)
     {
