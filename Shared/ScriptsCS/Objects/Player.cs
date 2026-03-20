@@ -200,7 +200,7 @@ public class Player : GameObject
 
  private Missile SpawnMissile(Vector2 target)
 {
-    Transform t = new Transform(transform.position.X, transform.position.Y, 30, 12);
+    Transform t = new Transform(transform.position.X, transform.position.Y, 20, 15);
     t.RotateTo(target);
 
     Missile m = new Missile(t);
