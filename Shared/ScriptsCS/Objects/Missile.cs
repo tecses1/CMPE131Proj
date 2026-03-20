@@ -17,7 +17,9 @@ public class Missile : GameObject
         if (!this.CollideWith(gl.GetWorldBounds()))
         {
             this.Kill();
+            return;
         }
+        
     }
 
     public override void Kill()

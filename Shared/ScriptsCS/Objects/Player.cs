@@ -203,6 +203,8 @@ public class Player : GameObject
     Transform t = new Transform(transform.position.X, transform.position.Y, 20, 15);
     t.RotateTo(target);
 
+    t.rotation -= MathF.PI / 2f; // have to rotate 90deg
+
     Missile m = new Missile(t);
     m.velocity = t.Forward() * 10f;
     m.owner = this.uid;
