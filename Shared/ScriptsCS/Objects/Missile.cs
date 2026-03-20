@@ -1,14 +1,29 @@
-namespace Shared
-{
-    using System.Dynamic;
-    using System.Numerics;
+namespace Shared;
+using System.Numerics;
 
-    public class Missile : Projectile
+public class Missile : GameObject
+{
+    public Vector2 velocity;
+    public Guid owner;
+    public int damage = 50;
+    public Missile(Transform t) : base(t)
     {
-        public Missile(Transform transform, Vector2 velocity) : base (transform,velocity)
+    }
+
+    public override void Update()
+    {
+        this.transform.position += velocity;
+
+        if (!this.CollideWith(gl.GetWorldBounds()))
         {
-            this.damage = 5;
-            this.Velocity *= 0.5f;
+            this.Kill();
+            return;
         }
+        
+    }
+
+    public override void Kill()
+    {
+        base.Kill();
     }
 }

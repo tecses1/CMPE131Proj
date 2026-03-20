@@ -108,7 +108,7 @@ public class Player : GameObject
         if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
         {
             guntype++;
-            if (guntype > 1)
+            if (guntype > 2) //to incorporate the missile
             {
                 guntype = 0;
             }
@@ -131,6 +131,10 @@ public class Player : GameObject
                 }else if (guntype == 1)
                 {
                     GameObject shot = SpawnGuntype2(mousePos);
+                    this.gl.AddGameObject(shot);
+                }else if (guntype == 2) // added for misile implementation
+                {
+                    GameObject shot = SpawnMissile(mousePos);
                     this.gl.AddGameObject(shot);
                 }
 
@@ -194,6 +198,18 @@ public class Player : GameObject
         return proj;
     }
 
+ private Missile SpawnMissile(Vector2 target)
+{
+    shotCooldownSeconds = 2.0f;
+
+    Transform t = new Transform(transform.position.X, transform.position.Y, 15, 20);
+    t.RotateTo(target);
+
+    Missile m = new Missile(t);
+    m.velocity = t.Forward() * 10f;
+    m.owner = this.uid;
+    return m;
+}
     //score
     public void AddScore(int points)
     {
