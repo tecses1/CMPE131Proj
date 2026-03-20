@@ -1,10 +1,12 @@
 namespace Shared;
 using System.Numerics;
+using System.Drawing;    
 //replace game manager so we can run the game logic on a server machine.
 public class GameLogic
 {
 
-    EventManager eventManager = new EventManager();
+    //EventManager eventManager = new EventManager();
+    public CollisionManager collisionManager = new CollisionManager(GameConstants.worldSizeX, GameConstants.worldSizeY);
     List<GameObject> activeObjects = new List<GameObject>();
 
     List<GameObject> players = new List<GameObject>();
@@ -18,11 +20,13 @@ public class GameLogic
     DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
 
-    DateTime healthPackCounter = DateTime.Now; 
-
-    // spawn less for real game but testing needs many
-    float HealthPackSpawnCooldownSeconds = 1f; 
-
+    public RectangleF worldBounds;
+    public GameLogic()
+    {
+        this.collisionManager.Register(activeObjects);
+        this.collisionManager.Register(players);
+        this.worldBounds = new RectangleF(0, 0, GameConstants.worldSizeX, GameConstants.worldSizeY);
+    }
     public void Update()
     {
         foreach (GameObject go in objsToRemove)
@@ -38,13 +42,13 @@ public class GameLogic
         objsToAdd.Clear();
 
 
-        eventManager.Clear();//clear before they update on this frame.
+        //eventManager.Clear();//clear before they update on this frame.
         foreach (GameObject go in activeObjects)
         {
             //Update and register in same lop. No need to run twice. On.
             go.Store(); //store values for interpolation before update changes them.
             go.Update();
-            eventManager.Register(go);
+            //eventManager.Register(go);
 
         } 
 
@@ -54,86 +58,100 @@ public class GameLogic
         {
             p.Store();
             p.Update();
-            eventManager.Register(p);
-
-            //Check if player is out of bounds, if so, damage the player.
-            if (!p.InBounds(this.GetWorldBounds()) && !p.IsDead)
-            {
-                p.TakeDamage(10);
-            }
+            //eventManager.Register(p);
             
         }
 
+        collisionManager.UpdateTree(); //update the tree with new positions before we check for collisions.
 
-            // process collisions
-        eventManager.ProcessCollisions((go, collideGO) =>
+        foreach (Collision collision in collisionManager.CheckCollisions())
         {
-            // Console.WriteLine(go.GetType().Name + " and a " + collideGO.GetType().Name +", c=" + go.disableCollision + ", c=" + collideGO.disableCollision);
-            
-            if (!go.CollideWith(collideGO)) return;
-            //if ((go is Projectile && collideGO is Player) ||
-            //    (go is Player && collideGO is Projectile)) ADDING PVP BABY
-            //    return;
-            if (go is Projectile proj && collideGO is Asteroid asteroid)
+            GameObject A = collision.ObjectA;
+            GameObject B = collision.ObjectB;
+            switch (A, B)
             {
-                proj.Kill();
-                asteroid.hp -= proj.damage;
-                if (asteroid.hp <= 0)
+                case (Projectile, Asteroid):
+                case (Asteroid, Projectile):
+                    Projectile proj = A is Projectile ? (Projectile)A : (Projectile)B;
+                    Asteroid asteroid = A is Asteroid ? (Asteroid)A : (Asteroid)B;
+                    proj.Kill();
+                    asteroid.hp -= proj.damage;
+                    if (asteroid.hp <= 0)
+                    {
+                        getPlayerWithUID(proj.owner).AddScore(10);
+                        asteroid.Kill();
+                    }
+                    break;
+                case (Asteroid, Player):
+                case (Player, Asteroid):
+                    Asteroid asteroid2 = A is Asteroid ? (Asteroid)A : (Asteroid)B;
+                    Player player = A is Player ? (Player)A : (Player)B;
+                    player.TakeDamage(asteroid2.hp);
+                    asteroid2.Kill();
+                    break;
+                case (Projectile, Player):
+                case (Player, Projectile):  
+                    Projectile proj2 = A is Projectile ? (Projectile)A : (Projectile)B;
+                    Player player2 = A is Player ? (Player)A : (Player)B;
+                    if (proj2.owner != player2.uid)
+                    {
+                        proj2.Kill();
+                        player2.TakeDamage(proj2.damage);
+                    }
+                    break;
+                case (Player, Healthpack):
+                case (Healthpack, Player):
+                    Healthpack hp = A is Healthpack ? (Healthpack)A : (Healthpack)B;
+                    Player player3 = A is Player ? (Player)A : (Player)B;
+                    player3.Heal(hp.healAmount);
+                    hp.Kill();
+                    break;
+                case (Explosion, GameObject):
+                case(GameObject, Explosion):
+                    Explosion explosion = A is Explosion ? (Explosion)A : (Explosion)B;
+                    GameObject other = A is Explosion ? (GameObject)B : (GameObject)A;
+                    if (other is Player)
+                    {
+                        Player player4 = (Player)other;
+                        player4.TakeDamage(explosion.damage);
+                    }
+
+                    if (other is Asteroid)
+                    {
+                        Asteroid asteroid3 = (Asteroid)other;
+                        asteroid3.hp -= explosion.damage;
+                        if (asteroid3.hp <= 0)
+                        {
+                            asteroid3.Kill();
+                        }
+                    }
+                    
+                    break;
+            }   
+        }
+
+        foreach (GameObject go in collisionManager.GetOutOfBoundsObjects())
+        {
+            if (go is Player) continue; //players don't die from going out of bounds, they just can't move further in that direction. This is handled in the player update logic.
+            if (go is Asteroid)
+            {
+                Asteroid asteroid = (Asteroid)go;
+                asteroid.LifetimeFrames--;
+                if (asteroid.LifetimeFrames <= 0)
                 {
-                    getPlayerWithUID(proj.owner).AddScore(10);
-                    // player.AddScore(10);
                     asteroid.Kill();
                 }
+                continue;
             }
-            else if (go is Asteroid asteroid2 && collideGO is Projectile proj2)
-            {
-                proj2.Kill();
-                asteroid2.hp -= proj2.damage;
-                if (asteroid2.hp <= 0)
-                {
-                   getPlayerWithUID(proj2.owner).AddScore(10);
-                    asteroid2.Kill();
-                }
-            }
-            else if (go is Asteroid a && collideGO is Player p)
-            {
-                p.TakeDamage(10);
-                a.Kill();
-            }else if (go is Projectile proj3 && collideGO is Player p2)
-            {
-                if (proj3.owner != p2.uid)
-                {
-                    proj3.Kill();
-                    p2.TakeDamage(proj3.damage);
-                }
-            } else if (go is Player p3 && collideGO is Projectile proj4)
-            {
-                if (proj4.owner != p3.uid)
-                {
-                    proj4.Kill();
-                    p3.TakeDamage(proj4.damage);
-                }
-            }
-            else if (go is Healthpack hp && collideGO is Player player)
-            {
-                hp.Collect(player);
-                return; // we’re done here
-            }
-            else if (go is Player player2 && collideGO is Healthpack hp2)
-            {
-                hp2.Collect(player2);
-                return;
-            }
+            go.Kill();
+        }
 
-        });
-            //if obj is in the bounds of the canvas, we can render.
-
-
+        
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
             Asteroid newAsteroid = Asteroid.GenerateAsteroid();
             
-            if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.position);
+            if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.GetPosition());
             AddGameObject(newAsteroid);
             counter = DateTime.Now;
         }
@@ -148,16 +166,6 @@ public class GameLogic
             healthPackCounter = DateTime.Now;
         }
         mvoe to asteroid death! :D */
-    }
-    public float[] GetWorldBounds()
-    {
-        float[] bounds = new float[4];
-        bounds[0] = 0; //Top left corner X
-        bounds[1] = 0; //Top left corner Y
-        bounds[2] = GameConstants.worldSizeX; //Bottom right corner X
-        bounds[3] = GameConstants.worldSizeY; //Bottom right corner Y
-
-        return bounds;
     }
     public Player getPlayerWithUID(Guid uid)
     {
@@ -221,6 +229,12 @@ public class GameLogic
                 break;
             case "Healthpack":
                 newObj = new Healthpack(defaultT);
+                break;
+            case "Missile":
+                newObj = new Missile(defaultT, new Vector2(0,0));
+                break;
+            case "Explosion":
+                newObj = new Explosion(defaultT, new Vector2(0,0), 0f);
                 break;
             // Add more types here as your game grows
         }

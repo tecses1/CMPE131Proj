@@ -42,7 +42,7 @@ public class LocalPlayer : Player
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
-        playerName = new Text(playerNameString, centerTransform, 0,-transform.size.Y/2*1.25f);
+        playerName = new Text(playerNameString, centerTransform, 0,-transform.rect.Height/2*1.25f);
         playerName.setTextColor(Color.White,200);
         playerName.worldSpace = false;
         Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth/2,Settings.CanvasHeight/2);
@@ -64,7 +64,7 @@ public class LocalPlayer : Player
         // health bar in background
         Transform hbBgTransform = new Transform(
             Settings.CanvasWidth / 2,
-            Settings.CanvasHeight / 2 + transform.size.Y,
+            Settings.CanvasHeight / 2 + transform.rect.Height,
             healthBarWidth,
             healthBarHeight
         );
@@ -75,7 +75,7 @@ public class LocalPlayer : Player
 
         Transform hbFillTransform = new Transform(
             Settings.CanvasWidth / 2,
-            Settings.CanvasHeight / 2 + transform.size.Y,
+            Settings.CanvasHeight / 2 + transform.rect.Height,
             healthBarWidth,
             healthBarHeight
         );
@@ -118,19 +118,19 @@ public class LocalPlayer : Player
                 //CENTER CAMERA ON PLAYER. MUST BE CALLED IN RENDER FUNCTION OR BIG JITTERS.
         //If we're in the world bounds.
         // added else out of bounds take damage
-        bool[] collided = this.GetCollisionSides(gm.gl.GetWorldBounds()); //see if we fall out of world bounds, and what side it is.
+        bool[] collided = this.GetCollisionSides(gm.gl.worldBounds); //see if we fall out of world bounds, and what side it is.
         Transform lerpTsf = this.GetLerpPosition();
         //gm.CenterCameraOn(this.transform);
         if (collided[0] && collided[2])//Inside Y axis bouynds
         {
             //gm.CenterCameraOn(this.transform,true,false);
-            gm.SetCameraTarget(lerpTsf.position, true, false);   
+            gm.SetCameraTarget(lerpTsf.GetPosition(), true, false);   
 
         }
         if (collided[1] && collided[3]) //Inside X axis bounds
         {
             //gm.CenterCameraOn(this.transform, false,true);
-            gm.SetCameraTarget(lerpTsf.position, false, true);   
+            gm.SetCameraTarget(lerpTsf.GetPosition(), false, true);   
         } 
         
     }
@@ -225,7 +225,7 @@ public class LocalPlayer : Player
 
 
 
-        if(!this.CollideWith(gm.gl.GetWorldBounds()))
+        if(!this.CollideWith(gm.gl.worldBounds))
         {
             //outOfBoundsText.Draw(gm);
             outOfBoundsText.disableRender = false;
@@ -268,7 +268,7 @@ public class LocalPlayer : Player
             healthPercent = 1f;
         }
         // scale health width
-        healthBarFill.transform.size.X = healthBarWidth * healthPercent;
+        healthBarFill.transform.rect.Width = healthBarWidth * healthPercent;
 
         if (newColor != currentHealthColor)
         {
@@ -281,15 +281,15 @@ public class LocalPlayer : Player
     public Transform GetLerpPosition()
     {
                         // Interpolation: Calculate the interpolated position based on previous and current transform
-                float interpolationOffsetX = this.transform.position.X;// - gm.worldOffsetX;
-                float interpolationOffsetY =  this.transform.position.Y;// - gm.worldOffsetY;
+                float interpolationOffsetX = this.transform.rect.X;// - gm.worldOffsetX;
+                float interpolationOffsetY =  this.transform.rect.Y;// - gm.worldOffsetY;
                 float interpolationRotation = this.transform.rotation;
                 if (this.previousTransform != null) {
-                    float prevRelX = this.previousTransform.position.X ;//- gm.worldOffsetX;
-                    float prevRelY = this.previousTransform.position.Y;// - gm.worldOffsetY;
+                    float prevRelX = this.previousTransform.rect.X ;//- gm.worldOffsetX;
+                    float prevRelY = this.previousTransform.rect.Y;// - gm.worldOffsetY;
                     
-                    float currRelX = this.transform.position.X;// - gm.worldOffsetX;
-                    float currRelY = this.transform.position.Y;;// - gm.worldOffsetY;
+                    float currRelX = this.transform.rect.X;// - gm.worldOffsetX;
+                    float currRelY = this.transform.rect.Y;;// - gm.worldOffsetY;
 
                     // 2. Interpolate between the RELATIVE points
                     float t = gm.GetInterpolationFactor();
@@ -305,7 +305,7 @@ public class LocalPlayer : Player
                     // Use degrees for tsfs.
                     interpolationRotation = smoothedRotation;
                 }
-            return new Transform(interpolationOffsetX, interpolationOffsetY, (int)this.transform.size.X, (int)this.transform.size.Y, interpolationRotation);
+            return new Transform(interpolationOffsetX, interpolationOffsetY, (int)this.transform.rect.Width, (int)this.transform.rect.Height, interpolationRotation);
     }
 
 
@@ -337,11 +337,4 @@ public class LocalPlayer : Player
 
     }
 
-    private void Respawn()
-    {
-        IsDead = false;
-        CurrentHealth = MaxHealth;
-        transform.position = new Vector2(Settings.CanvasWidth/2, Settings.CanvasHeight/2);
-        Console.WriteLine($"{playerNameString} respawned.");
-    }
 }

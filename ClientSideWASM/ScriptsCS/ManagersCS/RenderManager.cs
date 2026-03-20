@@ -7,13 +7,14 @@ using ClientSideWASM.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Shared;
+using System.Drawing;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 public class RenderManager
 {
     //World size.
     
-
+    public RectangleF cameraViewRect =  new RectangleF(0, 0, Settings.CanvasWidth, Settings.CanvasHeight);
     //World offset, for rendering.
     public float targetWorldOffsetX = 0; //for interpolation
     public float targetWorldOffsetY = 0; //for interpolation.
@@ -118,11 +119,11 @@ public class RenderManager
     {   
         if (!constrainX)
         {
-            this.worldOffsetX = t.position.X  - Settings.CanvasWidth / 2;
+            this.worldOffsetX = t.rect.X  - Settings.CanvasWidth / 2;
         }
         if (!constrainY)
         {
-            this.worldOffsetY = t.position.Y - Settings.CanvasHeight / 2;
+            this.worldOffsetY = t.rect.Y - Settings.CanvasHeight / 2;
         }
     }
 
@@ -246,12 +247,12 @@ public class RenderManager
         //pack groups by reference.
         foreach (List<GameObject> group in groupsToRender) {
             foreach (var obj in group) {               
-                    var pos = obj.transform.position;
-                    var size = obj.transform.size;
+                    //var pos = obj.transform.position;
+                    //var size = obj.transform.size;
 
                 // "Loose" Culling: Check if object is roughly in view
                 // If it's outside these bounds, we don't even put it in the int[]
-                if (obj.InBounds(GetCanvasBounds()) == false) {
+                if (!obj.InteresectsWith(GetCanvasBounds())) {
                     continue; // Skip rendering this object
                 }
 
@@ -259,15 +260,16 @@ public class RenderManager
 
 
                 // Interpolation: Calculate the interpolated position based on previous and current transform
-                float interpolationOffsetX = obj.transform.position.X;
-                float interpolationOffsetY = obj.transform.position.Y;
+                float interpolationOffsetX = obj.transform.rect.X;
+                float interpolationOffsetY = obj.transform.rect.Y;
                 float interpolationRotation = obj.transform.RotationRadians();
+                //Console.WriteLine("Rotation: " + obj.transform.rotation);
                 if (obj.previousTransform != null) {
-                    float prevRelX = obj.previousTransform.position.X;
-                    float prevRelY = obj.previousTransform.position.Y;
+                    float prevRelX = obj.previousTransform.rect.X;
+                    float prevRelY = obj.previousTransform.rect.Y;
                     
-                    float currRelX = obj.transform.position.X;
-                    float currRelY = obj.transform.position.Y ;
+                    float currRelX = obj.transform.rect.X;
+                    float currRelY = obj.transform.rect.Y ;
 
                     // 2. Interpolate between the RELATIVE points
                     float t = GetInterpolationFactor();
@@ -293,8 +295,8 @@ public class RenderManager
                 megaBuffer[cursor++] = 0;
                 megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);
                 megaBuffer[cursor++] = (int)((interpolationOffsetY - worldOffsetY) * 100);
-                megaBuffer[cursor++] = (int)(obj.transform.size.X * 100);
-                megaBuffer[cursor++] = (int)(obj.transform.size.Y * 100);
+                megaBuffer[cursor++] = (int)(obj.transform.rect.Width * 100);
+                megaBuffer[cursor++] = (int)(obj.transform.rect.Height * 100);
                 megaBuffer[cursor++] = (int)(interpolationRotation * 100);
                 megaBuffer[cursor++] = idx;
             }
@@ -304,53 +306,40 @@ public class RenderManager
 
         void PackRect(Rect r) {
             megaBuffer[cursor++] = 1;
-            float x = r.worldSpace ? (r.transform.position.X - worldOffsetX) : r.transform.position.X;
-            float y = r.worldSpace ? (r.transform.position.Y - worldOffsetY) : r.transform.position.Y;
+            float x = r.worldSpace ? (r.transform.rect.X - worldOffsetX) : r.transform.rect.X;
+            float y = r.worldSpace ? (r.transform.rect.Y - worldOffsetY) : r.transform.rect.Y;
             megaBuffer[cursor++] = (int)(x * 100);
             megaBuffer[cursor++] = (int)(y * 100);
-            megaBuffer[cursor++] = (int)(r.transform.size.X * 100);
-            megaBuffer[cursor++] = (int)(r.transform.size.Y * 100);
+            megaBuffer[cursor++] = (int)(r.transform.rect.Width * 100);
+            megaBuffer[cursor++] = (int)(r.transform.rect.Height * 100);
             megaBuffer[cursor++] = ColorToAlphaInt(r.fillColor, r.fillAlpha); 
             megaBuffer[cursor++] = ColorToAlphaInt(r.borderColor, r.borderAlpha);
             megaBuffer[cursor++] = (int)(r.borderWidth * 100);
         }
         foreach (var r in rectsToRender) {
             
-            if ((r.InBounds(GetCanvasBounds()) || r.worldSpace == false) && !r.disableRender) PackRect(r);
+            if ((r.InteresectsWith(GetCanvasBounds()) || r.worldSpace == false) && !r.disableRender) PackRect(r);
         }
 
         foreach (var t in textsToRender) {
-            if ((t.InBounds(GetCanvasBounds()) || t.worldSpace == false) && !t.disableRender) PackRect(t);
+            if ((t.InteresectsWith(GetCanvasBounds()) || t.worldSpace == false) && !t.disableRender) PackRect(t);
         } // Text inherits from Rect!
-        // 3. Prepare ONLY the Text labels
-        /*
-        var textLabels = textsToRender.Where(t => (t.InBounds(GetCanvasBounds()) || t.worldSpace == false)).Select(t => new {
-            text = (t.disableRender ? t.text : ""),
-            x = (t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X) + t.offsetX,
-            y = (t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y) + t.offsetY,
-            w = t.transform.size.X, // Matches t.w in JS
-            h = t.transform.size.Y, // Matches t.h in JS
-            tCol = t.fontColor,
-            tAlp = t.textAlpha / 255f,
-            fnt = t.font,
-            fontSize = t.fontSize,
-            fillToSize = t.fillToRect
-        }).ToArray();*/
+
         var textList = new List<object>();
 
         foreach (var t in textsToRender)
         {
             // SKIP: if explicitly disabled OR if it's world-space and off-screen
             if (t.disableRender) continue;
-            if (!(t.InBounds(GetCanvasBounds()) || t.worldSpace == false)) continue;
+            if (!(t.InteresectsWith(GetCanvasBounds()) || t.worldSpace == false)) continue;
 
             // Only process the math for items we are actually going to show
             textList.Add(new {
                 text = t.text,
-                x = (t.worldSpace ? (t.transform.position.X - worldOffsetX) : t.transform.position.X) + t.offsetX,
-                y = (t.worldSpace ? (t.transform.position.Y - worldOffsetY) : t.transform.position.Y) + t.offsetY,
-                w = t.transform.size.X,
-                h = t.transform.size.Y,
+                x = (t.worldSpace ? (t.transform.rect.X - worldOffsetX) : t.transform.rect.X) + t.offsetX,
+                y = (t.worldSpace ? (t.transform.rect.Y - worldOffsetY) : t.transform.rect.Y) + t.offsetY,
+                w = t.transform.rect.Width,
+                h = t.transform.rect.Height,
                 tCol = t.fontColor,
                 tAlp = t.textAlpha / 255f,
                 fnt = t.font,
@@ -366,9 +355,6 @@ public class RenderManager
         var activeBuffer = new ArraySegment<int>(megaBuffer, 0, cursor);
         js.InvokeVoid("combinedRender", mainCanvas.Id, Settings.CanvasBackground, activeBuffer, textLabels);
 
-        //objsToRender.Clear();
-        //rectsToRender.Clear();
-        //textsToRender.Clear();
     }
     public Vector2 CameraToWorldPos(Vector2 v)
     {
@@ -381,42 +367,15 @@ public class RenderManager
         return new Vector2(x + worldOffsetX, y + worldOffsetY);
     }
     //Returns Canvas bounds. USeful for seeign if an object moves outside of bounds, within reason.
-    public float[] GetCanvasBounds()
+    public RectangleF GetCanvasBounds()
     {
-        float[] bounds = new float[4];
-        bounds[0] = 0 + worldOffsetX;
-        bounds[1] = 0 + worldOffsetY;
-        bounds[2] = Settings.CanvasWidth + worldOffsetX;
-        bounds[3] = Settings.CanvasHeight + worldOffsetY;
-
-        return bounds;
-    }
-
-    public float[] GetCanvasCenter()
-    {
-        float[] center = new float[2];
-        center[0] = Settings.CanvasWidth/2;
-        center[1] = Settings.CanvasHeight/2;
-
-        return center;
-    }
-
-    public float[] GetCanvasCenterWorld()
-    {
-        float[] center = new float[2];
-        center[0] = Settings.CanvasWidth/2 + worldOffsetX;
-        center[1] = Settings.CanvasHeight/2 + worldOffsetY;
-
-        return center;
+        cameraViewRect.X = 0 + worldOffsetX;
+        cameraViewRect.Y = 0 + worldOffsetY;
+        return cameraViewRect;
     }
 
 
-    public Transform GetRenderTrasnform(Transform t)
-    {
-        Transform newT = new Transform(t.position.X - worldOffsetX, t.position.Y - worldOffsetY,(int)t.size.X, (int)t.size.Y);
-        newT.rotation = t.rotation;
-        return newT;
-    }
+
     public void RegisterGroupToRender(List<GameObject> go)
     {
         //only render if in canvas camera view.

@@ -1,72 +1,84 @@
 using System.Numerics;
 
 namespace Shared;
+using System.Drawing;
+using System;
+using System.Numerics; // Assuming System.Numerics.Vector2
 
-[System.Serializable]
 public class Transform
 {
-    public Vector2 position;
-    public Vector2 size;
+    //public Vector2 position;
+    //public Vector2 size;
+
+    public RectangleF rect;
     public float rotation;
+    public float rotationSpeed;
+    public Vector2 velocity;
+
     public Transform()
     {
-        position = new Vector2(0,0);
-        size = new Vector2(0,0);
+        this.rect = new RectangleF(0, 0, 0, 0);
         rotation = 0;
     }
-    public Transform(float x, float y, int sizeX, int sizeY)
+
+    public Transform(float x, float y, float sizeX, float sizeY, float rotation = 0)
     {
-        this.position = new Vector2(x,y);
-        this.size = new Vector2(sizeX, sizeY);
-        this.rotation = 0;
-    }
-    public Transform(Transform other)
-    {
-        this.position = other.position;
-        this.size = other.size;
-        this.rotation = other.rotation;
-    }
-    public Transform(float x, float y, int sizeX, int sizeY, float rotation)
-    {
-        this.position = new Vector2(x,y);
-        this.size = new Vector2(sizeX, sizeY);
-        this.rotation = 0 + rotation;
-    }
-    public Vector2 Forward()
-    {
-        float radians = this.rotation * (float)Math.PI / 180f;
-        return new Vector2(
-            -(float)Math.Sin(radians),
-            (float)Math.Cos(radians)
-        );
-    }
-    public float RotationRadians()
-    {
-        return this.rotation * (float)Math.PI / 180f;
-    }
-    public float GetHypotenuse()
-    {
-        return (float)Math.Sqrt(size.X * size.X + 
-                                size.Y * size.Y);
-    }
-    public Vector2 Left()
-    {
-        // To rotate 90 degrees counter-clockwise:
-        // New X = Old Y
-        // New Y = -Old X
-        Vector2 forward = Forward();
-        Vector2 left = new Vector2(forward.Y , -forward.X);
-        return left;
+        this.rect = new RectangleF(x, y, sizeX, sizeY);
+        this.rotation = rotation;
     }
 
-    public void RotateTo(Vector2 pos)
+    public Transform(Transform other)
     {
-        Vector2 viewDirection = (pos - position);
-        if (viewDirection.LengthSquared() == 0f)
-            viewDirection = new Vector2(0, -1);
-        
-        double angleRadiansView = Math.Atan2(viewDirection.X, viewDirection.Y);
-        double angleDegrees = (angleRadiansView) * (180.0 / Math.PI);
-        rotation = -(float)angleDegrees;
+        this.rect = other.rect;
+        rotation = other.rotation;
+        velocity = other.velocity;
+        rotationSpeed = other.rotationSpeed;
     }
+
+    // This property handles the "Centered to Top-Left" conversion for RectangleF
+
+    public Vector2 Forward()
+    {
+        float radians = RotationRadians();
+        return new Vector2(-(float)Math.Sin(radians), (float)Math.Cos(radians));
+    }
+
+    public Vector2 Left()
+    {
+        Vector2 f = Forward();
+        return new Vector2(f.Y, -f.X);
+    }
+
+    public float RotationRadians() => rotation * (float)Math.PI / 180f;
+
+    public float GetHypotenuse() => (float)Math.Sqrt(rect.Width * rect.Width + rect.Height * rect.Height);
+
+    public void RotateTo(Vector2 targetPos)
+    {
+        Vector2 position = new Vector2(this.rect.X, this.rect.Y);
+        Vector2 viewDirection = targetPos - position;
+        if (viewDirection.LengthSquared() == 0f) viewDirection = new Vector2(0, -1);
+        
+        double angleRadians = Math.Atan2(viewDirection.X, viewDirection.Y);
+        rotation = -(float)(angleRadians * (180.0 / Math.PI));
+    }
+
+    public void Update()
+    {
+        rect.X += velocity.X;
+        rect.Y += velocity.Y;
+        rotation += rotationSpeed;
+    }
+    public Vector2 GetPosition() => new Vector2(rect.X, rect.Y);    
+    public void SetPosition(float x, float y)
+    {
+        rect.X = x;
+        rect.Y = y;
+    }
+    public void SetPosition(Vector2 pos)
+    {
+        rect.X = pos.X;
+        rect.Y = pos.Y;
+    }   
+    
 }

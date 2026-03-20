@@ -22,14 +22,14 @@ public class ClientPlayer : Player
     {
         this.gm = gm;
 
-        Transform centerTransform = new Transform(this.transform.position.X, this.transform.position.Y - transform.size.Y, 100, 25);   
+        Transform centerTransform = new Transform(this.transform.rect.X, this.transform.rect.Y - transform.rect.Height, 100, 25);   
         playerName = new Text(playerNameString, centerTransform);//, 0,-transform.size.Y/2*1.25f);
         playerName.setTextColor(Color.White,200);
         playerName.worldSpace = true; //spawn relative to player, not screen space.
         // health bar in background
         Transform hbBgTransform = new Transform(
-            this.transform.position.X,
-            this.transform.position.Y + transform.size.Y,
+            this.transform.rect.X,
+            this.transform.rect.Y + transform.rect.Height,
             healthBarWidth,
             healthBarHeight
         );
@@ -39,8 +39,8 @@ public class ClientPlayer : Player
         healthBarBackground.borderWidth = 0;
 
         Transform hbFillTransform = new Transform(
-            this.transform.position.X,
-            this.transform.position.Y + transform.size.Y,
+            this.transform.rect.X,
+            this.transform.rect.Y + transform.rect.Height,
             healthBarWidth,
             healthBarHeight
         );
@@ -71,14 +71,14 @@ public class ClientPlayer : Player
         this.UpdateHealthBarVisual();
 
         //draw our healthbar.
-        this.healthBarBackground.SetPosition(this.transform.position.X, this.transform.position.Y + this.transform.size.Y);
+        this.healthBarBackground.SetPosition(this.transform.rect.X, this.transform.rect.Y + this.transform.rect.Height);
         this.healthBarBackground.disableRender = false;
         //this.healthBarBackground.Draw(gm);
-        this.healthBarFill.SetPosition(this.transform.position.X, this.transform.position.Y + this.transform.size.Y);
+        this.healthBarFill.SetPosition(this.transform.rect.X, this.transform.rect.Y + this.transform.rect.Height);
         this.healthBarFill.disableRender = false;
         //this.healthBarFill.Draw(gm);
         //draw our name!
-        this.playerName.SetPosition(this.transform.position.X, this.transform.position.Y - this.transform.size.Y);
+        this.playerName.SetPosition(this.transform.rect.X, this.transform.rect.Y - this.transform.rect.Height);
         this.playerName.disableRender = false;
         //this.playerName.Draw(gm);
 
@@ -101,7 +101,7 @@ public class ClientPlayer : Player
             healthPercent = 1f;
         }
         // scale health width
-        healthBarFill.transform.size.X = healthBarWidth * healthPercent;
+        healthBarFill.transform.rect.X = healthBarWidth * healthPercent;
 
         if (newColor != currentHealthColor)
         {

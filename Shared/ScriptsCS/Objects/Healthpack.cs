@@ -21,8 +21,8 @@ public class Healthpack : GameObject
         // this.speed = speed;
         transform.rotation = (float)(Random.Shared.NextDouble() * 360);
         // hp = (int)this.transform.size.X ;
-
-        this.transform.size = new Vector2(20,20); //fixed size for health packs.
+        this.transform.rect.Width = 20;
+        this.transform.rect.Height = 20;
     }
     public void SetDirection(Vector2 v)
     {
@@ -32,25 +32,16 @@ public class Healthpack : GameObject
 
     public override void Update()
     {
-        if (collected)
+        transform.Update();
+        /*if (collected)
         {
             // Slowly float away if collected (optional effect)
-            transform.position += velocity / 2;
         }
         else
         {
             transform.position += velocity;
 
-            if (!this.CollideWith(gl.GetWorldBounds()))
-            {
-                // Outside of bounds, start countdown
-                LifetimeFrames--;
-                if (LifetimeFrames < 0)
-                {
-                    base.Kill();
-                }
-            }
-        }
+        }*/
     }
 
     public override void Kill()

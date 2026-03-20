@@ -7,74 +7,40 @@ namespace Shared;
     {
         //public float X;
         //public float Y;
+
         [Network(0)]
-        public Vector2 Velocity {get; set;}
-        [Network(1)]
         public int LifetimeFrames {get; set;} = 30; 
         public int deathAnimSpeed = 5;
         int cDeathAnim = 20;
         bool dead = false;
-        [Network(2)]
+        [Network(1)]
         public int damage {get; set;} = 1;
-        [Network(3)]
+        [Network(2)]
         public Guid owner;
         public Projectile( Transform transform, Vector2 velocity, int lifetime =5) : base(transform)
         {
         
-            Velocity = velocity;
+            this.transform.velocity = velocity;
             LifetimeFrames = lifetime;
         }
 
         public override void Update()
         {
-            if (dead)
+            this.transform.Update();
+            LifetimeFrames--;
+            if (LifetimeFrames < 0)
             {
-                this.transform.rotation += 1;
-                cDeathAnim -= 1;
-                if (cDeathAnim <= 0)
-                {
-                    
-                    if (currentFrame > 6)
-                    {
-                        base.Kill();
-                    }
-                    else
-                    {
-                        currentFrame += 1;
-                    }
-                    
-                }
-                transform.position += Velocity / 20;
+                this.Kill();
             }
-            else
-            {
-                transform.position += Velocity;
-
-                if (!this.CollideWith(gl.GetWorldBounds())) //We are outside of bounds. \\
-                {
-                    this.Kill();
-                    
-
-                }
-                LifetimeFrames--;
-                //Console.WriteLine("Counting down: " + LifetimeFrames);
-                if (LifetimeFrames < 0)
-                {
-                    this.Kill();
-                }
-            }
+            
         }
 
         public override void Kill()
         {
-            if (!dead)
-            {
-                currentFrame = 1;
-                dead = true;
-                this.disableCollision = true;
-                cDeathAnim = deathAnimSpeed;
-            }
 
+            Explosion e = new Explosion(new Transform() { rect = this.transform.rect }, this.transform.velocity / 10, 1f);
+            gl.AddGameObject(e);
+            base.Kill();
             
         }
     }
