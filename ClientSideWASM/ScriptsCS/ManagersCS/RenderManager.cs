@@ -14,7 +14,7 @@ public class RenderManager
 {
     //World size.
     
-    public RectangleF cameraViewRect =  new RectangleF(0, 0, Settings.CanvasWidth, Settings.CanvasHeight);
+    public Rect cameraViewRect =  new Rect(0, 0, Settings.CanvasWidth, Settings.CanvasHeight);
     //World offset, for rendering.
     public float targetWorldOffsetX = 0; //for interpolation
     public float targetWorldOffsetY = 0; //for interpolation.
@@ -29,8 +29,8 @@ public class RenderManager
     //Objs to render
     public List<List<GameObject>> groupsToRender = new();
     public List<GameObject> objsToRender = new();
-    public List<Text> textsToRender = new List<Text>();
-    public List<Rect> rectsToRender = new List<Rect>();
+    public List<DrawText> DrawTextsToRender = new List<DrawText>();
+    public List<DrawRect> DrawRectsToRender = new List<DrawRect>();
 
     //JS crap for batch drawing
     private GameAsset[] assetCache;
@@ -39,7 +39,7 @@ public class RenderManager
     protected IJSInProcessRuntime js;
     private CanvasBase mainCanvas;
 
-    Text t;
+    DrawText t;
     public float cameraSmoothing = 0.8f; 
 
     int[] megaBuffer = new int[16384];
@@ -95,11 +95,11 @@ public class RenderManager
 
 
         Transform tTransform = new Transform(200,25,400,100);
-        t = new Text("FPS: " + fps, tTransform);
+        t = new DrawText("FPS: " + fps, tTransform);
         t.textAlpha = 100;
         t.worldSpace = false;
 
-        RegisterTextToRender(t);
+        RegisterDrawTextToRender(t);
 
         InitializeJSCache();
         groupsToRender.Add(objsToRender);
@@ -167,23 +167,23 @@ public class RenderManager
         this.mainCanvas = c;
     }
 
-    public void RegisterTextToRender(Text text)
+    public void RegisterDrawTextToRender(DrawText text)
     {
-        this.textsToRender.Add(text);
+        this.DrawTextsToRender.Add(text);
     }
-    public void RegisterRectToRender(Rect rect)
+    public void RegisterRectToRender(DrawRect rect)
     {
         
-        this.rectsToRender.Add(rect);
+        this.DrawRectsToRender.Add(rect);
     }
-    public void UnregisterText(Text text)
+    public void UnregisterDrawText(DrawText text)
     {
-        this.textsToRender.Remove(text);
+        this.DrawTextsToRender.Remove(text);
     }
-    public void UnregisterRect(Rect rect)
+    public void UnregisterDrawRect(DrawRect rect)
     {
         
-        this.rectsToRender.Remove(rect);
+        this.DrawRectsToRender.Remove(rect);
     }
 
     int getCacheIndex(GameObject o)
@@ -304,7 +304,7 @@ public class RenderManager
         // 2. Pack Rects AND Text-Backgrounds (Type 1)
         // We treat them identically in the buffer to simplify JS
 
-        void PackRect(Rect r) {
+        void PackRect(DrawRect r) {
             megaBuffer[cursor++] = 1;
             float x = r.worldSpace ? (r.transform.rect.X - worldOffsetX) : r.transform.rect.X;
             float y = r.worldSpace ? (r.transform.rect.Y - worldOffsetY) : r.transform.rect.Y;
@@ -316,18 +316,18 @@ public class RenderManager
             megaBuffer[cursor++] = ColorToAlphaInt(r.borderColor, r.borderAlpha);
             megaBuffer[cursor++] = (int)(r.borderWidth * 100);
         }
-        foreach (var r in rectsToRender) {
+        foreach (var r in DrawRectsToRender) {
             
             if ((r.InteresectsWith(GetCanvasBounds()) || r.worldSpace == false) && !r.disableRender) PackRect(r);
         }
 
-        foreach (var t in textsToRender) {
+        foreach (var t in DrawTextsToRender) {
             if ((t.InteresectsWith(GetCanvasBounds()) || t.worldSpace == false) && !t.disableRender) PackRect(t);
         } // Text inherits from Rect!
 
         var textList = new List<object>();
 
-        foreach (var t in textsToRender)
+        foreach (var t in DrawTextsToRender)
         {
             // SKIP: if explicitly disabled OR if it's world-space and off-screen
             if (t.disableRender) continue;
@@ -367,10 +367,10 @@ public class RenderManager
         return new Vector2(x + worldOffsetX, y + worldOffsetY);
     }
     //Returns Canvas bounds. USeful for seeign if an object moves outside of bounds, within reason.
-    public RectangleF GetCanvasBounds()
+    public Rect GetCanvasBounds()
     {
-        cameraViewRect.X = 0 + worldOffsetX;
-        cameraViewRect.Y = 0 + worldOffsetY;
+        cameraViewRect.X = (Settings.CanvasWidth / 2) + worldOffsetX;
+        cameraViewRect.Y = (Settings.CanvasHeight / 2) + worldOffsetY;
         return cameraViewRect;
     }
 

@@ -38,7 +38,7 @@ public class Player : GameObject
     private DateTime deathTime;
     private TimeSpan respawnDelay = TimeSpan.FromSeconds(5);
 
-    private Vector2 spawnPoint = new Vector2(512, 384); // center of map
+    private Vector2 spawnPoint = new Vector2(0, 0); // center of map
     private Vector2 defaultSize = new Vector2(50, 50);
     private int defaultHealth = 1000;
 
@@ -81,8 +81,8 @@ public class Player : GameObject
 
         //Find what sides we're colliding with in closwise order from top. 
         // 1. Movement Input (Calculates direction * acceleration)
-        transform.velocity.Y += (e.keys[2] ? acceleration : 0) - (e.keys[0] ? acceleration : 0);
-        transform.velocity.X += (e.keys[3] ? acceleration : 0) - (e.keys[1] ? acceleration : 0);
+        transform.velocity.Y += (e.IsKeyDown("s",true) ? acceleration : 0) - (e.IsKeyDown("w",true) ? acceleration : 0);
+        transform.velocity.X += (e.IsKeyDown("d",true) ? acceleration : 0) - (e.IsKeyDown("a",true) ? acceleration : 0);
 
         // 2. Clamp Velocity (Native C# function)
         transform.velocity.X = Math.Clamp(transform.velocity.X, -maxSpeed, maxSpeed);
@@ -90,8 +90,8 @@ public class Player : GameObject
 
         // 3. Apply Drag (Reduces velocity by a percentage)
         //Only when keys are not being pressed (slow to stop)
-        if ((e.keys[0] || e.keys[2]) == false) transform.velocity.Y *= (1 - drag);
-        if ((e.keys[1] || e.keys[3]) == false) transform.velocity.X *= (1 - drag);
+        if ((e.IsKeyDown("w",true) || e.IsKeyDown("s",true)) == false) transform.velocity.Y *= (1 - drag);
+        if ((e.IsKeyDown("a",true) || e.IsKeyDown("d")) == false) transform.velocity.X *= (1 - drag);
 
 
         // 4. Zero-out and Move
@@ -104,7 +104,7 @@ public class Player : GameObject
 
 
     
-        if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
+        if (e.IsKeyDown("r",true) && (DateTime.Now - lastChange).Seconds > 1)
         {
             guntype++;
             if (guntype > 2) //to incorporate the missile

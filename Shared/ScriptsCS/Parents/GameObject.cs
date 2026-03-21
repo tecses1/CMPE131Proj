@@ -32,21 +32,21 @@ public class GameObject : NetworkObject
         return transform.rect.IntersectsWith(other.transform.rect);
     }
 
-    public bool CollideWith(RectangleF rect)
+    public bool CollideWith(Rect rect)
     {
         if (disableCollision) return false;
         return transform.rect.IntersectsWith(rect);
     }
 
-    public bool InteresectsWith(RectangleF rect)
+    public bool InteresectsWith(Rect rect)
     {
         return rect.IntersectsWith(transform.rect);
     }
 
-    public bool[] GetCollisionSides(RectangleF container)
+    public bool[] GetCollisionSides(Rect container)
     {
         // 0:Top, 1:Right, 2:Bottom, 3:Left
-        RectangleF b = transform.rect;
+        Rect b = transform.rect;
         return new bool[] {
             b.Top >= container.Top,
             b.Right <= container.Right,

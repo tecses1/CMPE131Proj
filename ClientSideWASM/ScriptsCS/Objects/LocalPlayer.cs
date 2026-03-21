@@ -16,8 +16,8 @@ public class LocalPlayer : Player
 
     // for health bar
     public int MaxHealth = 1000;
-    private Rect healthBarBackground;
-    private Rect healthBarFill;
+    private DrawRect healthBarBackground;
+    private DrawRect healthBarFill;
     private int healthBarWidth = 70;
     private int healthBarHeight = 10;
     private Color currentHealthColor = Color.Green;
@@ -25,10 +25,10 @@ public class LocalPlayer : Player
     [Network(0)]
 
     //UI elements
-    public Text playerName;
-    Text outOfBoundsText;
-    Rect oobScreenFlashRect;
-    Text scoreText;
+    public DrawText playerName;
+    DrawText outOfBoundsText;
+    DrawRect oobScreenFlashRect;
+    DrawText scoreText;
     int alpha = 0;
     int direction = 1;
 
@@ -37,27 +37,27 @@ public class LocalPlayer : Player
     private float respawnCountdown = 5f; // seconds
     private bool justDied = false;
     //private Rect deathModalBackground;
-    private Text deathModalText;
+    private DrawText deathModalText;
 
     public bool isLocalPlayer = false; // This can be used to differentiate between the local player and other players in the game.
     public LocalPlayer( GameManager gm, Transform transform) : base( transform ) {
         Transform centerTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, 100, 25);   
-        playerName = new Text(playerNameString, centerTransform, 0,-transform.rect.Height/2*1.25f);
+        playerName = new DrawText(playerNameString, centerTransform, 0,-transform.rect.Height/2*1.25f);
         playerName.setTextColor(Color.White,200);
         playerName.worldSpace = false;
         Transform oobTransform = new Transform(Settings.CanvasWidth/2, Settings.CanvasHeight / 2, Settings.CanvasWidth/2,Settings.CanvasHeight/2);
-        outOfBoundsText = new Text(Settings.OutOfBoundsMessage, oobTransform, 0,0);
+        outOfBoundsText = new DrawText(Settings.OutOfBoundsMessage, oobTransform, 0,0);
         outOfBoundsText.fontColor = Settings.ErrorText;
         outOfBoundsText.worldSpace = false;
 
         Transform oobScreenFlashT = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight /2,Settings.CanvasWidth,Settings.CanvasHeight);
-        oobScreenFlashRect = new Rect( oobScreenFlashT);
+        oobScreenFlashRect = new DrawRect( oobScreenFlashT);
         oobScreenFlashRect.borderWidth = 50;
         oobScreenFlashRect.worldSpace = false;
 
         // score system
         Transform scoreTransform = new Transform(Settings.CanvasWidth - 50, Settings.CanvasHeight - 8, 100, 125);
-        scoreText = new Text("Score: 0",  scoreTransform);
+        scoreText = new DrawText("Score: 0",  scoreTransform);
         scoreText.worldSpace = false; 
 
 
@@ -68,7 +68,7 @@ public class LocalPlayer : Player
             healthBarWidth,
             healthBarHeight
         );
-        healthBarBackground = new Rect( hbBgTransform);
+        healthBarBackground = new DrawRect( hbBgTransform);
         healthBarBackground.setFillColor(Color.DarkGray,100);
         healthBarBackground.worldSpace = false;
         healthBarBackground.borderWidth = 0;
@@ -79,7 +79,7 @@ public class LocalPlayer : Player
             healthBarWidth,
             healthBarHeight
         );
-        healthBarFill = new Rect( hbFillTransform);
+        healthBarFill = new DrawRect( hbFillTransform);
         healthBarFill.setFillColor(Color.Green,100);
         healthBarFill.borderWidth = 0;
         healthBarFill.worldSpace = false;
@@ -97,7 +97,7 @@ public class LocalPlayer : Player
     //Texts come with rect support, because they extend rect! No need to make another rect background. :)
     //I added fontSize override though, so that way it doesn't auto scale.
     Transform textTransform = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 400, 50);
-    deathModalText = new Text("", textTransform);
+    deathModalText = new DrawText("", textTransform);
     deathModalText.setTextColor(Color.Red, 150);
     deathModalText.fontSize = 24;
     deathModalText.worldSpace = false;

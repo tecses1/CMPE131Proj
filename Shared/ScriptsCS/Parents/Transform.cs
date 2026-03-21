@@ -10,20 +10,20 @@ public class Transform
     //public Vector2 position;
     //public Vector2 size;
 
-    public RectangleF rect;
+    public Rect rect;
     public float rotation;
     public float rotationSpeed;
     public Vector2 velocity;
 
     public Transform()
     {
-        this.rect = new RectangleF(0, 0, 0, 0);
+        this.rect = new Rect(0, 0, 0, 0);
         rotation = 0;
     }
 
     public Transform(float x, float y, float sizeX, float sizeY, float rotation = 0)
     {
-        this.rect = new RectangleF(x, y, sizeX, sizeY);
+        this.rect = new Rect(x, y, sizeX, sizeY);
         this.rotation = rotation;
     }
 

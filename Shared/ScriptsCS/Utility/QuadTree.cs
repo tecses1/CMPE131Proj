@@ -6,10 +6,10 @@ public class Quadtree {
 
     private int _level;
     private List<GameObject> _objects;
-    private RectangleF _bounds;
+    private Rect _bounds;
     private Quadtree[] _nodes;
 
-    public Quadtree(int level, RectangleF bounds) {
+    public Quadtree(int level, Rect bounds) {
         _level = level;
         _objects = new List<GameObject>();
         _bounds = bounds;
@@ -26,30 +26,36 @@ public class Quadtree {
         }
     }
 
-    private void Split() {
+private void Split() {
         float subWidth = _bounds.Width / 2f;
         float subHeight = _bounds.Height / 2f;
-        float x = _bounds.X;
-        float y = _bounds.Y;
+        
+        // Calculate the distance from the parent center to the new sub-centers
+        float xOffset = subWidth / 2f;
+        float yOffset = subHeight / 2f;
 
-        _nodes[0] = new Quadtree(_level + 1, new RectangleF(x + subWidth, y, subWidth, subHeight));
-        _nodes[1] = new Quadtree(_level + 1, new RectangleF(x, y, subWidth, subHeight));
-        _nodes[2] = new Quadtree(_level + 1, new RectangleF(x, y + subHeight, subWidth, subHeight));
-        _nodes[3] = new Quadtree(_level + 1, new RectangleF(x + subWidth, y + subHeight, subWidth, subHeight));
+        // Pass the actual CENTER of each new quadrant
+        _nodes[0] = new Quadtree(_level + 1, new Rect(_bounds.X + xOffset, _bounds.Y - yOffset, subWidth, subHeight)); // Top Right
+        _nodes[1] = new Quadtree(_level + 1, new Rect(_bounds.X - xOffset, _bounds.Y - yOffset, subWidth, subHeight)); // Top Left
+        _nodes[2] = new Quadtree(_level + 1, new Rect(_bounds.X - xOffset, _bounds.Y + yOffset, subWidth, subHeight)); // Bottom Left
+        _nodes[3] = new Quadtree(_level + 1, new Rect(_bounds.X + xOffset, _bounds.Y + yOffset, subWidth, subHeight)); // Bottom Right
     }
 
-    private int GetIndex(RectangleF rect) {
+    private int GetIndex(Rect rect) {
         int index = -1;
-        double verticalMidpoint = _bounds.X + (_bounds.Width / 2);
-        double horizontalMidpoint = _bounds.Y + (_bounds.Height / 2);
+        
+        // Because _bounds is a centered Rect, X and Y ARE the midpoints!
+        float verticalMidpoint = _bounds.X; 
+        float horizontalMidpoint = _bounds.Y;
 
-        bool topQuadrant = (rect.Y < horizontalMidpoint && rect.Y + rect.Height < horizontalMidpoint);
-        bool bottomQuadrant = (rect.Y > horizontalMidpoint);
+        // Use the computed edge properties to check if the object fits perfectly in a quadrant
+        bool topQuadrant = (rect.Top < horizontalMidpoint && rect.Bottom < horizontalMidpoint);
+        bool bottomQuadrant = (rect.Top > horizontalMidpoint);
 
-        if (rect.X < verticalMidpoint && rect.X + rect.Width < verticalMidpoint) {
+        if (rect.Left < verticalMidpoint && rect.Right < verticalMidpoint) {
             if (topQuadrant) index = 1;
             else if (bottomQuadrant) index = 2;
-        } else if (rect.X > verticalMidpoint) {
+        } else if (rect.Left > verticalMidpoint) {
             if (topQuadrant) index = 0;
             else if (bottomQuadrant) index = 3;
         }
@@ -84,7 +90,7 @@ public class Quadtree {
     }
 
     // Retrieve by GameObject Bounds
-    public void Retrieve(List<GameObject> returnObjects, RectangleF searchArea) {
+    public void Retrieve(List<GameObject> returnObjects, Rect searchArea) {
         int index = GetIndex(searchArea);
         if (index != -1 && _nodes[0] != null) {
             _nodes[index].Retrieve(returnObjects, searchArea);

@@ -23,7 +23,7 @@ public class GameManager : RenderManager
     public List<ClientPlayer> clientPlayers = new List<ClientPlayer>();
     public List<GameObject> backgroundStars = new List<GameObject>();
 
-    Text isLocal;
+    DrawText isLocal;
 
     ClientInputWrapper cInput;
     
@@ -58,7 +58,7 @@ public class GameManager : RenderManager
 
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
-        isLocal = new Text("Playing Locally ", t);
+        isLocal = new DrawText("Playing Locally ", t);
         isLocal.worldSpace = false;
 
         //Create local player, add to GameLogic? 
@@ -93,8 +93,8 @@ void GenerateStars()
     Console.WriteLine("spawning " + starCount + " stars for bg");
     for (int i = 0; i < starCount; i++)
     {
-        int x = r.Next(0, GameConstants.worldSizeX);
-        int y = r.Next(0, GameConstants.worldSizeY);
+        int x = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
+        int y = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
         
         int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize, Settings.minSize, Settings.maxSize);
         

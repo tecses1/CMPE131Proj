@@ -36,8 +36,8 @@ public class Lobby
         users.Add(user);
 
         
-        //Add a player.
-        Player p = new Player(new Transform(GameConstants.worldSizeX / 2, GameConstants.worldSizeY/2, 50,50));
+        //Add a player, 0,0 is center of world.
+        Player p = new Player(new Transform(0, 0, 50,50));
         p.playerNameString = user.name;
         p.uid = user.uid;
         gl.AddPlayer(p);

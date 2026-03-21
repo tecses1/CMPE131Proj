@@ -12,30 +12,16 @@ public class ClientInputWrapper : InputWrapper
     public ClientInputWrapper() { }
 
     public void loadKeysDown(KeyboardPressEvent keysDown)
-
     {
-        switch (keysDown.Key)
-        {
-            case "w": keys[0] = true; break;
-            case "a": keys[1] = true; break;
-            case "s": keys[2] = true; break;
-            case "d": keys[3] = true; break;
-            case "r": keys[4] = true; break;
-            case "Escape": keys[5] = true; break;
-        }
+        // This will automatically add the key if it doesn't exist, 
+        // or update it to true if it does.
+        keys[keysDown.Key] = true;
     }
 
     public void loadKeysUp(KeyboardPressEvent keysUp)
     {
-        switch (keysUp.Key)
-        {
-            case "w": keys[0] = false; break;
-            case "a": keys[1] = false; break;
-            case "s": keys[2] = false; break;
-            case "d": keys[3] = false; break;
-            case "r": keys[4] = false; break;
-            case "Escape": keys[5] = false; break;
-        }
+        // Update the key state to false when released.
+        keys[keysUp.Key] = false;
     }
 
     // Called from UI handler: supply raw mouse coords (double)

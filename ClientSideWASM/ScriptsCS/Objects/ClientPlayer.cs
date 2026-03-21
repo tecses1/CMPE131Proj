@@ -10,20 +10,20 @@ public class ClientPlayer : Player
 
     // for health bar
     public int MaxHealth = 1000;
-    private Rect healthBarBackground;
-    private Rect healthBarFill;
+    private DrawRect healthBarBackground;
+    private DrawRect healthBarFill;
     private int healthBarWidth = 70;
     private int healthBarHeight = 10;
     private Color currentHealthColor = Color.Green;
 
     //for name
-    public Text playerName;
+    public DrawText playerName;
     public ClientPlayer( GameManager gm, Transform transform) : base( transform )
     {
         this.gm = gm;
 
         Transform centerTransform = new Transform(this.transform.rect.X, this.transform.rect.Y - transform.rect.Height, 100, 25);   
-        playerName = new Text(playerNameString, centerTransform);//, 0,-transform.size.Y/2*1.25f);
+        playerName = new DrawText(playerNameString, centerTransform);//, 0,-transform.size.Y/2*1.25f);
         playerName.setTextColor(Color.White,200);
         playerName.worldSpace = true; //spawn relative to player, not screen space.
         // health bar in background
@@ -33,7 +33,7 @@ public class ClientPlayer : Player
             healthBarWidth,
             healthBarHeight
         );
-        healthBarBackground = new Rect( hbBgTransform);
+        healthBarBackground = new DrawRect( hbBgTransform);
         healthBarBackground.setFillColor(Color.DarkGray,100);
         healthBarBackground.worldSpace = true;
         healthBarBackground.borderWidth = 0;
@@ -44,7 +44,7 @@ public class ClientPlayer : Player
             healthBarWidth,
             healthBarHeight
         );
-        healthBarFill = new Rect( hbFillTransform);
+        healthBarFill = new DrawRect( hbFillTransform);
         healthBarFill.setFillColor(Color.Green,100);
         healthBarFill.borderWidth = 0;
         healthBarFill.worldSpace = true;

@@ -1,7 +1,7 @@
 namespace ClientSideWASM;
 using Shared;
 using System.Drawing;
-public class Rect
+public class DrawRect
 {
     // Keeping capitalization exactly as requested
     public string fillColor = Settings.DefaultTextBackground;
@@ -15,26 +15,26 @@ public class Rect
     public bool worldSpace = true;
     public bool disableRender = false;
 
-    public Rect()
+    public DrawRect()
     {
         this.transform = new Transform(0, 0, 0, 0);
     }
 
-    public Rect(int sizex, int sizey)
+    public DrawRect(int sizex, int sizey)
     {
         this.transform = new Transform(0, 0, sizex, sizey);
     }
 
-    public Rect(int posx, int posy, int sizex, int sizey)
+    public DrawRect(int posx, int posy, int sizex, int sizey)
     {
         this.transform = new Transform(posx, posy, sizex, sizey);
     }
 
-    public Rect(Transform t)
+    public DrawRect(Transform t)
     {
         this.transform = t;
     }
-    public bool InteresectsWith(RectangleF rect)
+    public bool InteresectsWith(Rect rect)
     {
         return rect.IntersectsWith(transform.rect);
     }
@@ -51,7 +51,7 @@ public class Rect
 
     public virtual void Unregister(RenderManager rm)
     {
-        rm.UnregisterRect(this);
+        rm.UnregisterDrawRect(this);
     }
 
     public void setBorderColor(Color c)
@@ -77,7 +77,7 @@ public class Rect
     }
 
     // REFACTORED: Now uses RectangleF for clean intersection checks
-    public bool CollideWith(RectangleF other)
+    public bool CollideWith(Rect other)
     {
         return this.transform.rect.IntersectsWith(other);
     }
@@ -87,7 +87,7 @@ public class Rect
     public float[] GetBounds()
     {
         // Leveraging the Transform.Bounds property we created earlier
-        RectangleF b = transform.rect;
+        Rect b = transform.rect;
         return new float[] { b.Left, b.Top, b.Right, b.Bottom };
     }
 }

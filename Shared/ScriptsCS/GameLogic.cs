@@ -20,12 +20,12 @@ public class GameLogic
     DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
 
-    public RectangleF worldBounds;
+    public Rect worldBounds;
     public GameLogic()
     {
         this.collisionManager.Register(activeObjects);
         this.collisionManager.Register(players);
-        this.worldBounds = new RectangleF(0, 0, GameConstants.worldSizeX, GameConstants.worldSizeY);
+        this.worldBounds = new Rect(0, 0, GameConstants.worldSizeX, GameConstants.worldSizeY);
     }
     public void Update()
     {

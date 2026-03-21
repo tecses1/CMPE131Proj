@@ -3,10 +3,10 @@ using System.Drawing;
 public class CollisionManager{
     private Quadtree _tree;
     private List<List<GameObject>> _registeredGroups;
-    private RectangleF _worldBounds;
+    private Rect _worldBounds;
 
     public CollisionManager(float worldWidth, float worldHeight) {
-        _worldBounds = new RectangleF(0, 0, worldWidth, worldHeight);
+        _worldBounds = new Rect(0, 0, worldWidth, worldHeight);
         _tree = new Quadtree(0, _worldBounds);
         _registeredGroups = new List<List<GameObject>>();
     }
@@ -63,11 +63,12 @@ public class CollisionManager{
             foreach (var obj in group) {
 
                 // Check if any part of the object is outside the 0 to WorldX/WorldY limits
-                RectangleF objRect = obj.transform.rect;
-                bool isOutLeft = objRect.X < _worldBounds.Left;
-                bool isOutRight = (objRect.X + objRect.Width) > _worldBounds.Right;
-                bool isOutTop = objRect.Y < _worldBounds.Top;
-                bool isOutBottom = (objRect.Y + objRect.Height) > _worldBounds.Bottom;
+                // Use the edges!
+                Rect objRect = obj.transform.rect;
+                bool isOutLeft = objRect.Left < _worldBounds.Left;
+                bool isOutRight = objRect.Right > _worldBounds.Right;
+                bool isOutTop = objRect.Top < _worldBounds.Top;
+                bool isOutBottom = objRect.Bottom > _worldBounds.Bottom;
 
                 if (isOutLeft || isOutRight || isOutTop || isOutBottom) {
                     outOfBounds.Add(obj);
@@ -83,11 +84,11 @@ public class CollisionManager{
         float rangeSq = range * range;
         
         // Define our circular search area as a bounding box for the Quadtree query
-        var searchArea = new RectangleF(
-            origin.transform.rect.X - range, 
-            origin.transform.rect.Y - range, 
-            range * 2, 
-            range * 2
+        var searchArea = new Rect(
+            origin.transform.rect.X, 
+            origin.transform.rect.Y, 
+            range*2, 
+            range*2
         );
         
         var candidates = new List<GameObject>();
