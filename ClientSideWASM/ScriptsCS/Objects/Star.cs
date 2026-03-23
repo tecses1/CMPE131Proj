@@ -7,7 +7,8 @@ public class Star : GameObject
     
     public Star (Transform t) : base(t )
     {
-        
+        //render is skipped on gameobjects without previous trasnforms... even if they're static.
+        this.previousTransform = t;
     }
 
     public override void Update()

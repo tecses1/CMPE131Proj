@@ -258,33 +258,37 @@ public class RenderManager
 
                 if (obj.disableRender) continue; // Skip if object has rendering disabled (e.g., for invisible hitboxes or optimization)
 
+                if (obj.previousTransform == null)  continue; //skip if we don't have interpolation capability.
+                //why? So ojects don't "sit" for a while on spawn
+                //also, it saves a little render time thats added to the time it takes to make the objects.
+                //so it reduces jitter. :) 
+
 
                 // Interpolation: Calculate the interpolated position based on previous and current transform
                 float interpolationOffsetX = obj.transform.rect.X;
                 float interpolationOffsetY = obj.transform.rect.Y;
                 float interpolationRotation = obj.transform.RotationRadians();
-                //Console.WriteLine("Rotation: " + obj.transform.rotation);
-                if (obj.previousTransform != null) {
-                    float prevRelX = obj.previousTransform.rect.X;
-                    float prevRelY = obj.previousTransform.rect.Y;
-                    
-                    float currRelX = obj.transform.rect.X;
-                    float currRelY = obj.transform.rect.Y ;
 
-                    // 2. Interpolate between the RELATIVE points
-                    float t = GetInterpolationFactor();
-                    interpolationOffsetX = prevRelX + (currRelX - prevRelX) * t;
-                    interpolationOffsetY = prevRelY + (currRelY - prevRelY) * t;
+                float prevRelX = obj.previousTransform.rect.X;
+                float prevRelY = obj.previousTransform.rect.Y;
+                
+                float currRelX = obj.transform.rect.X;
+                float currRelY = obj.transform.rect.Y ;
+
+                // 2. Interpolate between the RELATIVE points
+                float t = GetInterpolationFactor();
+                interpolationOffsetX = prevRelX + (currRelX - prevRelX) * t;
+                interpolationOffsetY = prevRelY + (currRelY - prevRelY) * t;
 
 
-                    //interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
-                    //interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
-                    float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180;
-                    float smoothedRotation = obj.previousTransform.rotation + (deltaRotation * GetInterpolationFactor());
+                //interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
+                //interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
+                float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180;
+                float smoothedRotation = obj.previousTransform.rotation + (deltaRotation * GetInterpolationFactor());
 
-                    // Apply to the actual Render transform
-                    interpolationRotation = smoothedRotation * (float)(Math.PI / 180.0);
-                }
+                // Apply to the actual Render transform
+                interpolationRotation = smoothedRotation * (float)(Math.PI / 180.0);
+                
                 //if (obj.GetType() == typeof(Projectile)) {
                 //    // For the local player, we want to use the actual position for rendering, not the interpolated one.
                 //    Console.WriteLine("Target: " + obj.transform.position.X + "," + obj.transform.position.Y + " | Interpolated: " + interpolationOffsetX + "," + interpolationOffsetY + " | Interpolation Factor: " + GetInterpolationFactor() + " Prev: " + obj.previousTransform?.position.X + "," + obj.previousTransform?.position.Y);
