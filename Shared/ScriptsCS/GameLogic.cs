@@ -326,6 +326,7 @@ public class GameLogic
                         //decode immediately to set initial values.
                         obj.Decode(reader);
 
+
                     }
                     else
                     {
@@ -333,6 +334,7 @@ public class GameLogic
                         obj.Store();
                         // 5. UPDATE the state
                         obj.Decode(reader);
+
                     }
                     //Console.WriteLine("Updating object");
                     //4.5 Store the previous state for interpolation.
