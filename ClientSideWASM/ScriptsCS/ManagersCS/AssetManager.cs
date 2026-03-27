@@ -10,6 +10,7 @@ public static class AssetManager
 
     public static Dictionary<string, GameAsset> _assets = new() {
         { "LocalPlayer", new GameAsset { Name = "LocalPlayer", FrameRefs = new [] { "images/spaceship.png" } } },
+        { "Enemy", new GameAsset { Name = "Enemy", FrameRefs = new [] { "images/spaceship.png" } } },
         { "ClientPlayer", new GameAsset { Name = "ClientPlayer", FrameRefs = new [] { "images/spaceship.png" } } },
         { "Player", new GameAsset { Name = "Player", FrameRefs = new [] { "images/spaceship.png"} } },
 

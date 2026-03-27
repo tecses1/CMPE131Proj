@@ -78,7 +78,7 @@ public class GameLogic
                     asteroid.hp -= proj.damage;
                     if (asteroid.hp <= 0)
                     {
-                        getPlayerWithUID(proj.owner).AddScore(10);
+                        //getPlayerWithUID(proj.owner).AddScore(10); returns null for enemies. standby.
                         asteroid.Kill();
                     }
                     break;
@@ -127,6 +127,28 @@ public class GameLogic
                     }
                     
                     break;
+                case (Enemy, Player):
+                case (Player, Enemy):
+                    Enemy enemy = A is Enemy ? (Enemy)A : (Enemy)B;
+                    Player player5 = A is Player ? (Player)A : (Player)B;
+                    player5.TakeDamage(100);
+                    enemy.hp -= 100;
+                    break;
+                case (Enemy, Projectile):
+                case (Projectile, Enemy):
+                    Enemy enemy2 = A is Enemy ? (Enemy)A : (Enemy)B;
+                    Projectile proj3 = A is Projectile ? (Projectile)A : (Projectile)B;
+                    if (proj3.owner != enemy2.uid)
+                    {
+                        proj3.Kill();
+                        enemy2.hp -= proj3.damage;
+                        if (enemy2.hp <= 0)
+                        {
+                            //getPlayerWithUID(proj3.owner).AddScore(50); returns null for enemies. standby.
+                            enemy2.Kill();
+                        }
+                    }
+                    break;
             }   
         }
 
@@ -143,16 +165,27 @@ public class GameLogic
                 }
                 continue;
             }
+            if (go is Enemy)
+            {
+                Enemy enemy = (Enemy)go;
+                enemy.TargetCenter();
+                continue;
+            }
             go.Kill();
         }
 
         
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
-            Asteroid newAsteroid = Asteroid.GenerateAsteroid();
+            if (Random.Shared.NextInt64(0,5) >= 3) { // 40% chance to spawn an enemy every 2 seconds. Adjust as needed.
+                Enemy e = Enemy.GenerateEnemy();
+                AddGameObject(e);
+            }else{
+                Asteroid newAsteroid = Asteroid.GenerateAsteroid();
             
-            if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.GetPosition());
-            AddGameObject(newAsteroid);
+                if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.GetPosition());
+                AddGameObject(newAsteroid);
+            }
             counter = DateTime.Now;
         }
 
@@ -235,6 +268,9 @@ public class GameLogic
                 break;
             case "Explosion":
                 newObj = new Explosion(defaultT, new Vector2(0,0), 0f);
+                break;
+            case "Enemy":
+                newObj = new Enemy(defaultT);
                 break;
             // Add more types here as your game grows
         }
