@@ -1,19 +1,13 @@
 
 
 namespace ClientSideWASM.Pages;
-
-using System.Numerics;
 using Blazorex;
 using Shared;
-using System.Diagnostics;
 public partial class Game
 {
     private CanvasManager? _canvasManager;
 
     private IRenderContext? _context;
-
-    private const int CanvasWidth = 1024;
-    private const int CanvasHeight = 768;
 
     public ClientInputWrapper inputWrapper;
     public GameManager main;
@@ -47,7 +41,7 @@ public partial class Game
 
         //create the canvas and events.
         _canvasManager?.CreateCanvas(
-            "keyrain",
+            "MainGame",
             new CanvasCreationOptions
             {
                 Hidden = false,
@@ -102,7 +96,7 @@ public partial class Game
 
         }
         
-        main.Render( timestamp); //skip rendering if we updated the game state to try and even out the frames.
+        main.Render( timestamp); 
 
 
         

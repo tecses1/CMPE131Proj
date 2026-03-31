@@ -1,45 +1,27 @@
 @page "/Home"
 @layout MainLayout
-
-<div>
-
-</div>
-
-
-<div>
-<div>
-    @if (nm.myLobby != "")
+@using Blazored.LocalStorage
+@inject IJSRuntime JS 
+@*Load resources defined in dictionary from asset manager*@
+<!--<img @ref="_myImage" src="./spaceship.png" hidden /> -->
+<div style="display:none">
+    @foreach (var asset in AssetManager._assets.Values)
     {
-        @:Your lobby: @nm.myLobby
-    }else{
-       
-        @: You're not currently in a lobby. Request one, or type one in if you know it! 
-         <input type="text" @bind="requestedLobby" class="form-control" placeholder="Lobby Name" />
-         <button @onclick="RequestNewLobby">Request New</button>
-         <button @onclick="RequestJoinLobby">Request Join</button>
-         if (failedToJoinLobby != "")
-         {
-             @: @failedToJoinLobby
-         }
+        @for (int i = 0; i < asset.Frames.Length; i++)
+        {
+            var index = i; 
+            <img @ref="asset.Frames[index]" 
+                 src="@asset.FrameRefs[index]" 
+                 alt="@asset.Name-@index" />
+        }
     }
 </div>
-<input type="text" @bind="userInput" class="form-control" placeholder="Enter text here..." />
+<PageTitle>Home</PageTitle>
 
-<button @onclick="SaveToStorage" class="btn btn-primary mt-2">Set Name</button>
+<div class="canvas">
+    <CanvasManager @ref="_canvasManager" />
+    <div class="status">
+        CMPE 131 Project | Benjamin Schnittker | Sofia Nguyen | Kekoa Sarmiento | Dylan Quach | Siddarth Kota
+    </div>
 </div>
-<div>
-    @if (userInput != null)
-    {
-        @:Hello @userInput
-    }
-</div>
-<button @onclick="NavigateToCounter">Launch game!</button>
 
-@code {
-    private void NavigateToCounter()
-    {
-
-
-        Nav.NavigateTo("/Game");//,true);
-    }
-}
