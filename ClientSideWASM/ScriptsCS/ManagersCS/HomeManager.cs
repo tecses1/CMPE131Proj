@@ -5,7 +5,10 @@ using Shared;
 using Blazored.LocalStorage;
 using System.Runtime.CompilerServices;
 using System.Drawing;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.AspNetCore.Components;
 namespace ClientSideWASM;
+
 public class HomeManager : RenderManager
 {
     public ClientInputWrapper userInput;
@@ -14,7 +17,8 @@ public class HomeManager : RenderManager
     public string failedToJoinLobby = "";
 
 
-
+    public DrawText editing;
+    public string editingPlaceholder;
     //text stuff
     List<DrawText> collideableTexts = new List<DrawText>();
         // main screen
@@ -23,9 +27,17 @@ public class HomeManager : RenderManager
             DrawText playText;
         //lobby screen
             DrawText lobbyTitle;
+            DrawText currentLobyText;
+            InputField lobbyInput;
+            DrawText launchText;
+            DrawText requestButton;
+            DrawText joinButton;
+
             DrawText lobbyBack;
         //settings screen
             DrawText settingsTitle;
+            InputField playerNameTextBox;
+            
             DrawText settingsBack;
 
     //bg stars
@@ -38,10 +50,12 @@ public class HomeManager : RenderManager
     IJSRuntime JS;
     ILocalStorageService localStorage;
     NetworkManager nm;
-
+    DateTime charTicker;
     public int cScreen = 0; //0 is main menu, 1 is lobby screen, 2 is settings
-    public HomeManager(IJSRuntime JS, ILocalStorageService localStorage, NetworkManager nm) : base(JS)
+    NavigationManager Nav;
+    public HomeManager(IJSRuntime JS, ILocalStorageService localStorage, NetworkManager nm, NavigationManager Nav) : base(JS)
     {
+        this.Nav = Nav;
         this.JS = JS;
         this.localStorage = localStorage;
         this.nm = nm;
@@ -119,7 +133,25 @@ public class HomeManager : RenderManager
         lobbyTitle = new DrawText("Lobbies", lobbyTitleTrasnform);
         RegisterText(lobbyTitle,false);   
 
+        Transform currentLobbyTransform = new Transform(Settings.CanvasWidth / 2, 200, 200, 50);
+        currentLobyText = new DrawText("Current Lobby: None", currentLobbyTransform);
+        RegisterText(currentLobyText,false);   
 
+        Transform lobbyTextBoxTransform = new Transform(Settings.CanvasWidth / 2, 300, 400, 50);
+        lobbyInput = new InputField("", lobbyTextBoxTransform);
+        RegisterText(lobbyInput,true);   
+
+        Transform requestButtonTransform = new Transform(Settings.CanvasWidth / 2-50, 400, 100, 50);
+        requestButton = new DrawText("Create", requestButtonTransform);
+        RegisterText(requestButton,true);   
+
+        Transform joinButtonTransform = new Transform(Settings.CanvasWidth / 2 + 50, 400, 100, 50);
+        joinButton = new DrawText("Join", joinButtonTransform);
+        RegisterText(joinButton,true);   
+
+        Transform launchTextTransform = new Transform(Settings.CanvasWidth / 2, 400, 250, 70);
+        launchText = new DrawText("LAUNCH!", launchTextTransform);
+        RegisterText(launchText,true);   
 
         Transform lobbyBackTransform = new Transform(Settings.CanvasWidth / 2, 500, 250, 50);
         lobbyBack = new DrawText("Back", lobbyBackTransform);
@@ -129,6 +161,11 @@ public class HomeManager : RenderManager
         Transform settingsTitleTransform = new Transform(Settings.CanvasWidth / 2, 100, 250, 70);
         settingsTitle = new DrawText("Settings", settingsTitleTransform);
         RegisterText(settingsTitle,false);   
+
+        Transform settingsPlayerNameTextBoxTransform = new Transform(Settings.CanvasWidth / 2, 200, 250, 50);
+        playerNameTextBox = new InputField(Settings.name, settingsPlayerNameTextBoxTransform);
+
+        RegisterText(playerNameTextBox,true);   
 
 
 
@@ -168,11 +205,16 @@ public class HomeManager : RenderManager
         {
             lobbyTitle.disableRender = false;
             lobbyBack.disableRender = false;
+            lobbyInput.disableRender = false;
+            requestButton.disableRender = false;
+            joinButton.disableRender = false;
+            currentLobyText.disableRender = false;
         }
         else if (screenNum == 2)
         {
             settingsTitle.disableRender = false;
             settingsBack.disableRender = false; 
+            playerNameTextBox.disableRender = false;
         }
     }
     public void MainScreen(List<DrawText> hovered)
@@ -206,8 +248,96 @@ public class HomeManager : RenderManager
         }
     }
 
-    public void LobbyScreen(List<DrawText> hovered)
+    public async Task LobbyScreen(List<DrawText> hovered)
     {
+        if (editing == lobbyInput)
+        {
+            //check if player clicked outside of the textbox.
+            bool check = userInput.CLeftPressed && !hovered.Contains(lobbyInput); 
+            if (lobbyInput.Update(userInput) || check) // handles the ticking
+            {
+                // Handle the case when the user presses Enter
+                editing = null; // stop editing
+
+            }
+        }
+        if (nm.myLobby == "")
+        {
+            currentLobyText.text = "Current Lobby: None";
+            this.launchText.disableRender = true;
+            this.requestButton.disableRender = false;
+            this.joinButton.disableRender = false;
+            this.lobbyInput.disableRender = false;
+        }
+        else
+        {
+            this.requestButton.disableRender = true;
+            this.joinButton.disableRender = true;
+            this.lobbyInput.disableRender = true;
+            this.launchText.disableRender = false;
+            currentLobyText.text = "Current Lobby: " + nm.myLobby;
+        }
+
+        if (hovered.Contains(joinButton))
+        {
+            joinButton.setTextColor(Color.Blue,255);
+            if (userInput.CLeftPressed)
+            {
+                bool success = await RequestJoinLobby(lobbyInput.placeholder);
+                if (success)
+                {
+                    this.currentLobyText.text = "Current Lobby: " + nm.myLobby;
+                }
+                else
+                {
+                    this.lobbyInput.setTextColor(Color.Red,255);
+                    this.lobbyInput.placeholder = "FAILED";
+                }
+            }
+        }
+        else
+        {
+            joinButton.setTextColor(Color.White,255);
+        }
+
+        if (hovered.Contains(requestButton))
+        {
+            requestButton.setTextColor(Color.Blue,255);
+            if (userInput.CLeftPressed)
+            {
+                bool success = await RequestNewLobby(lobbyInput.placeholder);
+                if (success)
+                {
+                    this.currentLobyText.text = "Current Lobby: " + nm.myLobby;
+                }
+                else
+                {
+                    this.lobbyInput.setTextColor(Color.Red,255);
+                    this.lobbyInput.placeholder = "FAILED";
+                }
+            }
+        }
+        else
+        {
+            requestButton.setTextColor(Color.White,255);
+        }
+
+        if (hovered.Contains(launchText))
+        {
+            launchText.setTextColor(Color.Blue,255);
+            if (userInput.CLeftPressed)
+            {
+                //launch the game!
+                //naviate to the game screen
+                Nav.NavigateTo("/Game");
+
+            }
+        }
+        else
+        {
+            launchText.setTextColor(Color.White,255);
+        }
+
         if (hovered.Contains(lobbyBack))
         {
             lobbyBack.setTextColor(Color.Blue,255);
@@ -220,10 +350,37 @@ public class HomeManager : RenderManager
         {
             lobbyBack.setTextColor(Color.White,255);
         }
+
+
+        if (hovered.Contains(lobbyInput))
+        {
+            lobbyInput.setFillColor(Color.LightYellow,255);
+            if (userInput.CLeftPressed)
+            {
+                editing = lobbyInput;
+            }
+        }
+        else
+        {
+            lobbyInput.setFillColor(Color.White,255);
+        }
     }
 
     public void SettingsScreen(List<DrawText> hovered)
     {
+        if (editing == playerNameTextBox)
+        {
+            //check if player clicked outside of the textbox.
+            bool check = userInput.CLeftPressed && !hovered.Contains(playerNameTextBox); 
+            if (playerNameTextBox.Update(userInput) || check) // handles the ticking
+            {
+                // Handle the case when the user presses Enter
+                editing = null; // stop editing
+                Settings.name = playerNameTextBox.placeholder; // save the new name
+                SaveToStorage(); // save to local storage and send to server
+            }
+        }
+
         if (hovered.Contains(settingsBack))
         {
             settingsBack.setTextColor(Color.Blue,255);
@@ -236,6 +393,21 @@ public class HomeManager : RenderManager
         {
             settingsBack.setTextColor(Color.White,255);
         }
+
+        if (hovered.Contains(playerNameTextBox))
+        {
+            playerNameTextBox.setFillColor(Color.LightYellow,255);
+            if (userInput.CLeftPressed)
+            {
+                editing = playerNameTextBox;
+            }
+        }
+        else
+        {
+            playerNameTextBox.setFillColor(Color.White,255);
+        }
+
+
     }
     //update functions. Unlike game, these are called at the same rate! 
     public override void Update()
@@ -291,9 +463,14 @@ public class HomeManager : RenderManager
 
 
     //network call functions
-    public async Task RequestNewLobby()
+    public async Task<bool> RequestNewLobby(string lobbyName)
     {
-        var response = await nm.client.SendWithResponse("{NewLobby}",null,"lobbyName");
+
+        if (lobbyName.Length == 0)
+        {
+            return false;
+        }
+        var response = await nm.client.SendWithResponse("{NewLobby}",null,lobbyName);
 
         if (response != null)
         {
@@ -302,15 +479,22 @@ public class HomeManager : RenderManager
             nm.isHost = true;
             nm.myLobby = lobby;
             Console.WriteLine("Lobby receieved: " +lobby);
+            return true;
         }
         else
         {
             Console.WriteLine("Server didn't respond in time.");
         }
+        return false;
     }
-    public async Task RequestJoinLobby()
+    public async Task<bool> RequestJoinLobby(string lobbyName)
     {
-        var response = await nm.client.SendWithResponse("{JoinLobby}",null,"lobbyName");
+        if (lobbyName.Length == 0)
+        {
+            return false;
+        }
+
+        var response = await nm.client.SendWithResponse("{JoinLobby}",null,lobbyName);
 
         if (response != null)
         {
@@ -318,16 +502,19 @@ public class HomeManager : RenderManager
             var resp = args[0];//what did the server say
             if (resp == "{Success}")
             {
-                this.nm.myLobby = "lobbyName";
+                this.nm.myLobby = lobbyInput.placeholder;
+                return true;
             }
             else
             {
+                return false;
                 //tell we failed to join
             }
         }
         else
         {
             Console.WriteLine("Server didn't respond in time.");
+            return false;
         }
 
     }

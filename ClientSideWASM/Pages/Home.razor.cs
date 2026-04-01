@@ -55,7 +55,7 @@ public partial class Home
             }
         );
         //Initialize my stuff.
-        home = new HomeManager(JS,LocalStorage,nm);
+        home = new HomeManager(JS,LocalStorage,nm,Nav);
         inputWrapper = new ClientInputWrapper();
     }
     private void OnCanvasReady(CanvasBase canvas)
