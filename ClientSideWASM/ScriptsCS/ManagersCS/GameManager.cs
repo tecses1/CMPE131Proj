@@ -16,6 +16,7 @@ public class GameManager : RenderManager
     //em for collision
 
     public  NetworkManager nm;
+    public InGameMenu gameMenu;
 
     public GameLogic gl;
 
@@ -76,6 +77,8 @@ public class GameManager : RenderManager
         RegisterGroupToRender(gl.GetPlayers());
         RegisterObjToRender(localPlayer);
 
+        gameMenu = new InGameMenu(this);
+
 
     }
     
@@ -134,8 +137,10 @@ void GenerateStars()
         cInput.OverwriteCameraToWorldPos(this);
         //make sure our input has our UID.
         this.cInput.owner = nm.client.assignedUID;
-        //send our input over to the server!
-        this.nm.client.Send("{Input}",cInput.ToBytes());
+        //send our input over to the server when pause menu is closed
+        if (!gameMenu.isVisible){
+            this.nm.client.Send("{Input}",cInput.ToBytes());
+        }
         localPlayer.cInput = (InputWrapper)cInput; //make sure to update our local player with the input wrapper so it can move while we wait for the gamestate update from the server.
         //update the local player immediately exactly as game logic would.
         localPlayer.UpdateBase();
@@ -143,6 +148,8 @@ void GenerateStars()
         base.Update();
         this.stateSize = nm.StateQueue.lastSize;
         updateTime = (int)updateTimer.ElapsedMilliseconds;
+
+        gameMenu.UpdateInput(cInput);   
 
 
 }
