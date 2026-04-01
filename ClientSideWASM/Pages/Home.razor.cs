@@ -23,70 +23,9 @@ public partial class Home
         }
         nm.client.Send("{SetName}",null,Settings.name);
         nm.client.Send("{SetPage}",null,this.GetType().Name);
-    }
-
-    public async Task RequestNewLobby()
-    {
-        var response = await nm.client.SendWithResponse("{NewLobby}",null,"lobbyName");
-
-        if (response != null)
-        {
-            // Populate the UI with the args returned from the server
-            var lobby = response.Args.ToList()[0];
-            nm.isHost = true;
-            nm.myLobby = lobby;
-            Console.WriteLine(lobby);
-            await InvokeAsync(StateHasChanged);
-        }
-        else
-        {
-            Console.WriteLine("Server didn't respond in time.");
-        }
-    }
-    public async Task RequestJoinLobby()
-    {
-        var response = await nm.client.SendWithResponse("{JoinLobby}",null,"lobbyName");
-
-        if (response != null)
-        {
-            var args = response.Args.ToList();
-            var resp = args[0];//what did the server say
-            if (resp == "{Success}")
-            {
-                this.nm.myLobby = "lobbyName";
-            }
-            else
-            {
-                //tell we failed to join
-            }
-            await InvokeAsync(StateHasChanged);
-        }
-        else
-        {
-            Console.WriteLine("Server didn't respond in time.");
-        }
-    
         
     }
-    //Called when button is pr essed, see above.
-    /*
-    private async Task SaveToStorage()
-    {
-        if (!string.IsNullOrWhiteSpace(userInput))
-        {
-            // Saves the current value of 'userInput' to local storage
-            
-            Settings.name = userInput;
-            await nm.client.Send("{SetName}",null,Settings.name);
-            await Save();
-        }
 
-    }*/
-    //Reference method. Called from OnIntializedAsync().
-    async Task Save(){
-        await LocalStorage.SetItemAsStringAsync("settingsSaveKey",Settings.Save());
-
-    }
 
 
     //canvas stuff
@@ -116,7 +55,7 @@ public partial class Home
             }
         );
         //Initialize my stuff.
-        home = new HomeManager(JS);
+        home = new HomeManager(JS,LocalStorage,nm);
         inputWrapper = new ClientInputWrapper();
     }
     private void OnCanvasReady(CanvasBase canvas)
@@ -170,12 +109,12 @@ public partial class Home
 
         // Most canvas mouse events let you know which button; if you want to branch
         // by button you can inspect 'e' here. For now assume left button press:
-        inputWrapper.loadMouseDown(true);
+        inputWrapper.loadMouseDown(e.Button == 0);
     }
     private void OnMouseUp(Blazorex.MouseClickEvent e)
     {
         if (_context is null) return;
 
-        inputWrapper.loadMouseUp(true);
+        inputWrapper.loadMouseUp(e.Button == 0);
     }
 }
