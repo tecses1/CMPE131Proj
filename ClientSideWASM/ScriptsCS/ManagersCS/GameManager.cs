@@ -140,7 +140,6 @@ void GenerateStars()
         //update the local player immediately exactly as game logic would.
         localPlayer.UpdateBase();
 
-
         base.Update();
         this.stateSize = nm.StateQueue.lastSize;
         updateTime = (int)updateTimer.ElapsedMilliseconds;

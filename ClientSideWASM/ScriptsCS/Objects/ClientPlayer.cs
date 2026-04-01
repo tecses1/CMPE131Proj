@@ -101,7 +101,7 @@ public class ClientPlayer : Player
             healthPercent = 1f;
         }
         // scale health width
-        healthBarFill.transform.rect.X = healthBarWidth * healthPercent;
+        healthBarFill.transform.rect.Width = healthBarWidth * healthPercent;
 
         if (newColor != currentHealthColor)
         {
