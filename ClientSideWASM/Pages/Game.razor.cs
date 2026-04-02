@@ -61,7 +61,7 @@ public partial class Game
             }
         );
         //Initialize my stuff.
-        main = new GameManager(JS,  nm);
+        main = new GameManager(JS,  nm, Nav);
         inputWrapper = new ClientInputWrapper();
     }
 

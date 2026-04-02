@@ -1,4 +1,6 @@
 namespace ClientSideWASM;
+
+using Microsoft.AspNetCore.Components;
 using Shared;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
@@ -9,7 +11,7 @@ using System.Security.Cryptography.X509Certificates;
 public class InGameMenu
 {
     GameManager gm;
-
+    NavigationManager Nav;
     public DrawText title;
     public DrawText exitButton;
 
@@ -18,9 +20,10 @@ public class InGameMenu
 
     public bool isVisible = false;
 
-    public InGameMenu(GameManager gm)
+    public InGameMenu(GameManager gm, NavigationManager Nav)
     {
         this.gm = gm;
+        this.Nav = Nav;
 
         Transform backgroundTransform = new Transform(Settings.CanvasWidth / 2, Settings.CanvasHeight / 2, 300, 500);
         backgroundRect = new DrawRect(backgroundTransform);
@@ -79,7 +82,9 @@ public class InGameMenu
                 exitButton.setTextColor(Color.Blue, 255);
                 if (input.LeftDown)
                 {
-                    Console.WriteLine("LEAVE LOBBY OR SUMN");
+                    this.gm.nm.client.Send("{LeaveLobby}");
+                    this.gm.nm.myLobby = "";
+                    Nav.NavigateTo("/Home");
                 }
             }
             else

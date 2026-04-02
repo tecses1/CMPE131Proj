@@ -223,11 +223,13 @@ public class GameLogic
 
     public void RemovePlayer(Player p)
     {
+        Console.WriteLine("Removing player: " + p.playerNameString);
         this.players.Remove(p);
     }
 
     public void AddPlayer(Player p)
     {
+        Console.WriteLine("adding player: " + p.playerNameString);
         p.RegisterGameLogic(this);
         this.players.Add(p);
     }
@@ -351,11 +353,12 @@ public class GameLogic
 
                     // 3. Look for the object in our local group
                     // (Note: For massive lists, a Dictionary is faster than .Find, but this is fine for now)
-                    GameObject obj = currentGroup.Find(o => o.uid == uid);
+                    GameObject obj = currentGroup.Find(o => o.uid.Equals(uid));
 
                     // 4. CREATE if it doesn't exist
                     if (obj == null)
                     {
+                        Console.WriteLine("Object with UID " + uidString + " not found, creating new " + className);
                         //Console.WriteLine("object does not exist, adding object: " + className);
                         obj = CreateGameObject(className, uidString);
                         currentGroup.Add(obj);
