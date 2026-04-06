@@ -119,7 +119,13 @@ public class User : NetworkModel
                     //We can handle some input on the server, but for now we just send it to the host to handle. 
                     myInputData = data;
                     break;
-
+                case "{LeaveLobby}":
+                    if (myLobby != null)
+                    {
+                        myLobby.RemoveUser(this);//.Remove(this);
+                        
+                    }
+                    break;
                 default:
                     Console.WriteLine("Error: Unknown Purpose: " + purpose);// new[] { "Error", "Unknown Command" };
                     break;

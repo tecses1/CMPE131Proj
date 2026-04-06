@@ -10,38 +10,24 @@ public static class AssetManager
 
     public static Dictionary<string, GameAsset> _assets = new() {
         { "LocalPlayer", new GameAsset { Name = "LocalPlayer", FrameRefs = new [] { "images/spaceship.png" } } },
+        { "Enemy", new GameAsset { Name = "Enemy", FrameRefs = new [] { "images/spaceship.png" } } },
         { "ClientPlayer", new GameAsset { Name = "ClientPlayer", FrameRefs = new [] { "images/spaceship.png" } } },
-        { "Player", new GameAsset { Name = "Player", FrameRefs = new [] { "images/spaceship.png", 
-                                                                            "images/projectileExplosion/explode0.png",
-                                                                            "images/projectileExplosion/explode1.png", 
-                                                                            "images/projectileExplosion/explode2.png", 
-                                                                            "images/projectileExplosion/explode3.png", 
-                                                                            "images/projectileExplosion/explode4.png", 
-                                                                            "images/projectileExplosion/explode5.png", 
-                                                                            "images/projectileExplosion/explode6.png" 
-        } } },
+        { "Player", new GameAsset { Name = "Player", FrameRefs = new [] { "images/spaceship.png"} } },
 
-        { "Projectile", new GameAsset { Name = "Projectile", FrameRefs = new[] {"images/projectile.png",
-                                                                                "images/projectileExplosion/explode0.png",
-                                                                                "images/projectileExplosion/explode1.png", 
-                                                                                "images/projectileExplosion/explode2.png", 
-                                                                                "images/projectileExplosion/explode3.png", 
-                                                                                "images/projectileExplosion/explode4.png", 
-                                                                                "images/projectileExplosion/explode5.png", 
-                                                                                "images/projectileExplosion/explode6.png"  } } },
+        { "Projectile", new GameAsset { Name = "Projectile", FrameRefs = new[] {"images/projectile.png" } } },
         { "Star", new GameAsset { Name = "Star", FrameRefs = new[] {"images/star.png"} } },
-        { "Asteroid", new GameAsset { Name = "Asteroid", FrameRefs = new[] {"images/asteroid.png",
-                                                                                "images/projectileExplosion/explode0.png",
-                                                                                "images/projectileExplosion/explode1.png", 
-                                                                                "images/projectileExplosion/explode2.png", 
-                                                                                "images/projectileExplosion/explode3.png", 
-                                                                                "images/projectileExplosion/explode4.png", 
-                                                                                "images/projectileExplosion/explode5.png", 
-                                                                                "images/projectileExplosion/explode6.png"  } } },
+        { "Asteroid", new GameAsset { Name = "Asteroid", FrameRefs = new[] {"images/asteroid.png" } } },
                                                                                     
         { "Healthpack", new GameAsset { Name = "Healthpack", FrameRefs = new[] { "images/hp.png" } } },
 
-        { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } }
+        { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
+        { "Explosion", new GameAsset { Name = "Explosion", FrameRefs = new[] { "images/projectileExplosion/explode0.png",
+                                                                                     "images/projectileExplosion/explode1.png",
+                                                                                     "images/projectileExplosion/explode2.png",
+                                                                                     "images/projectileExplosion/explode3.png",
+                                                                                     "images/projectileExplosion/explode4.png",
+                                                                                     "images/projectileExplosion/explode5.png",
+                                                                                     "images/projectileExplosion/explode6.png" } } }
     };
 
 

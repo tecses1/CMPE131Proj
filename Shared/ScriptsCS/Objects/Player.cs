@@ -30,7 +30,6 @@ public class Player : GameObject
     
     int guntype = 1;
     bool barrel = true;
-    Vector2 cVelocity = new Vector2(0,0);
     int shooting = -1;
 
     // death animation
@@ -39,7 +38,7 @@ public class Player : GameObject
     private DateTime deathTime;
     private TimeSpan respawnDelay = TimeSpan.FromSeconds(5);
 
-    private Vector2 spawnPoint = new Vector2(512, 384); // center of map
+    private Vector2 spawnPoint = new Vector2(0, 0); // center of map
     private Vector2 defaultSize = new Vector2(50, 50);
     private int defaultHealth = 1000;
 
@@ -82,30 +81,30 @@ public class Player : GameObject
 
         //Find what sides we're colliding with in closwise order from top. 
         // 1. Movement Input (Calculates direction * acceleration)
-        cVelocity.Y += (e.keys[2] ? acceleration : 0) - (e.keys[0] ? acceleration : 0);
-        cVelocity.X += (e.keys[3] ? acceleration : 0) - (e.keys[1] ? acceleration : 0);
+        transform.velocity.Y += (e.IsKeyDown("s",true) ? acceleration : 0) - (e.IsKeyDown("w",true) ? acceleration : 0);
+        transform.velocity.X += (e.IsKeyDown("d",true) ? acceleration : 0) - (e.IsKeyDown("a",true) ? acceleration : 0);
 
         // 2. Clamp Velocity (Native C# function)
-        cVelocity.X = Math.Clamp(cVelocity.X, -maxSpeed, maxSpeed);
-        cVelocity.Y = Math.Clamp(cVelocity.Y, -maxSpeed, maxSpeed);
+        transform.velocity.X = Math.Clamp(transform.velocity.X, -maxSpeed, maxSpeed);
+        transform.velocity.Y = Math.Clamp(transform.velocity.Y, -maxSpeed, maxSpeed);
 
         // 3. Apply Drag (Reduces velocity by a percentage)
         //Only when keys are not being pressed (slow to stop)
-        if ((e.keys[0] || e.keys[2]) == false) cVelocity.Y *= (1 - drag);
-        if ((e.keys[1] || e.keys[3]) == false) cVelocity.X *= (1 - drag);
+        if ((e.IsKeyDown("w",true) || e.IsKeyDown("s",true)) == false) transform.velocity.Y *= (1 - drag);
+        if ((e.IsKeyDown("a",true) || e.IsKeyDown("d")) == false) transform.velocity.X *= (1 - drag);
 
 
         // 4. Zero-out and Move
-        if (Math.Abs(cVelocity.X) < 0.01f) cVelocity.X = 0;
-        if (Math.Abs(cVelocity.Y) < 0.01f) cVelocity.Y = 0;
+        if (Math.Abs(transform.velocity.X) < 0.01f) transform.velocity.X = 0;
+        if (Math.Abs(transform.velocity.Y) < 0.01f) transform.velocity.Y = 0;
+        
+        //this.transform.position += cVelocity;
 
-        this.transform.position += cVelocity;
-
-
+        this.transform.Update();
 
 
     
-        if (e.keys[4] && (DateTime.Now - lastChange).Seconds > 1)
+        if (e.IsKeyDown("r",true) && (DateTime.Now - lastChange).Seconds > 1)
         {
             guntype++;
             if (guntype > 2) //to incorporate the missile
@@ -134,7 +133,20 @@ public class Player : GameObject
                     this.gl.AddGameObject(shot);
                 }else if (guntype == 2) // added for misile implementation
                 {
-                    GameObject shot = SpawnMissile(mousePos);
+                    GameObject[] targets = this.gl.collisionManager.GetNearby(this,500);
+                    GameObject target = null;
+                    if (targets.Length != 0)
+                    {
+                        foreach (GameObject go in targets)
+                        {
+                            if (go is Player || go is Asteroid) // only target other players or asteroids for now.
+                            {
+                                target = go;
+                                break;
+                            }
+                        }
+                    }
+                    GameObject shot = SpawnMissile(target);
                     this.gl.AddGameObject(shot);
                 }
 
@@ -146,19 +158,19 @@ public class Player : GameObject
     private Projectile[] SpawnGuntype1(Vector2 target)
     {
         shotCooldownSeconds = 0.09f;
-        Vector2 dir = target - transform.position;
+        Vector2 dir = target - transform.GetPosition();
         if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
         dir = Vector2.Normalize(dir);
 
-        float spawnOffset = MathF.Max(20, MathF.Min(transform.size.X, transform.size.Y) / 2f - 10f);
+        float spawnOffset = MathF.Max(20, MathF.Min(transform.rect.Width, transform.rect.Height) / 2f - 10f);
         
-        Vector2 spawnPos = transform.position - dir;// * spawnOffset;
+        Vector2 spawnPos = transform.GetPosition() - dir;// * spawnOffset;
         Vector2 velocity = dir * bulletSpeed * 1.25f; //boost speed for smaller bullets. 
 
         Transform proj1t = new Transform(spawnPos.X-transform.Left().X*16,spawnPos.Y-transform.Left().Y*16, 7,7, transform.rotation);
         Transform proj2t = new Transform(spawnPos.X+transform.Left().X*16,spawnPos.Y+transform.Left().Y*16, 7,7, transform.rotation);
-        var proj = new Projectile( proj1t, velocity, lifetime: 20);
-        var proj2 = new Projectile(proj2t, velocity, lifetime: 20);
+        var proj = new Projectile( proj1t, velocity, lifetime: 12);
+        var proj2 = new Projectile(proj2t, velocity, lifetime: 12);
 
         proj.owner = this.uid;
         proj2.owner = this.uid;
@@ -174,12 +186,12 @@ public class Player : GameObject
     private Projectile SpawnGuntype2(Vector2 target)
     {
         shotCooldownSeconds = 0.24f;
-        Vector2 dir = target - transform.position;
+        Vector2 dir = target - transform.GetPosition();
         if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
         dir = Vector2.Normalize(dir);
 
         
-        Vector2 spawnPos = transform.position - dir;// * spawnOffset;
+        Vector2 spawnPos = transform.GetPosition() - dir;// * spawnOffset;
         int offset = 16;
         if (barrel)
         {
@@ -189,7 +201,7 @@ public class Player : GameObject
         proj1t.RotateTo(target);
         Vector2 velocity = proj1t.Forward() * bulletSpeed;
 
-        var proj = new Projectile(proj1t, velocity, lifetime: 56);
+        var proj = new Projectile(proj1t, velocity, lifetime: 36);
         proj.owner = this.uid;
         proj.damage = 18;
 
@@ -198,18 +210,24 @@ public class Player : GameObject
         return proj;
     }
 
- private Missile SpawnMissile(Vector2 target)
-{
-    shotCooldownSeconds = 2.0f;
+    private Missile SpawnMissile(GameObject target)
+    {
+        shotCooldownSeconds = 2.0f;
 
-    Transform t = new Transform(transform.position.X, transform.position.Y, 15, 20);
-    t.RotateTo(target);
+        Transform t = new Transform(transform.rect.X, transform.rect.Y, 15, 20);
+        if (target == null)
+        {
+            t.rotation = this.transform.rotation;
+        }
 
-    Missile m = new Missile(t);
-    m.velocity = t.Forward() * 10f;
-    m.owner = this.uid;
-    return m;
-}
+        Missile m = new Missile(t,t.Forward() * 10f);
+        m.target = target;
+        m.LifetimeFrames = 120;
+        m.owner = this.uid;
+
+
+        return m;
+    }
     //score
     public void AddScore(int points)
     {
@@ -243,13 +261,13 @@ public class Player : GameObject
         IsDead = true;
         deathTime = DateTime.Now;
         disableCollision = true;
-        cVelocity = Vector2.Zero;
+        transform.velocity = Vector2.Zero;
         Console.WriteLine($"{playerNameString} died!");
     }
     private void Respawn()
     {
-        transform.position = spawnPoint;
-        transform.size = defaultSize;
+        transform.SetPosition(spawnPoint);
+        //transform.size = defaultSize;
         CurrentHealth = defaultHealth;
         IsDead = false;
         disableCollision = false;

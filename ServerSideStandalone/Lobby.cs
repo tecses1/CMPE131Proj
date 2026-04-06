@@ -34,15 +34,33 @@ public class Lobby
     {
 
         users.Add(user);
-
+        Console.WriteLine("user added: " +user.name + ", Debug: " + users.Count);
+        //GeneratePlayer(user);
+    }
+    public void RemoveUser(User user)
+    {
+        try{
+        gl.getPlayerWithUID(user.uid)?.Kill();
+        }catch(Exception e)
+            {
+                Console.WriteLine("Werird...Player not found. It was already removed?");
+            }
+        users.Remove(user);
+        user.myLobby = null;
+        user.myInputData = null;
+        Console.WriteLine("user removed: " + user.name + ", Debug: " + users.Count);
         
-        //Add a player.
-        Player p = new Player(new Transform(GameConstants.worldSizeX / 2, GameConstants.worldSizeY/2, 50,50));
-        p.playerNameString = user.name;
-        p.uid = user.uid;
+
+    }
+    public void GeneratePlayer(User u)
+    {
+                //Add a player, 0,0 is center of world.
+        Player p = new Player(new Transform(0, 0, 50,50));
+        p.playerNameString = u.name;
+        p.uid = u.uid;
         gl.AddPlayer(p);
         p.RegisterGameLogic(gl);
-        Console.WriteLine("user added: " +user.name + ", Debug: " + users.Count);
+        Console.WriteLine("Making new player: " + p.playerNameString);  
     }
     public bool TimeOut()
     {
@@ -50,6 +68,12 @@ public class Lobby
     }
     public void Update()
     {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            node.PlayerCount = users.Count;
+            node.UserList = GetUsers();
+            node.tps = "Ticks per second: " + tps;
+        });
         if (isEmpty())
         {
             timer.Start();
@@ -58,15 +82,6 @@ public class Lobby
         }
         else
         {
-                // Update the lobby node information
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                node.PlayerCount = users.Count;
-                node.UserList = GetUsers();
-                node.tps = "Ticks per second: " + tps;
-                });
-
-            
             timer.Reset();
         }
         ticks++;
@@ -81,11 +96,17 @@ public class Lobby
                 continue;
             }
             InputWrapper input = InputWrapper.FromBytes(users[i].myInputData);
+
             Player p = gl.getPlayerWithUID(input.owner);
-            if (p != null)
+            if (p != null) // if a player exists, apply input
             {
                 p.cInput = input;
-            }else Console.WriteLine("Player with " + input.owner + " not found. Input not registered!");
+            }
+            else //otherwise, we should check if we have input and make the player
+            {
+                GeneratePlayer(users[i]);
+                
+            } 
         }
         //update the world.
         gl.Update();

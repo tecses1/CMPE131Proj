@@ -44,10 +44,10 @@ public static class NetworkMemberCache
         }else if (type == typeof(Transform))
         {
             Transform t = (Transform)value;
-            writer.Write(t.position.X);
-            writer.Write(t.position.Y);
-            writer.Write((int)t.size.X);
-            writer.Write((int)t.size.Y);
+            writer.Write(t.rect.X);
+            writer.Write(t.rect.Y);
+            writer.Write((int)t.rect.Width);
+            writer.Write((int)t.rect.Height);
             writer.Write(t.rotation);
 
         }

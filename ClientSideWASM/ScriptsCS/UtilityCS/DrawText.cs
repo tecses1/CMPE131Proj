@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using Shared;
 
-public class Text : Rect
+public class DrawText : DrawRect
 {
 
     
@@ -22,7 +22,7 @@ public class Text : Rect
 
 
 
-    public Text(string text, Transform t, float offsetX = 0, float offsetY = 0) : base( t)
+    public DrawText(string text, Transform t, float offsetX = 0, float offsetY = 0) : base( t)
     {
         this.transform = t;
         this.text = text;
@@ -36,12 +36,12 @@ public class Text : Rect
     }
     public override void Register(RenderManager rm)
     {
-        rm.RegisterTextToRender(this);
+        rm.RegisterDrawTextToRender(this);
            
     }
     public virtual void Unregister(RenderManager rm)
     {
-        rm.UnregisterText(this);
+        rm.UnregisterDrawText(this);
     }
     public void setTextColor(Color c,int alpha)
     {

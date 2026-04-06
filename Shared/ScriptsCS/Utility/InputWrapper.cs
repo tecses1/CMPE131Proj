@@ -7,8 +7,7 @@ public class InputWrapper
     public Guid owner;
     public DateTime timeStamp;
     // WASD keys
-    public bool[] keys = { false, false, false, false, false, false };
-
+    public Dictionary<string, bool> keys = new Dictionary<string, bool>();
     // store mouse state ourselves (Event args from Blazorex are read-only / double)
     public double MouseX { get; set; } = -1.0; //impossible. know if this is wrong.
     public double MouseY { get; set; } = -1.0;
@@ -23,33 +22,8 @@ public class InputWrapper
 
 
     public InputWrapper() { }
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-        
-        // Header with the Owner ID and Timestamp
-        sb.AppendLine($"--- Input Frame [{timeStamp:HH:mm:ss.fff}] ---");
-        sb.AppendLine($"Owner: {owner.ToString().Substring(0, 8)}..."); // Shortened Guid for readability
 
-        // Keys Visualization
-        // Mapping keys[0-3] to WASD for easy debugging
-        char w = keys[0] ? 'W' : '_';
-        char a = keys[1] ? 'A' : '_';
-        char s = keys[2] ? 'S' : '_';
-        char d = keys[3] ? 'D' : '_';
-        // Mapping keys[4-5] to Space/Shift or others
-        string extra = $"{(keys[4] ? "[K4]" : "")} {(keys[5] ? "[K5]" : "")}";
-
-        sb.AppendLine($"Movement: [{w}{a}{s}{d}] {extra}");
-
-        // Mouse & Clicks
-        string clickState = LeftPressed ? "PRESSED (Edge)" : (LeftDown ? "HELD" : "idle");
-        sb.AppendLine($"Mouse: ({MouseX:F1}, {MouseY:F1}) | Left: {clickState}");
-
-        return sb.ToString();
-    }
-
-    public byte[] ToBytes()
+public byte[] ToBytes()
     {
         using (var ms = new MemoryStream())
         {
@@ -61,13 +35,27 @@ public class InputWrapper
                 // Write DateTime (8 bytes - ticks)
                 writer.Write(timeStamp.Ticks);
 
-                // Pack 6 booleans into 1 byte (bitmask)
-                byte keyMask = 0;
-                for (int i = 0; i < keys.Length; i++)
+                // --- NEW DICTIONARY SERIALIZATION ---
+                // 1. Gather only the keys that are currently pressed down
+                List<string> activeKeys = new List<string>();
+                foreach (var kvp in keys)
                 {
-                    if (keys[i]) keyMask |= (byte)(1 << i);
+                    if (kvp.Value) 
+                    {
+                        activeKeys.Add(kvp.Key);
+                    }
                 }
-                writer.Write(keyMask);
+
+                // 2. Write how many keys are currently pressed
+                // A byte is perfect here (max 255 simultaneous keys is plenty)
+                writer.Write((byte)activeKeys.Count);
+
+                // 3. Write the actual string names of the pressed keys
+                foreach (string key in activeKeys)
+                {
+                    writer.Write(key); // BinaryWriter handles string length-prefixing automatically
+                }
+                // ------------------------------------
 
                 // Mouse Data (Double = 8 bytes each)
                 writer.Write(MouseX);
@@ -75,7 +63,7 @@ public class InputWrapper
                 writer.Write(MouseXWorld);
                 writer.Write(MouseYWorld);
 
-                // Click states (Could be packed too, but keeping separate for clarity)
+                // Click states
                 writer.Write(LeftDown);
                 writer.Write(LeftPressed);
 
@@ -91,6 +79,8 @@ public class InputWrapper
             using (var reader = new BinaryReader(ms))
             {
                 var wrapper = new InputWrapper();
+                // Ensure the dictionary is initialized
+                wrapper.keys = new Dictionary<string, bool>();
 
                 // Read Guid
                 wrapper.owner = new Guid(reader.ReadBytes(16));
@@ -98,18 +88,24 @@ public class InputWrapper
                 // Read DateTime
                 wrapper.timeStamp = new DateTime(reader.ReadInt64());
 
-                // Unpack keys from bitmask
-                byte keyMask = reader.ReadByte();
-                for (int i = 0; i < wrapper.keys.Length; i++)
+                // --- NEW DICTIONARY DESERIALIZATION ---
+                // 1. Find out how many keys are pressed
+                byte activeKeyCount = reader.ReadByte();
+
+                // 2. Read each string and set it to true in the dictionary
+                for (int i = 0; i < activeKeyCount; i++)
                 {
-                    wrapper.keys[i] = (keyMask & (1 << i)) != 0;
+                    string keyName = reader.ReadString();
+                    wrapper.keys[keyName] = true;
                 }
+                // --------------------------------------
 
                 // Read Mouse Data
                 wrapper.MouseX = reader.ReadDouble();
                 wrapper.MouseY = reader.ReadDouble();
                 wrapper.MouseXWorld = reader.ReadDouble();
                 wrapper.MouseYWorld = reader.ReadDouble();
+                
                 // Read Click states
                 wrapper.LeftDown = reader.ReadBoolean();
                 wrapper.LeftPressed = reader.ReadBoolean();
@@ -118,6 +114,23 @@ public class InputWrapper
             }
         }
     }
+    public bool IsKeyDown(string key, bool ignoreCase = false)
+    {
+        if (!ignoreCase)
+        {
+            // Original behavior: Check for exact case match.
+            // Returns true only if the key exists AND its value is true.
+            return keys.TryGetValue(key, out bool isDown) && isDown;
+        }
 
-    
+        // Ignore case behavior: Check both lowercase and uppercase variations.
+        string lowerKey = key.ToLower();
+        string upperKey = key.ToUpper();
+
+        bool isLowerDown = keys.TryGetValue(lowerKey, out bool lDown) && lDown;
+        bool isUpperDown = keys.TryGetValue(upperKey, out bool uDown) && uDown;
+
+        // Return true if either the lowercase OR the uppercase version is currently pressed.
+        return isLowerDown || isUpperDown;
+    }
 }

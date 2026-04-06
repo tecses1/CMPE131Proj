@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.AspNetCore.Components;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 
@@ -16,6 +18,8 @@ public class GameManager : RenderManager
     //em for collision
 
     public  NetworkManager nm;
+    public InGameMenu gameMenu;
+    public NavigationManager Nav;
 
     public GameLogic gl;
 
@@ -23,7 +27,7 @@ public class GameManager : RenderManager
     public List<ClientPlayer> clientPlayers = new List<ClientPlayer>();
     public List<GameObject> backgroundStars = new List<GameObject>();
 
-    Text isLocal;
+    DrawText isLocal;
 
     ClientInputWrapper cInput;
     
@@ -34,47 +38,38 @@ public class GameManager : RenderManager
 
 
 
-    public GameManager(IJSRuntime JSRuntime,  NetworkManager nm) : base(JSRuntime)
+    public GameManager(IJSRuntime JSRuntime,  NetworkManager nm, NavigationManager Nav) : base(JSRuntime)
     {
+        this.Nav = Nav;
         this.nm = nm;
         nm.Initialize(this);
         
         //initialize the game logic which handles the game behavior.
         this.gl = new GameLogic();
 
-        // Pre-populate asteroids
-        for (int i = 0; i < 50; i++) // choose a number based on density
-        {
-            Asteroid a = Asteroid.GenerateAsteroid();
-            gl.AddGameObject(a);
-        }
-
-        // Pre-populate health packs
-        for (int i = 0; i < 10; i++) // fewer than asteroids, to avoid clutter
-        {
-            Healthpack hp = Healthpack.GenerateHealthPack();
-            gl.AddGameObject(hp);
-        }
-
         GenerateStars();
         Transform t = new Transform(Settings.CanvasWidth/2, 25, 300,50);
-        isLocal = new Text("Playing Locally ", t);
+        isLocal = new DrawText("Playing Locally ", t);
         isLocal.worldSpace = false;
 
         //Create local player, add to GameLogic? 
         localPlayer = new LocalPlayer(this, new Transform(GameConstants.worldSizeX/2,GameConstants.worldSizeY/2,50,50));
         //make sure local player has UID for finding updates.
         localPlayer.uid = nm.client.assignedUID;
+        Console.WriteLine("New local made: " + localPlayer.uid);
         localPlayer.isLocalPlayer = true;
         //Add the local player to the players.
         gl.AddPlayer(localPlayer);
+        localPlayer.disableRender = true;
         //add groups to render manager by reference.
-
+        
 
         RegisterGroupToRender(backgroundStars);
         RegisterGroupToRender(gl.GetActiveObjects());
         RegisterGroupToRender(gl.GetPlayers());
-        RegisterObjToRender(localPlayer);
+        //RegisterObjToRender(localPlayer);
+
+        gameMenu = new InGameMenu(this, Nav);
 
 
     }
@@ -93,8 +88,8 @@ void GenerateStars()
     Console.WriteLine("spawning " + starCount + " stars for bg");
     for (int i = 0; i < starCount; i++)
     {
-        int x = r.Next(0, GameConstants.worldSizeX);
-        int y = r.Next(0, GameConstants.worldSizeY);
+        int x = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
+        int y = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
         
         int size = (int)Math.Clamp(Settings.minSize + r.NextDouble() * Settings.maxSize, Settings.minSize, Settings.maxSize);
         
@@ -134,16 +129,19 @@ void GenerateStars()
         cInput.OverwriteCameraToWorldPos(this);
         //make sure our input has our UID.
         this.cInput.owner = nm.client.assignedUID;
-        //send our input over to the server!
-        this.nm.client.Send("{Input}",cInput.ToBytes());
+        //send our input over to the server when pause menu is closed
+        if (!gameMenu.isVisible){
+            this.nm.client.Send("{Input}",cInput.ToBytes());
+        }
         localPlayer.cInput = (InputWrapper)cInput; //make sure to update our local player with the input wrapper so it can move while we wait for the gamestate update from the server.
         //update the local player immediately exactly as game logic would.
         localPlayer.UpdateBase();
 
-
         base.Update();
         this.stateSize = nm.StateQueue.lastSize;
         updateTime = (int)updateTimer.ElapsedMilliseconds;
+
+        gameMenu.UpdateInput(cInput);   
 
 
 }
@@ -154,13 +152,18 @@ void GenerateStars()
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
+
+        if (!gl.GetPlayers().Contains(localPlayer))
+        {
+            //Console.WriteLine("Local player not found in gamestate, adding local player to gamestate. Weird.");
+            gl.AddPlayer(localPlayer);
+        }
         foreach (Player p in gl.GetPlayers())
         {
-            if (p == localPlayer) continue; //ignore the local player, we already know this one is fixed.
+            //ignore the local player, we already know this one is fixed.
             if (p.GetType() == typeof(Player)) //the game logic class created a player.
             {
-                Console.WriteLine("Player class");
-
+                Console.WriteLine("New player class found...");
                 gl.RemovePlayer(p);
                 //replace it with our client player that handles rendering.
             
@@ -173,9 +176,10 @@ void GenerateStars()
 
                 RegisterObjToRender(cp);//make sure we tell the render manager HEY! This object needs to be rendered!
                 //Because we modififed the collection, we have to close this loop.
-                break;
+                return;
 
             }
+
 
         }
     }
