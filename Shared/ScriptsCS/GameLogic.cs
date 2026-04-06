@@ -293,9 +293,9 @@ public class GameLogic
         return this.GetGameState(frameStamp, players, activeObjects);
     }
 
-    public long LoadGameState(byte[] gameState)
+    public long LoadGameState(byte[] gameState, List<GameObject> newObjects = null)
     {
-        return this.LoadGameState(gameState, players,activeObjects);
+        return this.LoadGameState(gameState, newObjects, players, activeObjects);
     }
     //Go through all groups passed, and, in order, write their meta data and object data.
     byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
@@ -319,7 +319,8 @@ public class GameLogic
             return ms.ToArray();
         }
     }
-    long LoadGameState(byte[] stateData, params List<GameObject>[] localGroups)
+    //give all the new objects on return! 
+    long LoadGameState(byte[] stateData,  List<GameObject> newObjects = null, params List<GameObject>[] localGroups)
     {
 
         using (MemoryStream ms = new MemoryStream(stateData))
@@ -358,9 +359,13 @@ public class GameLogic
                     // 4. CREATE if it doesn't exist
                     if (obj == null)
                     {
-                        Console.WriteLine("Object with UID " + uidString + " not found, creating new " + className);
+                        //Console.WriteLine("Object with UID " + uidString + " not found, creating new " + className);
                         //Console.WriteLine("object does not exist, adding object: " + className);
                         obj = CreateGameObject(className, uidString);
+                        if (newObjects != null)
+                        {
+                            newObjects.Add(obj);
+                        }
                         currentGroup.Add(obj);
                         //decode immediately to set initial values.
                         obj.Decode(reader);

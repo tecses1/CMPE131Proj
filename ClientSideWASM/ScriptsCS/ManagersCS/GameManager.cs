@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components;
+using ClientSideWASM.Pages;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 
@@ -26,6 +27,7 @@ public class GameManager : RenderManager
     public LocalPlayer localPlayer;
     public List<ClientPlayer> clientPlayers = new List<ClientPlayer>();
     public List<GameObject> backgroundStars = new List<GameObject>();
+    public List<GameObject> incomingObjects = new List<GameObject>(); //used to hold objects that are created from gamestate updates, so we can add them to the render manager after loading the gamestate. 
 
     DrawText isLocal;
 
@@ -152,19 +154,25 @@ void GenerateStars()
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
-
-        if (!gl.GetPlayers().Contains(localPlayer))
-        {
-            //Console.WriteLine("Local player not found in gamestate, adding local player to gamestate. Weird.");
-            gl.AddPlayer(localPlayer);
-        }
-        foreach (Player p in gl.GetPlayers())
-        {
+        //The player is removed by the gamestate update when no update has been made. Keep adding until updates apply.
+        foreach (GameObject go in incomingObjects) //These are objects created by gamestate.
+        { //we need to replace them with our client side "copies", that have render capabilities.
             //ignore the local player, we already know this one is fixed.
-            if (p.GetType() == typeof(Player)) //the game logic class created a player.
+            if (go.GetType() == typeof(Player)) //the game logic class created a player.
             {
-                Console.WriteLine("New player class found...");
+                Player p = (Player)go;  
                 gl.RemovePlayer(p);
+                //Replace the player with our local player.
+                //The gamestate keeps making new ones until the object is confirmed.
+                //Just keep replacing it until it doesn't need to, anymore.
+                if (p.uid == localPlayer.uid)
+                {
+                    gl.RemovePlayer(p);
+                    gl.AddPlayer(localPlayer);
+                    continue;
+                }
+                Console.WriteLine("New player class found...");
+
                 //replace it with our client player that handles rendering.
             
                 ClientPlayer cp = new ClientPlayer(this, p.transform);
@@ -179,9 +187,14 @@ void GenerateStars()
                 return;
 
             }
-
-
+            if (go.GetType() == typeof(Enemy))
+            {
+                //Replace the enemy with our client side render that handles healthbars! :) 
+            }
+        
         }
+        incomingObjects.Clear();
+
     }
 
 
@@ -228,7 +241,7 @@ void GenerateStars()
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
 
-            gl.LoadGameState(gameState);
+            gl.LoadGameState(gameState, incomingObjects);
             GameStateCheck();
             //CenterCameraOn(this.localPlayer.transform, false, false);
             localPlayer.CenterCameraOnMe();
