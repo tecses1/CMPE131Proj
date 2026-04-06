@@ -149,7 +149,7 @@ void GenerateStars()
 }
 
     
-    public void GameStateCheck()
+    public void GameStateCheck(List<GameObject> incomingObjects)
     {
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
@@ -175,14 +175,25 @@ void GenerateStars()
 
                 //replace it with our client player that handles rendering.
             
-                ClientPlayer cp = new ClientPlayer(this, p.transform);
-                //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
-                cp.uid = p.uid;
-                cp.playerName.text = p.playerNameString;
-                gl.AddPlayer(cp);
-                clientPlayers.Add(cp);
-
-                RegisterObjToRender(cp);//make sure we tell the render manager HEY! This object needs to be rendered!
+                ClientPlayer cp = clientPlayers.Find(x => x.uid == p.uid);
+                if (cp == null)
+                {
+                    //we already have this player, so we need to remove the duplicate we just made and stop.
+                    ClientPlayer newPlayer = new ClientPlayer(this, p.transform);
+                    //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
+                    newPlayer.uid = p.uid;
+                    newPlayer.playerName.text = p.playerNameString;
+                    gl.AddPlayer(newPlayer);
+                    clientPlayers.Add(newPlayer);
+                    RegisterObjToRender(newPlayer);
+                    continue;
+                }
+                else
+                {
+                    //If the player exists in ClientPlayers, but was removed from gamestate for some reason, and its being readded
+                    gl.AddPlayer(cp);
+                }
+                //make sure we tell the render manager HEY! This object needs to be rendered!
                 //Because we modififed the collection, we have to close this loop.
                 return;
 
@@ -193,7 +204,6 @@ void GenerateStars()
             }
         
         }
-        incomingObjects.Clear();
 
     }
 
@@ -242,7 +252,9 @@ void GenerateStars()
             _timeSinceLastLoad = 0;
 
             gl.LoadGameState(gameState, incomingObjects);
-            GameStateCheck();
+            Console.WriteLine("debug: " + incomingObjects.Count);
+            GameStateCheck(incomingObjects);
+            incomingObjects.Clear();
             //CenterCameraOn(this.localPlayer.transform, false, false);
             localPlayer.CenterCameraOnMe();
 

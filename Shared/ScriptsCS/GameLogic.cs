@@ -16,6 +16,8 @@ public class GameLogic
 
     List<GameObject> objsToAdd = new List<GameObject>();
 
+    List<GameObject> newObjectsLoaded = new List<GameObject>();
+    List<GameObject> destroyedObjectsLoaded = new List<GameObject>();
 
     DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
@@ -293,13 +295,30 @@ public class GameLogic
         return this.GetGameState(frameStamp, players, activeObjects);
     }
 
-    public long LoadGameState(byte[] gameState, List<GameObject> newObjects = null)
+    public long LoadGameState(byte[] gameState, List<GameObject> newObjects = null, List<GameObject> destroyedObjects = null)
     {
-        return this.LoadGameState(gameState, newObjects, players, activeObjects);
+        long r = this.loadGameState(gameState, players, activeObjects);
+
+        if (newObjects != null)
+        {
+            newObjects.AddRange(this.newObjectsLoaded);
+        }
+
+        if (destroyedObjects != null)
+        {
+            destroyedObjects.AddRange(this.destroyedObjectsLoaded);
+        }
+        this.newObjectsLoaded.Clear();
+        this.destroyedObjectsLoaded.Clear();
+        return r;
     }
     //Go through all groups passed, and, in order, write their meta data and object data.
     byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
     {
+        //Make sure buffers are clear!
+        this.newObjectsLoaded.Clear();
+        this.destroyedObjectsLoaded.Clear();
+
         using (MemoryStream ms = new MemoryStream())
         using (BinaryWriter writer = new BinaryWriter(ms))
         {
@@ -320,7 +339,7 @@ public class GameLogic
         }
     }
     //give all the new objects on return! 
-    long LoadGameState(byte[] stateData,  List<GameObject> newObjects = null, params List<GameObject>[] localGroups)
+    long loadGameState(byte[] stateData, params List<GameObject>[] localGroups)
     {
 
         using (MemoryStream ms = new MemoryStream(stateData))
@@ -362,10 +381,7 @@ public class GameLogic
                         //Console.WriteLine("Object with UID " + uidString + " not found, creating new " + className);
                         //Console.WriteLine("object does not exist, adding object: " + className);
                         obj = CreateGameObject(className, uidString);
-                        if (newObjects != null)
-                        {
-                            newObjects.Add(obj);
-                        }
+                        newObjectsLoaded.Add(obj);
                         currentGroup.Add(obj);
                         //decode immediately to set initial values.
                         obj.Decode(reader);
@@ -392,7 +408,9 @@ public class GameLogic
                     if (!receivedUids.Contains(currentGroup[k].uid))
                     {
                         // Call any necessary destroy logic here (e.g., particle effects, physics cleanup)
+                        destroyedObjectsLoaded.Add(currentGroup[k]);
                         currentGroup.RemoveAt(k);
+                        
                     }
                 }
             }
