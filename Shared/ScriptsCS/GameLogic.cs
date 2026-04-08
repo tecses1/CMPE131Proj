@@ -188,9 +188,9 @@ public class GameLogic
             }
             if(Random.Shared.NextInt64(0,10) > 6)
             {
-                Enemy a = Enemy.GenerateEnemy();
-                AlienSM UFO = new AlienSM(a.transform);
-                
+                //Enemy a = Enemy.GenerateEnemy();
+
+                AlienSM UFO = new AlienSM(Enemy.GenerateTransform());
                 AddGameObject(UFO);
             }
 
@@ -284,8 +284,8 @@ public class GameLogic
                 break;
             // Add more types here as your game grows
             case "AlienSM":
-            newObj = new AlienSM(defaultT);
-            break;
+                newObj = new AlienSM(defaultT);
+                break;
         }
         if (newObj == null)
         {

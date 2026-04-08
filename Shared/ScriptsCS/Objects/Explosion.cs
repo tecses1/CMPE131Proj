@@ -23,14 +23,14 @@ public class Explosion : GameObject
         cDeathAnim -= 1;
         if (cDeathAnim <= 0)
         {
-            if (currentFrame > 6)
-            {
-                base.Kill();
-            }
-            else
-            {
+
                 currentFrame += 1;
-            }
+                if (currentFrame > 5)
+                {
+                     base.Kill();
+
+                }
+            
 
             cDeathAnim = deathAnimSpeed;
         }

@@ -35,7 +35,7 @@ public class Enemy : GameObject
 
         }
 
-        public void Fire()
+        public virtual void Fire()
         {
             Projectile proj = new Projectile(new Transform(this.transform.rect.X, this.transform.rect.Y, 10, 10,this.transform.rotation), this.transform.Forward() * 20f, lifetime: 60);
             proj.owner = this.uid;
@@ -140,9 +140,8 @@ public class Enemy : GameObject
             base.Kill();
             
         }
-
-    //Helper function to spawn an enemy on world bounds.
-    public static Enemy GenerateEnemy()
+    //generate random trasnform out outside bundaries of world
+        public static Transform GenerateTransform()
     {
         Random r = new Random();
         int size = 50;
@@ -173,11 +172,19 @@ public class Enemy : GameObject
 
         }
         Transform t = new Transform(spawnX, spawnY, size, size);
-        Enemy e = new Enemy(t);
+        //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
+        return t;
+        //gl.AddGameObject(e):
+        }
+    //Helper function to spawn an enemy on world bounds.
+    public static Enemy GenerateEnemy()
+    {
+
+        Enemy e = new Enemy(GenerateTransform());
         //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
         return e;
         //gl.AddGameObject(e):
-    }
+        }
     }
     
 
