@@ -9,6 +9,7 @@ public static class AssetManager
     //I'm sorry- there's no better way.
 
     public static Dictionary<string, GameAsset> _assets = new() {
+        { "MissingImage", new GameAsset { Name = "MissingImage", FrameRefs = new[] { "missing.png" } } },
         { "LocalPlayer", new GameAsset { Name = "LocalPlayer", FrameRefs = new [] { "images/spaceship.png" } } },
         { "Enemy", new GameAsset { Name = "Enemy", FrameRefs = new [] { "images/spaceship.png" } } },
         { "ClientPlayer", new GameAsset { Name = "ClientPlayer", FrameRefs = new [] { "images/spaceship.png" } } },
