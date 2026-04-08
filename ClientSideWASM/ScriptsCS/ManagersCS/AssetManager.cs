@@ -27,7 +27,10 @@ public static class AssetManager
                                                                                      "images/projectileExplosion/explode3.png",
                                                                                      "images/projectileExplosion/explode4.png",
                                                                                      "images/projectileExplosion/explode5.png",
-                                                                                     "images/projectileExplosion/explode6.png" } } }
+                                                                                     "images/projectileExplosion/explode6.png" } } },
+
+        {"AlienSM", new GameAsset {Name = "AlienSM", FrameRefs = new[] {"images/AlienSmAnim/AlienSM1.png", "images/AlienSmAnim/AlienSM2.png"}}}
+                                
     };
 
 

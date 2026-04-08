@@ -186,6 +186,14 @@ public class GameLogic
                 if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.GetPosition());
                 AddGameObject(newAsteroid);
             }
+            if(Random.Shared.NextInt64(0,10) > 6)
+            {
+                Enemy a = Enemy.GenerateEnemy();
+                AlienSM UFO = new AlienSM(a.transform);
+                
+                AddGameObject(UFO);
+            }
+
             counter = DateTime.Now;
         }
 
@@ -275,6 +283,9 @@ public class GameLogic
                 newObj = new Enemy(defaultT);
                 break;
             // Add more types here as your game grows
+            case "AlienSM":
+            newObj = new AlienSM(defaultT);
+            break;
         }
         if (newObj == null)
         {
