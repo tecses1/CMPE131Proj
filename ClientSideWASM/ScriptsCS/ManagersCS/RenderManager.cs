@@ -188,19 +188,19 @@ public class RenderManager
 
     int getCacheIndex(GameObject o)
     {
-    // 1. Get the name of the class (Projectile, Asteroid, etc.)
-    string typeName = o.GetType().Name;
+        // 1. Get the name of the class (Projectile, Asteroid, etc.)
+        string typeName = o.GetType().Name;
 
-    // 2. Look up the starting index we calculated at boot
-    if (_assetStartingIndex.TryGetValue(typeName, out int baseIndex))
-    {
-        // 3. Add the current frame offset
-        // Ensure you don't overshoot the frame count for this specific asset
-        return baseIndex + o.currentFrame;
+        // 2. Look up the starting index we calculated at boot
+        if (_assetStartingIndex.TryGetValue(typeName, out int baseIndex))
+        {
+            // 3. Add the current frame offset
+            // Ensure you don't overshoot the frame count for this specific asset
+            return baseIndex + o.currentFrame;
+        }
+
+        return -1; // Asset not found
     }
-
-    return -1; // Asset not found
-}
     private int ColorToAlphaInt(string htmlColor, int alpha0to255)
     {
         if (string.IsNullOrEmpty(htmlColor)) return 0;
@@ -295,7 +295,7 @@ public class RenderManager
                 //}
 
                 int idx = getCacheIndex(obj);
-                if (idx == -1) continue;
+                if (idx == -1) idx = 0; // Fallback to "MissingImage" if asset not found
                 megaBuffer[cursor++] = 0;
                 megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);
                 megaBuffer[cursor++] = (int)((interpolationOffsetY - worldOffsetY) * 100);

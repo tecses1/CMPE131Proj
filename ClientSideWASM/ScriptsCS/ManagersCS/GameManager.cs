@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components;
+using ClientSideWASM.Pages;
 namespace ClientSideWASM;
 //Handles the background, houses then etwork manager, and updates other players and objects.
 
@@ -26,6 +27,8 @@ public class GameManager : RenderManager
     public LocalPlayer localPlayer;
     public List<ClientPlayer> clientPlayers = new List<ClientPlayer>();
     public List<GameObject> backgroundStars = new List<GameObject>();
+    public List<ObjChangeWrapper> incomingObjects = new List<ObjChangeWrapper>(); //used to hold objects that are created from gamestate updates, so we can add them to the render manager after loading the gamestate. 
+    public List<ObjChangeWrapper> destroyedObjects = new List<ObjChangeWrapper>(); //used to hold objects that are destroyed from gamestate updates, so we can add them to the render manager after loading the gamestate. 
 
     DrawText isLocal;
 
@@ -147,41 +150,72 @@ void GenerateStars()
 }
 
     
-    public void GameStateCheck()
+    public void GameStateCheck(List<ObjChangeWrapper> incomingObjects, List<ObjChangeWrapper> destroyedObjects)
     {
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
-
-        if (!gl.GetPlayers().Contains(localPlayer))
-        {
-            //Console.WriteLine("Local player not found in gamestate, adding local player to gamestate. Weird.");
-            gl.AddPlayer(localPlayer);
-        }
-        foreach (Player p in gl.GetPlayers())
-        {
+        //The player is removed by the gamestate update when no update has been made. Keep adding until updates apply.
+        foreach (ObjChangeWrapper wrapper in incomingObjects) //These are objects created by gamestate.
+        { //we need to replace them with our client side "copies", that have render capabilities.
+            GameObject go = wrapper.myObj;
+            List<GameObject> myGroup = wrapper.myGroup;
             //ignore the local player, we already know this one is fixed.
-            if (p.GetType() == typeof(Player)) //the game logic class created a player.
+            if (go.GetType() == typeof(Player)) //the game logic class created a player.
             {
+                Player p = (Player)go;  
+                myGroup.Remove(p);
+                //Replace the player with our local player.
+                //The gamestate keeps making new ones until the object is confirmed.
+                //Just keep replacing it until it doesn't need to, anymore.
+                if (p.uid == localPlayer.uid)
+                {
+                    Console.WriteLine("replacing player with local palyer as it was created");
+                    gl.AddPlayer(localPlayer);
+                    continue;
+                }
                 Console.WriteLine("New player class found...");
-                gl.RemovePlayer(p);
+
                 //replace it with our client player that handles rendering.
             
-                ClientPlayer cp = new ClientPlayer(this, p.transform);
-                //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
-                cp.uid = p.uid;
-                cp.playerName.text = p.playerNameString;
-                gl.AddPlayer(cp);
-                clientPlayers.Add(cp);
-
-                RegisterObjToRender(cp);//make sure we tell the render manager HEY! This object needs to be rendered!
+                ClientPlayer cp = clientPlayers.Find(x => x.uid == p.uid);
+                if (cp == null)
+                {
+                    //we already have this player, so we need to remove the duplicate we just made and stop.
+                    ClientPlayer newPlayer = new ClientPlayer(this, p.transform);
+                    //IMPORTANT, or it will make 1020935 players.... give the CP the same UID as the old player its replacing.
+                    newPlayer.uid = p.uid;
+                    newPlayer.playerName.text = p.playerNameString;
+                    gl.AddPlayer(newPlayer);
+                    clientPlayers.Add(newPlayer);
+                    RegisterObjToRender(newPlayer);
+                    continue;
+                }
+                else
+                {
+                    //If the player exists in ClientPlayers, but was removed from gamestate for some reason, and its being readded
+                    gl.AddPlayer(cp);
+                }
+                //make sure we tell the render manager HEY! This object needs to be rendered!
                 //Because we modififed the collection, we have to close this loop.
                 return;
 
             }
-
-
+            if (go.GetType() == typeof(Enemy))
+            {
+                //Replace the enemy with our client side render that handles healthbars! :) 
+            }
+        
         }
+
+        foreach (ObjChangeWrapper wrapper in destroyedObjects) //These are objects destroyed by gamestate.
+        {
+            GameObject go = wrapper.myObj;
+            List<GameObject> myGroup = wrapper.myGroup;
+            //for now, just remove them so GC destroys them.
+            myGroup.Remove(go);
+        }
+
     }
 
 
@@ -228,8 +262,11 @@ void GenerateStars()
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
 
-            gl.LoadGameState(gameState);
-            GameStateCheck();
+            gl.LoadGameState(gameState, incomingObjects,destroyedObjects);
+            GameStateCheck(incomingObjects,destroyedObjects);
+
+            incomingObjects.Clear();
+            destroyedObjects.Clear();
             //CenterCameraOn(this.localPlayer.transform, false, false);
             localPlayer.CenterCameraOnMe();
 
