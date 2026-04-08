@@ -27,7 +27,8 @@ public class GameManager : RenderManager
     public LocalPlayer localPlayer;
     public List<ClientPlayer> clientPlayers = new List<ClientPlayer>();
     public List<GameObject> backgroundStars = new List<GameObject>();
-    public List<GameObject> incomingObjects = new List<GameObject>(); //used to hold objects that are created from gamestate updates, so we can add them to the render manager after loading the gamestate. 
+    public List<ObjChangeWrapper> incomingObjects = new List<ObjChangeWrapper>(); //used to hold objects that are created from gamestate updates, so we can add them to the render manager after loading the gamestate. 
+    public List<ObjChangeWrapper> destroyedObjects = new List<ObjChangeWrapper>(); //used to hold objects that are destroyed from gamestate updates, so we can add them to the render manager after loading the gamestate. 
 
     DrawText isLocal;
 
@@ -149,25 +150,27 @@ void GenerateStars()
 }
 
     
-    public void GameStateCheck(List<GameObject> incomingObjects)
+    public void GameStateCheck(List<ObjChangeWrapper> incomingObjects, List<ObjChangeWrapper> destroyedObjects)
     {
         //After the gamestate is loaded, we may have added a player. Because GL does not send events yet,
         //this is a quick fix. Later, I need to have the GameLogic class attempt to send events such as
         //"On player connected" so we can overwrite the classes it makes by default with render classes.
         //The player is removed by the gamestate update when no update has been made. Keep adding until updates apply.
-        foreach (GameObject go in incomingObjects) //These are objects created by gamestate.
+        foreach (ObjChangeWrapper wrapper in incomingObjects) //These are objects created by gamestate.
         { //we need to replace them with our client side "copies", that have render capabilities.
+            GameObject go = wrapper.myObj;
+            List<GameObject> myGroup = wrapper.myGroup;
             //ignore the local player, we already know this one is fixed.
             if (go.GetType() == typeof(Player)) //the game logic class created a player.
             {
                 Player p = (Player)go;  
-                gl.RemovePlayer(p);
+                myGroup.Remove(p);
                 //Replace the player with our local player.
                 //The gamestate keeps making new ones until the object is confirmed.
                 //Just keep replacing it until it doesn't need to, anymore.
                 if (p.uid == localPlayer.uid)
                 {
-                    gl.RemovePlayer(p);
+                    Console.WriteLine("replacing player with local palyer as it was created");
                     gl.AddPlayer(localPlayer);
                     continue;
                 }
@@ -203,6 +206,14 @@ void GenerateStars()
                 //Replace the enemy with our client side render that handles healthbars! :) 
             }
         
+        }
+
+        foreach (ObjChangeWrapper wrapper in destroyedObjects) //These are objects destroyed by gamestate.
+        {
+            GameObject go = wrapper.myObj;
+            List<GameObject> myGroup = wrapper.myGroup;
+            //for now, just remove them so GC destroys them.
+            myGroup.Remove(go);
         }
 
     }
@@ -251,10 +262,11 @@ void GenerateStars()
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
 
-            gl.LoadGameState(gameState, incomingObjects);
-            Console.WriteLine("debug: " + incomingObjects.Count);
-            GameStateCheck(incomingObjects);
+            gl.LoadGameState(gameState, incomingObjects,destroyedObjects);
+            GameStateCheck(incomingObjects,destroyedObjects);
+
             incomingObjects.Clear();
+            destroyedObjects.Clear();
             //CenterCameraOn(this.localPlayer.transform, false, false);
             localPlayer.CenterCameraOnMe();
 

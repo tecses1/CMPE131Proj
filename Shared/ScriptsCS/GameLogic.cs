@@ -16,8 +16,8 @@ public class GameLogic
 
     List<GameObject> objsToAdd = new List<GameObject>();
 
-    List<GameObject> newObjectsLoaded = new List<GameObject>();
-    List<GameObject> destroyedObjectsLoaded = new List<GameObject>();
+    List<ObjChangeWrapper> newObjectsLoaded = new List<ObjChangeWrapper>();
+    List<ObjChangeWrapper> destroyedObjectsLoaded = new List<ObjChangeWrapper>();
 
     DateTime counter = DateTime.Now;
     float AsteroidSpawnCooldownSeconds = 2f;
@@ -295,7 +295,7 @@ public class GameLogic
         return this.GetGameState(frameStamp, players, activeObjects);
     }
 
-    public long LoadGameState(byte[] gameState, List<GameObject> newObjects = null, List<GameObject> destroyedObjects = null)
+    public long LoadGameState(byte[] gameState, List<ObjChangeWrapper> newObjects = null, List<ObjChangeWrapper> destroyedObjects = null)
     {
         long r = this.loadGameState(gameState, players, activeObjects);
 
@@ -381,10 +381,12 @@ public class GameLogic
                         //Console.WriteLine("Object with UID " + uidString + " not found, creating new " + className);
                         //Console.WriteLine("object does not exist, adding object: " + className);
                         obj = CreateGameObject(className, uidString);
-                        newObjectsLoaded.Add(obj);
-                        currentGroup.Add(obj);
                         //decode immediately to set initial values.
                         obj.Decode(reader);
+
+                        newObjectsLoaded.Add(new ObjChangeWrapper(obj, currentGroup));
+                        //currentGroup.Add(obj); let client handle the adding. Might need to change objects on creation.
+
 
 
                     }
@@ -408,8 +410,8 @@ public class GameLogic
                     if (!receivedUids.Contains(currentGroup[k].uid))
                     {
                         // Call any necessary destroy logic here (e.g., particle effects, physics cleanup)
-                        destroyedObjectsLoaded.Add(currentGroup[k]);
-                        currentGroup.RemoveAt(k);
+                        destroyedObjectsLoaded.Add(new ObjChangeWrapper(currentGroup[k], currentGroup));
+                        //currentGroup.RemoveAt(k); while we're at it, let the client handle removing too.
                         
                     }
                 }
