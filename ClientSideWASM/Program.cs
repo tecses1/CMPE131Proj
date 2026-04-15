@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Blazored.LocalStorage;
 using System.ComponentModel.DataAnnotations.Schema;
+using ClientSideWASM.Audio;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -12,10 +13,12 @@ builder.Services.AddBlazoredLocalStorage();
 //That way it remains 'static.' And can be accessed from the game and main page.
 builder.Services.AddSingleton<NetworkManager>();
 
+builder.Services.AddScoped<AudioService>();
 builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
+
 
 var host = builder.Build();
 

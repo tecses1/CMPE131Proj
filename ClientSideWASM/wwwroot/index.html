@@ -51,20 +51,26 @@
     <div id="app"></div>
     <!-- Custom audio player script -->
     <script>
-        window.playAudio = (audioFilePath) => {
-            let audio = new Audio(audioFilePath);
-            audio.loop = true; 
-            audio.volume = 0.5;
-            audio.play();
-        };
+        window.audioInterop = {
+            audio: null,
 
-        window.stopAudio = () => {
-            let audio = new Audio("/audio/lobby_mus.mp3");
-            audio.pause();  // Stops the music
-            audio.currentTime = 0;  // Resets to the beginning
+            play: function (path) {
+                if (!this.audio) {
+                    this.audio = new Audio(path);
+                    this.audio.loop = true;
+                    this.audio.volume = 0.5;
+                }
+                this.audio.play();
+            },
+
+            stop: function () {
+                if (this.audio) {
+                    this.audio.pause();
+                }
+            }
         };
     </script>
-    
+        
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="batchdraw.js"></script>
     <script src="clearbackground.js"></script>

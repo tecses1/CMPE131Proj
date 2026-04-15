@@ -24,19 +24,3 @@
         CMPE 131 Project | Benjamin Schnittker | Sofia Nguyen | Kekoa Sarmiento | Dylan Quach | Siddarth Kota
     </div>
 </div>
-
-<button @onclick="PlayBackgroundMusic">Play Music</button>
-@* <button @onclick="StopBackgroundMusic">Stop Music</button> *@
-
-@code {
-    private async Task PlayBackgroundMusic()
-    {
-        await JS.InvokeVoidAsync("playAudio", "/audio/lobby_mus.mp3");
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Automatically start background music
-        await PlayBackgroundMusic();
-    }
-}
