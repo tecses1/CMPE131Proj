@@ -25,14 +25,13 @@
     </div>
 </div>
 
-<button @onclick="ToggleAudio">
-    @if (IsAudioPlaying) { <text>Stop Music</text> } else { <text>Play Music</text> }
-</button>
+<button @onclick="PlayBackgroundMusic">Play Music</button>
+@* <button @onclick="StopBackgroundMusic">Stop Music</button> *@
 
 @code {
     private async Task PlayBackgroundMusic()
     {
-        await JS.InvokeVoidAsync("playAudio", "/audio/background-music.mp3");
+        await JS.InvokeVoidAsync("playAudio", "/audio/lobby_mus.mp3");
     }
 
     protected override async Task OnInitializedAsync()
