@@ -200,10 +200,13 @@ void GenerateStars()
                 //Because we modififed the collection, we have to close this loop.
                 return;
 
-            }
+            }else
             if (go.GetType() == typeof(Enemy))
             {
                 //Replace the enemy with our client side render that handles healthbars! :) 
+                wrapper.myGroup.Add(wrapper.myObj);
+            }else{
+                wrapper.myGroup.Add(wrapper.myObj);
             }
         
         }
