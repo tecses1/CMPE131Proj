@@ -21,14 +21,19 @@ public static class AssetManager
                                                                                     
         { "Healthpack", new GameAsset { Name = "Healthpack", FrameRefs = new[] { "images/hp.png" } } },
 
-        { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
-        { "Explosion", new GameAsset { Name = "Explosion", FrameRefs = new[] { "images/projectileExplosion/explode0.png",
+                { "Explosion", new GameAsset { Name = "Explosion", FrameRefs = new[] { "images/projectileExplosion/explode0.png",
                                                                                      "images/projectileExplosion/explode1.png",
                                                                                      "images/projectileExplosion/explode2.png",
                                                                                      "images/projectileExplosion/explode3.png",
                                                                                      "images/projectileExplosion/explode4.png",
                                                                                      "images/projectileExplosion/explode5.png",
-                                                                                     "images/projectileExplosion/explode6.png" } } }
+                                                                                     "images/projectileExplosion/explode6.png" } } },
+
+
+        { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
+
+        {"AlienSM", new GameAsset {Name = "AlienSM", FrameRefs = new[] {"images/AlienSmAnim/AlienSM1.png", "images/AlienSmAnim/AlienSM2.png"}}}
+                                
     };
 
 
