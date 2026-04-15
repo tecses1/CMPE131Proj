@@ -49,6 +49,22 @@
 
 <body>
     <div id="app"></div>
+        <!-- Custom audio player script -->
+    <script>
+        window.playAudio = (audioFilePath) => {
+            let audio = new Audio(audioFilePath);
+            audio.loop = true;  // Set to true if you want the audio to loop
+            audio.volume = 0.5;  // Set volume to 50% (you can adjust this)
+            audio.play();
+        };
+
+        window.stopAudio = () => {
+            let audio = new Audio("/audio/background-music.mp3");
+            audio.pause();  // Stops the music
+            audio.currentTime = 0;  // Resets to the beginning
+        };
+    </script>
+    
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="batchdraw.js"></script>
     <script src="clearbackground.js"></script>
