@@ -102,13 +102,12 @@ void GenerateStars()
 }
 
 
-    public void UpdateInput(ClientInputWrapper e)
-    {
-        this.cInput = e;
-    }
+
 
     public override void  Update()
     {
+        //FIX THIS LATER.
+        this.cInput = InputManager.currentInput;
         updateTimer.Restart();
         //check if we're a local gamestate, if so, update locally. for testing.
         if (!nm.client.isConnected()) {
