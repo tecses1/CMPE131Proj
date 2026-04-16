@@ -118,30 +118,4 @@ public struct Rect : IEquatable<Rect>
     {
         return X == other.X && Y == other.Y && Width == other.Width && Height == other.Height;
     }
-
-    public bool IntersectsLine(Vector2 lineStart, Vector2 lineEnd)
-    {
-        if(Contains(lineStart.X, lineStart.Y) || Contains(lineEnd.X, lineEnd.Y)) return true;
-
-        Vector2 topLeft = new Vector2(Left, Top);
-        Vector2 topRight = new Vector2(Right, Top);
-        Vector2 bottomLeft = new Vector2(Left, Bottom);
-        Vector2 bottomRight = new Vector2(Right, Bottom);
-
-        return LineIntersectsLine(lineStart, lineEnd, topLeft, topRight) ||
-               LineIntersectsLine(lineStart, lineEnd, topRight, bottomRight) ||
-               LineIntersectsLine(lineStart, lineEnd, bottomRight, bottomLeft) ||
-               LineIntersectsLine(lineStart, lineEnd, bottomLeft, topLeft);
-    }
-
-    private static bool LineIntersectsLine(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4)
-    {
-        float denominator = (p2.X - p1.X) * (p4.Y - p3.Y) - (p2.Y - p1.Y) * (p4.X - p3.X);
-        if (denominator == 0) return false;
-
-        float r = ((p4.X - p3.X) * (p1.Y - p3.Y) - (p4.Y - p3.Y) * (p1.X - p3.X)) / denominator;
-        float s = ((p2.X - p1.X) * (p1.Y - p3.Y) - (p2.Y - p1.Y) * (p1.X - p3.X)) / denominator;
-
-        return r >= 0 && r <= 1 && s >= 0 && s <= 1;
-    }
 }
