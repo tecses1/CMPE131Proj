@@ -6,6 +6,8 @@ public class InputField : DrawText
     public string placeholder;
     public DateTime lastTick = DateTime.Now;
     public bool stroke = false;
+    public bool selected = false;
+    public bool WipeOnClick = true;    
     
     public InputField(string placeholder, Transform t) : base(placeholder, t)
     {
@@ -14,19 +16,36 @@ public class InputField : DrawText
         setBorderColor(Color.LightGray,255);
         setFillColor(Color.White,255);
     }
+
+    public void Select() {
+        selected = true;
+        lastTick = DateTime.Now;
+        if (WipeOnClick) {
+            this.placeholder = "";
+        }
+    }
+
+    public void Deselect() {
+        selected = false;
+        this.text = placeholder; // Reset the text to the placeholder when deselected
+    }
     //returns true if enter is pressed, to signal we're done editing.
     public bool Update(ClientInputWrapper ci)
     {
         // If the text is currently the placeholder, and it's been at least 500ms since the last tick, toggle the visibility of the placeholder text
+        //TODO: Fix | showing when deselected on that frame
         if ((DateTime.Now - lastTick).TotalMilliseconds >= 500)
         {
-            if (stroke)
-            {
-                this.text = placeholder + " "; // Show the placeholder
+            if(selected) {
+                if (stroke) {
+                    this.text = placeholder + " "; // Show the placeholder
+                }
+                else {
+                    this.text = placeholder + "|"; // Hide the placeholder
+                }
             }
-            else
-            {
-                this.text = placeholder + "|"; // Hide the placeholder
+            else {
+                this.text = placeholder; // Ensure the text is just the placeholder when not selected
             }
             stroke = !stroke; // Toggle the stroke state
             lastTick = DateTime.Now; // Reset the tick timer

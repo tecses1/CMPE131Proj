@@ -358,6 +358,7 @@ public class HomeManager : RenderManager
             if (userInput.CLeftPressed)
             {
                 editing = lobbyInput;
+                lobbyInput.Select();
             }
         }
         else
@@ -374,10 +375,14 @@ public class HomeManager : RenderManager
             bool check = userInput.CLeftPressed && !hovered.Contains(playerNameTextBox); 
             if (playerNameTextBox.Update(userInput) || check) // handles the ticking
             {
+                if(playerNameTextBox.placeholder == "") { //Doesn't allow blank name
+                    playerNameTextBox.placeholder = "Player";
+                }
                 // Handle the case when the user presses Enter
                 editing = null; // stop editing
                 Settings.name = playerNameTextBox.placeholder; // save the new name
                 SaveToStorage(); // save to local storage and send to server
+                playerNameTextBox.Deselect();
             }
         }
 
@@ -400,6 +405,10 @@ public class HomeManager : RenderManager
             if (userInput.CLeftPressed)
             {
                 editing = playerNameTextBox;
+                playerNameTextBox.Select();
+                if (playerNameTextBox.placeholder == "Player") {
+                    playerNameTextBox.placeholder = "";
+                }
             }
         }
         else
