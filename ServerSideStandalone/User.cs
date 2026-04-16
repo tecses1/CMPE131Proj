@@ -16,6 +16,7 @@ public class User : NetworkModel
     bool read = false;
     int skipped = 0;
     private byte[] _myInputData;
+
     public byte[] myInputData
     {
         get
@@ -34,8 +35,8 @@ public class User : NetworkModel
             _myInputData = value;
         }
     }
+    public ClientNode node;
 
-    ClientNode node;
     public User( Server s)
     {
         this.uid = Guid.NewGuid();

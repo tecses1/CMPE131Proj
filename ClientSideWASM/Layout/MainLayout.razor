@@ -1,2 +1,38 @@
 ﻿@inherits LayoutComponentBase
-@Body
+@using ClientSideWASM.Audio
+@inject AudioService Audio
+
+<div class="main-layout">
+
+    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 998;">
+        <h1 style="margin: 0; font-size: 20px; font-weight: bold;">
+            GALAX.IO
+        </h1>
+    </div>
+    <!-- GLOBAL AUDIO BUTTON -->
+    <div style="position: absolute; top: 10px; right: 10px; z-index: 999;">
+        <img src="@VolumeIcon"
+             @onclick="ToggleAudio"
+             style="width:40px; cursor:pointer;" />
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="content">
+        @Body
+    </div>
+
+</div>
+
+@code {
+
+    private string VolumeIcon =>
+        Audio.IsPlaying
+            ? "/images/volume/volume-on.png"
+            : "/images/volume/volume-off.png";
+
+    private async Task ToggleAudio()
+    {
+        await Audio.Toggle("/audio/lobby_mus.mp3");
+        StateHasChanged();
+    }
+}

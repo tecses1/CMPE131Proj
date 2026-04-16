@@ -30,8 +30,7 @@ public class AlienSM : Enemy
 
         Projectile proj = new Projectile(new Transform(this.transform.rect.X, this.transform.rect.Y, 10, 10,this.transform.rotation), this.transform.Forward() * 20f, lifetime: 60);
         proj.owner = this.uid;
-        proj.damage = 45;
-        proj.transform.RotateTo(target.transform);
+        proj.damage = 5; //More is too op lol
         gl.AddGameObject(proj);
         lastShot = DateTime.Now;
     }

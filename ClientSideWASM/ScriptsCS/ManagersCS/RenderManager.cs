@@ -245,6 +245,7 @@ public class RenderManager
 
         // 1. Pack Sprites in obj to render (Type 0)
         //pack groups by reference.
+        Transform testTransform = new Transform(0,0,0,0); // use the same one so GC doesn't die.
         foreach (List<GameObject> group in groupsToRender) {
             foreach (var obj in group) {               
                     //var pos = obj.transform.position;
@@ -252,9 +253,8 @@ public class RenderManager
 
                 // "Loose" Culling: Check if object is roughly in view
                 // If it's outside these bounds, we don't even put it in the int[]
-                if (!obj.InteresectsWith(GetCanvasBounds())) {
-                    continue; // Skip rendering this object
-                }
+
+
 
                 if (obj.disableRender) continue; // Skip if object has rendering disabled (e.g., for invisible hitboxes or optimization)
 
@@ -277,10 +277,20 @@ public class RenderManager
 
                 // 2. Interpolate between the RELATIVE points
                 float t = GetInterpolationFactor();
+
                 interpolationOffsetX = prevRelX + (currRelX - prevRelX) * t;
                 interpolationOffsetY = prevRelY + (currRelY - prevRelY) * t;
 
+                //Set the test tsf to elimate pop in 
+                testTransform.rect.X = interpolationOffsetX;
+                testTransform.rect.Y = interpolationOffsetY;
 
+                testTransform.rect.Width = obj.transform.rect.Width;
+                testTransform.rect.Height = obj.transform.rect.Height;
+
+                if (!testTransform.rect.IntersectsWith(GetCanvasBounds())) {
+                    continue; // Skip rendering this object if interplation isn't viewable
+                }
                 //interpolationOffsetX = obj.previousTransform.position.X + (obj.transform.position.X - obj.previousTransform.position.X) * GetInterpolationFactor();
                 //interpolationOffsetY = obj.previousTransform.position.Y + (obj.transform.position.Y - obj.previousTransform.position.Y) * GetInterpolationFactor();
                 float deltaRotation = (obj.transform.rotation - obj.previousTransform.rotation + 540) % 360 - 180;
@@ -288,11 +298,12 @@ public class RenderManager
 
                 // Apply to the actual Render transform
                 interpolationRotation = smoothedRotation * (float)(Math.PI / 180.0);
-                
+
                 //if (obj.GetType() == typeof(Projectile)) {
                 //    // For the local player, we want to use the actual position for rendering, not the interpolated one.
                 //    Console.WriteLine("Target: " + obj.transform.position.X + "," + obj.transform.position.Y + " | Interpolated: " + interpolationOffsetX + "," + interpolationOffsetY + " | Interpolation Factor: " + GetInterpolationFactor() + " Prev: " + obj.previousTransform?.position.X + "," + obj.previousTransform?.position.Y);
                 //}
+                //culling problem, we need the interpolation position of the object...
 
                 int idx = getCacheIndex(obj);
                 if (idx == -1) idx = 0; // Fallback to "MissingImage" if asset not found

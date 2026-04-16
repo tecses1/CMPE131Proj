@@ -62,7 +62,16 @@ public class Transform
         double angleRadians = Math.Atan2(viewDirection.X, viewDirection.Y);
         rotation = -(float)(angleRadians * (180.0 / Math.PI));
     }
-
+    public void RotateTo(Transform target)
+    {
+        Vector2 position = new Vector2(this.rect.X, this.rect.Y);
+        Vector2 targetPos = new Vector2(target.rect.X, target.rect.Y);
+        Vector2 viewDirection = targetPos - position;
+        if (viewDirection.LengthSquared() == 0f) viewDirection = new Vector2(0, -1);
+        
+        double angleRadians = Math.Atan2(viewDirection.X, viewDirection.Y);
+        rotation = -(float)(angleRadians * (180.0 / Math.PI));
+    }
     public void Update()
     {
         rect.X += velocity.X;

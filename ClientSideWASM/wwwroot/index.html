@@ -49,6 +49,28 @@
 
 <body>
     <div id="app"></div>
+    <!-- Custom audio player script -->
+    <script>
+        window.audioInterop = {
+            audio: null,
+
+            play: function (path) {
+                if (!this.audio) {
+                    this.audio = new Audio(path);
+                    this.audio.loop = true;
+                    this.audio.volume = 0.5;
+                }
+                this.audio.play();
+            },
+
+            stop: function () {
+                if (this.audio) {
+                    this.audio.pause();
+                }
+            }
+        };
+    </script>
+        
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="batchdraw.js"></script>
     <script src="clearbackground.js"></script>

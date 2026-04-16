@@ -102,13 +102,12 @@ void GenerateStars()
 }
 
 
-    public void UpdateInput(ClientInputWrapper e)
-    {
-        this.cInput = e;
-    }
+
 
     public override void  Update()
     {
+        //FIX THIS LATER.
+        this.cInput = InputManager.currentInput;
         updateTimer.Restart();
         //check if we're a local gamestate, if so, update locally. for testing.
         if (!nm.client.isConnected()) {
@@ -200,10 +199,13 @@ void GenerateStars()
                 //Because we modififed the collection, we have to close this loop.
                 return;
 
-            }
+            }else
             if (go.GetType() == typeof(Enemy))
             {
                 //Replace the enemy with our client side render that handles healthbars! :) 
+                wrapper.myGroup.Add(wrapper.myObj);
+            }else{
+                wrapper.myGroup.Add(wrapper.myObj);
             }
         
         }
