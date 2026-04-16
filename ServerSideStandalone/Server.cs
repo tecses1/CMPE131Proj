@@ -44,12 +44,18 @@ public class Server
                 {
                     if (!u.isConnected())
                     {
-                        u.Update();
+                        
                         users.Remove(u);
+                        Application.Current.Dispatcher.Invoke(() => {
+                        mainWindow.Clients.Remove(u.node);    
+                         });
+        
+           
                         
                         break;
                     }
                      //update gui   
+                     u.Update();
                 }
             }catch(InvalidOperationException ex)
             {
@@ -75,7 +81,10 @@ public class Server
                     {
                         //Console.WriteLine("Lobby " + lobby.Name + " is empty. Removing...");
                         openLobbies.Remove(lobby);
-                        continue;
+                        Application.Current.Dispatcher.Invoke(() => {
+                        mainWindow.Lobbies.Remove(lobby.node);    
+                         });
+                        break;
                     }
 
                     lobby.Update();
