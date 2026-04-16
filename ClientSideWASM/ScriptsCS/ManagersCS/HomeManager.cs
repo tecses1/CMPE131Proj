@@ -92,10 +92,7 @@ public class HomeManager : RenderManager
 
         RegisterGroupToRender(stars);
     }
-    public void ApplyInput(ClientInputWrapper input)
-    {
-        userInput = input;
-    }
+
 
 
     //screen functions
@@ -422,6 +419,10 @@ public class HomeManager : RenderManager
     public override void Update()
     {
         base.Update();
+
+        //FIX THIS LTATER.
+        //All classes can now reference input directly.
+        this.userInput = InputManager.currentInput;
 
         foreach (Star s in stars)
         {

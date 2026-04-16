@@ -12,7 +12,6 @@ public partial class Home
 
     private IRenderContext? _context;
 
-    public ClientInputWrapper inputWrapper;
 
     public HomeManager home;
 
@@ -56,7 +55,7 @@ public partial class Home
         );
         //Initialize my stuff.
         home = new HomeManager(JS,LocalStorage,nm,Nav);
-        inputWrapper = new ClientInputWrapper();
+        //inputWrapper = new ClientInputWrapper();
     }
     private void OnCanvasReady(CanvasBase canvas)
     {
@@ -69,7 +68,7 @@ public partial class Home
 
     public void OnFrameReady(float timestamp)
     {
-        home.ApplyInput(inputWrapper);
+       // home.ApplyInput(inputWrapper);
         home.Update();
         home.Render(timestamp);
 
@@ -81,7 +80,8 @@ public partial class Home
         if (_context is null)
             return;
         //store the current event.
-        this.inputWrapper.loadKeysDown(e);
+        //this.inputWrapper.loadKeysDown(e);
+        InputManager.currentInput.loadKeysDown(e);
         
     }
     private void OnKeyUp(KeyboardPressEvent e)
@@ -89,8 +89,8 @@ public partial class Home
         if (_context is null)
             return;
         //store the current event.
-        this.inputWrapper.loadKeysUp(e);
-        
+        //this.inputWrapper.loadKeysUp(e);
+        InputManager.currentInput.loadKeysUp(e);
     }
     private void OnMouseMove(Blazorex.MouseMoveEvent e)
     {
@@ -99,7 +99,7 @@ public partial class Home
 
         // store the coords in our InputWrapper (MouseMoveEvent.OffsetX/Y are double)
         //Console.WriteLine("offset: " + e.OffsetX + "," +e.OffsetY);
-        inputWrapper.loadMouseMove(e.OffsetX, e.OffsetY);
+        InputManager.currentInput.loadMouseMove(e.OffsetX, e.OffsetY);
     }
 
     private void OnMouseDown(Blazorex.MouseClickEvent e)
@@ -109,12 +109,12 @@ public partial class Home
 
         // Most canvas mouse events let you know which button; if you want to branch
         // by button you can inspect 'e' here. For now assume left button press:
-        inputWrapper.loadMouseDown(e.Button == 0);
+        InputManager.currentInput.loadMouseDown(e.Button == 0);
     }
     private void OnMouseUp(Blazorex.MouseClickEvent e)
     {
         if (_context is null) return;
 
-        inputWrapper.loadMouseUp(e.Button == 0);
+        InputManager.currentInput.loadMouseUp(e.Button == 0);
     }
 }
