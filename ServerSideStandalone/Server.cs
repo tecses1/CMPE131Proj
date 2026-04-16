@@ -44,10 +44,12 @@ public class Server
                 {
                     if (!u.isConnected())
                     {
+                        u.Update();
                         users.Remove(u);
+                        
                         break;
                     }
-                    u.Update(); //update gui   
+                     //update gui   
                 }
             }catch(InvalidOperationException ex)
             {
