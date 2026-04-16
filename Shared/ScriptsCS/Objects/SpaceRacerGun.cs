@@ -1,42 +1,39 @@
+using System.Numerics;
+
 namespace Shared;
 
-    using System.Numerics;
-    using System;
+public class SpaceRacerGun : GameObject
+{
 
-    public class SpaceRacerGun : GameObject
+    public int deathAnimSpeed = 2;
+    int cDeathAnim = 2;
+    public int damage = 3; //applies over the course of the explosion animation, so that things that stay in the explosion longer take more damage.
+    public float force = 20f;
+    public SpaceRacerGun(Transform t, Vector2 velocity, float rotationSpeed = 1f) : base(t)
     {
-        //public float X;
-        //public float Y;
-
-        [Network(0)]
-        public int LifetimeFrames {get; set;} = 5; 
-
-        [Network(1)]
-        public int damage {get; set;} = 9999; // OP gun that does infinite damage for 1 frame
-        
-        [Network(2)]
-        public Guid owner;
-        public float beamLength = 1000f;
-        public bool isLethalFrame = true;
-
-        public SpaceRacerGun( Transform transform, Vector2 velocity, int lifetime =5) : base(transform)
-        {
-            this.transform.velocity = velocity;
-            this.LifetimeFrames = lifetime;
-            this.disableCollision = true; // disable collision for the gun itself, handled manually
-        }
-
-        public override void Update()
-        {
-            this.transform.Update();
-            LifetimeFrames--;
-            if (LifetimeFrames < 4) {
-                isLethalFrame = false; // only lethal for the first frame
-            }
-            if (LifetimeFrames <= 0) {
-                this.Kill();
-            }
-        }
+        this.currentFrame = 0;
+        this.transform.velocity = velocity;
+        this.transform.rotationSpeed = rotationSpeed;
+        this.disableCollision = true; // Explosions don't collide with anything, unless explcitily told to.
     }
-    
 
+    public override void Update()
+    {
+
+        cDeathAnim -= 1;
+        if (cDeathAnim <= 0)
+        {
+
+                currentFrame += 1;
+                if (currentFrame > 5)
+                {
+                     base.Kill();
+
+                }
+            
+
+            cDeathAnim = deathAnimSpeed;
+        }
+        
+    }
+}
