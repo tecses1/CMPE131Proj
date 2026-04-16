@@ -65,6 +65,7 @@ public class GameLogic
         }
 
         collisionManager.UpdateTree(); //update the tree with new positions before we check for collisions.
+        ProcessHitscanWeapons();
 
         foreach (Collision collision in collisionManager.CheckCollisions())
         {
@@ -288,6 +289,9 @@ public class GameLogic
             case "AlienSM":
                 newObj = new AlienSM(defaultT);
                 break;
+            case "SpaceRacerGun":
+                newObj = new SpaceRacerGun(defaultT, new Vector2(0,0));
+                break;
         }
         if (newObj == null)
         {
@@ -430,5 +434,47 @@ public class GameLogic
             return frameStamp;
         }
     }
-    
+
+    private void ProcessHitscanWeapons() 
+    {
+        foreach(GameObject obj in activeObjects)
+        {
+            if(obj is SpaceRacerGun gun && gun.isLethalFrame)
+            {
+                Vector2 start = gun.transform.GetPosition();
+                Vector2 forwardDir = gun.transform.Forward();
+                Vector2 end = start + forwardDir * gun.beamLength;
+
+                GameObject[] nearbyTargets = collisionManager.GetNearby(gun, gun.beamLength);
+
+                List<GameObject> allTargets = new List<GameObject>(nearbyTargets);
+                allTargets.AddRange(players);
+
+                foreach(var target in allTargets)
+                {
+                    if(target.uid == gun.owner) continue;
+                    if(target.transform.rect.IntersectsLine(start, end))
+                    {
+                        if(target is Enemy e)
+                        {
+                            e.Kill();
+                        }
+                        else if(target is Asteroid a)
+                        {
+                            a.Kill();
+                        }
+                        else if(target is Player p)
+                        {
+                            p.TakeDamage(gun.damage);
+                        }
+                        else if(target is AlienSM alien)
+                        {
+                            alien.Kill();
+                        }
+                    }   
+                }
+                gun.isLethalFrame = false; // only lethal for the first frame
+            }
+        }    
+    }   
 }
