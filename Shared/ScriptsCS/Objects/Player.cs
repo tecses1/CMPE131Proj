@@ -228,6 +228,26 @@ public class Player : GameObject
 
         return m;
     }
+
+    public void SpawnLaser()
+    {
+
+        //mouse pos get vector
+        //make x = to the length
+        //make y = to a fixed width
+        int laserLength = 200;
+        int offsetTowardsTargetXDividedBytwo = 0;
+        int offsetTowardsTargetYDividedBytwo = 0;
+        Transform laserTransform = new Transform(transform.rect.X + offsetTowardsTargetXDividedBytwo,
+         transform.rect.Y + offsetTowardsTargetYDividedBytwo, laserLength, 3);
+        laserTransform.rotation = this.transform.rotation;
+
+        //add the laser the game whatever make it happen
+
+
+
+
+    }
     //score
     public void AddScore(int points)
     {

@@ -1,5 +1,7 @@
 namespace Shared;
 using System.Drawing;
+using System.Numerics;
+
 public class CollisionManager{
     private Quadtree _tree;
     private List<List<GameObject>> _registeredGroups;
@@ -27,6 +29,11 @@ public class CollisionManager{
                 }
             }
         }
+    }
+
+    public GameObject[] GetObjectsOnLine(Vector2 start, Vector2 end)
+    {
+        return new GameObject[0];
     }
 
     // Broad Phase + Narrow Phase Collision Check

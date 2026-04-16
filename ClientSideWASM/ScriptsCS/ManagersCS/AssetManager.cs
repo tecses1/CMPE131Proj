@@ -16,6 +16,7 @@ public static class AssetManager
         { "Player", new GameAsset { Name = "Player", FrameRefs = new [] { "images/spaceship.png"} } },
 
         { "Projectile", new GameAsset { Name = "Projectile", FrameRefs = new[] {"images/projectile.png" } } },
+        { "SpaceRacerGun", new GameAsset { Name = "SpaceRacerGun", FrameRefs = new[] {"images/projectile.png" } } },
         { "Star", new GameAsset { Name = "Star", FrameRefs = new[] {"images/star.png"} } },
         { "Asteroid", new GameAsset { Name = "Asteroid", FrameRefs = new[] {"images/asteroid.png" } } },
                                                                                     
