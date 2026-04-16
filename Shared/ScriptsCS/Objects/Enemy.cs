@@ -25,7 +25,7 @@ public class Enemy : GameObject
         }
         public void TargetCenter()
         {
-            Vector2 centerPos = new Vector2(GameConstants.worldSizeX / 2, GameConstants.worldSizeY /2);
+            Vector2 centerPos = new Vector2(0, 0);
             Vector2 direction = Vector2.Normalize(centerPos - this.transform.GetPosition());
             targetPos = this.transform.GetPosition() + direction * radius;
                         //Console.WriteLine("Targeting center!" + targetPos.X + "," + targetPos.Y);
