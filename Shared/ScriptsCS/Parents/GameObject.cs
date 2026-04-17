@@ -13,14 +13,15 @@ public class GameObject : NetworkObject
 
     [Network(-2)]
     public int currentFrame { get; set; } = 0;
-    public int baseCacheIndex { get; set; } = -1;
+    [Network(-3)]
+    public int spriteOverrideIndex { get; set; } = -1;
     public bool disableCollision = false;
     public bool disableRender = false;
 
-    public GameObject(Transform transform, int baseCacheIndex = -1)
+    public GameObject(Transform transform, int spriteOverrideIndex = -1)
     {
         this.transform = transform;
-        this.baseCacheIndex = baseCacheIndex;
+        this.spriteOverrideIndex = spriteOverrideIndex;
     }
 
     public void RegisterGameLogic(GameLogic gl) => this.gl = gl;

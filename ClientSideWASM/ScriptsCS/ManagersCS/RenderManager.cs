@@ -302,8 +302,11 @@ public class RenderManager
                 //    Console.WriteLine("Target: " + obj.transform.position.X + "," + obj.transform.position.Y + " | Interpolated: " + interpolationOffsetX + "," + interpolationOffsetY + " | Interpolation Factor: " + GetInterpolationFactor() + " Prev: " + obj.previousTransform?.position.X + "," + obj.previousTransform?.position.Y);
                 //}
                 //culling problem, we need the interpolation position of the object...
+                int idx = obj.spriteOverrideIndex;
+                if (idx == -1) {
+                    idx = getCacheIndex(obj);
+                }
 
-                int idx = getCacheIndex(obj);
                 if (idx == -1) idx = 0; // Fallback to "MissingImage" if asset not found
                 megaBuffer[cursor++] = 0;
                 megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);
