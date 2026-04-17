@@ -20,7 +20,13 @@ public class Lobby
     public LobbyNode node;
     int tps;
     int ticks;
-    DateTime clock = DateTime.Now;
+    Stopwatch tickClock = Stopwatch.StartNew();
+    DateTime clock;
+    Stopwatch contaminationTimer = new Stopwatch();
+
+    int timeToUpdate_e; //extra update time
+    int timeToUpdate_s; //lolad inputs and update logic
+    int timeToUpdate_u; //time to update users
     public Lobby()
     {
         gl = new GameLogic();
@@ -32,7 +38,7 @@ public class Lobby
     }
     public void AddUser(User user)
     {
-
+        if (users.Contains(user)) return;
         users.Add(user);
         Console.WriteLine("user added: " +user.name + ", Debug: " + users.Count);
         //GeneratePlayer(user);
@@ -68,11 +74,17 @@ public class Lobby
     }
     public void Update()
     {
+        contaminationTimer.Restart();
         Application.Current.Dispatcher.Invoke(() =>
         {
             node.PlayerCount = users.Count;
             node.UserList = GetUsers();
             node.tps = "Ticks per second: " + tps;
+            node.ContaminationTime = timeToUpdate_e + timeToUpdate_s + timeToUpdate_u;
+            node.ExtraTime = timeToUpdate_e;
+            node.UserTime = timeToUpdate_u;
+            node.UpdateTime = timeToUpdate_s;
+
         });
         if (isEmpty())
         {
@@ -87,7 +99,7 @@ public class Lobby
         ticks++;
 
         
-        DateTime frameStamp = DateTime.Now;
+        
         //Get the input wrappers for each player.
         for (int i = 0; i < users.Count; i++){
             if (users[i].myInputData == null)
@@ -108,12 +120,14 @@ public class Lobby
                 
             } 
         }
+        timeToUpdate_e = (int)contaminationTimer.ElapsedMilliseconds;
         //update the world.
         gl.Update();
-        //Create gamestate CULLED for each user.
+        timeToUpdate_s = (int)contaminationTimer.ElapsedMilliseconds;
+        timeToUpdate_s -= timeToUpdate_e;
 
         //Create the gamestate to send back.
-        State = gl.GetGameState(frameStamp);
+        //State = gl.GetGameState(frameStamp);
 
         //Update Gamestate to clients
         UpdateState();
@@ -126,6 +140,11 @@ public class Lobby
             clock = DateTime.Now;
         }
 
+        timeToUpdate_u = (int)contaminationTimer.ElapsedMilliseconds;
+        timeToUpdate_u -= (timeToUpdate_e + timeToUpdate_s);
+        
+
+
     }
     public bool isHost(User user)
     {
@@ -137,7 +156,7 @@ public class Lobby
         for (int i = 0; i < users.Count; i++)
         {
             //Console.WriteLine ("Sending gamestate to user " + i);
-            byte[] newState = gl.GetGameStateCulled(DateTime.Now, users[i].uid);
+            byte[] newState = gl.GetGameStateCulled(tickClock.ElapsedMilliseconds, users[i].uid);
             //Console.WriteLine("DEBUG: CUlled length: " + newState.Length + ", Unculled length: " + State.Length);   
             users[i].Send("{GameStateUpdate}", newState);
         }

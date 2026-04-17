@@ -300,13 +300,13 @@ public class GameLogic
 
 
     //Header for simplification
-    public byte[] GetGameState(DateTime frameStamp)
+    public byte[] GetGameState(long timestamp)
     {
-        return this.GetGameState(frameStamp, players, activeObjects);
+        return this.GetGameState(timestamp, players, activeObjects);
     }
-    public byte[] GetGameStateCulled(DateTime frameStamp, Guid playerID)
+    public byte[] GetGameStateCulled(long timestamp, Guid playerID)
     {
-        return this.GetGameStateCulled(frameStamp, playerID, players, activeObjects);
+        return this.GetGameStateCulled(timestamp, playerID, players, activeObjects);
     }
 
     public long LoadGameState(byte[] gameState, List<ObjChangeWrapper> newObjects = null, List<ObjChangeWrapper> destroyedObjects = null)
@@ -326,21 +326,19 @@ public class GameLogic
         this.destroyedObjectsLoaded.Clear();
         return r;
     }
-    byte[] GetGameStateCulled(DateTime frameStamp, Guid playerID, params List<GameObject>[] groups)
+    byte[] GetGameStateCulled(long timestamp, Guid playerID, params List<GameObject>[] groups)
     {
         Player p = getPlayerWithUID(playerID);
         if (p == null)        {
             Console.WriteLine("[WARNING] Player not found for network culling! Sending full gamestate.");
-            return GetGameState(frameStamp, groups);
+            return GetGameState(timestamp, groups);
         }
-        //Make sure buffers are clear!
-        this.newObjectsLoaded.Clear();
-        this.destroyedObjectsLoaded.Clear();
+
 
         using (MemoryStream ms = new MemoryStream())
         using (BinaryWriter writer = new BinaryWriter(ms))
         {
-            writer.Write(frameStamp.Ticks);
+            writer.Write(timestamp);
             foreach (List<GameObject> group in groups)
             {
                 //write the group size.
@@ -372,12 +370,12 @@ public class GameLogic
         }
     }
     //Go through all groups passed, and, in order, write their meta data and object data.
-    byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
+    byte[] GetGameState(long timestamp, params List<GameObject>[] groups)
     {
         using (MemoryStream ms = new MemoryStream())
         using (BinaryWriter writer = new BinaryWriter(ms))
         {
-            writer.Write(frameStamp.Ticks);
+            writer.Write(timestamp);
             foreach (List<GameObject> group in groups)
             {
                 //write the group size.

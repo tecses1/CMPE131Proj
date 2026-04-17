@@ -4,10 +4,8 @@ using System.Runtime.CompilerServices;
 
 public class AlienSM : Enemy
 {
-    private double fireRate = 0.8;
     private DateTime lastShot = DateTime.MinValue;
-    private float detectionRange = 450f;
-    private float SMspeed = 3f;
+
     private float frameTimer = 0.0f;
     private float timePerFrame = 0.25f;
     
@@ -30,7 +28,7 @@ public class AlienSM : Enemy
 
         Projectile proj = new Projectile(new Transform(this.transform.rect.X, this.transform.rect.Y, 10, 10,this.transform.rotation), this.transform.Forward() * 20f, lifetime: 60);
         proj.owner = this.uid;
-        proj.damage = 5; //More is too op lol
+        proj.damage = 15; //More is too op lol
         gl.AddGameObject(proj);
         lastShot = DateTime.Now;
     }

@@ -1,18 +1,21 @@
 namespace ClientSideWASM;
 using Shared;
 using System.Drawing;
-public class ClientEnemy : Enemy
+using System.Dynamic;
+
+public class ClientUFO : AlienSM
 {
+
     private DrawRect healthBarBackground;
     private DrawRect healthBarFill;
     private int healthBarWidth = 70;
     private int healthBarHeight = 10;
     private Color currentHealthColor = Color.Green;
 
-    int MaxHealth = 400;
-    GameManager gm;
+    int MaxHealth = 650;
 
-    public ClientEnemy(GameManager gm, Transform t) : base(t)
+    GameManager gm;
+    public ClientUFO(GameManager gm, Transform t) : base(t)
     {
         
     
@@ -42,7 +45,6 @@ public class ClientEnemy : Enemy
         //register all of our things
         healthBarBackground.Register(gm);
         healthBarFill.Register(gm);
-
         this.gm = gm;
     }
     public void Deregister()
@@ -51,11 +53,10 @@ public class ClientEnemy : Enemy
         gm.UnregisterDrawRect(healthBarBackground);
     }
 
-
     public override void Render(float deltaTime)
     {
         this.UpdateHealthBarVisual();
-        Console.WriteLine("HP: " + hp);
+
         //draw our healthbar.
         this.healthBarBackground.SetPosition(this.transform.rect.X, this.transform.rect.Y + this.transform.rect.Height);
         //this.healthBarBackground.Draw(gm);
@@ -91,4 +92,6 @@ public class ClientEnemy : Enemy
             currentHealthColor = newColor;
         }
     }
+
+    
 }

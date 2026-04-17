@@ -13,8 +13,8 @@ public class Enemy : GameObject
         float wanderTimer = 0f;
 
         float radius = 600f; // how far the enemy can see. also used for wandering distance.
-
-        public int hp = 400;
+        [Network(0)]
+        public int hp {get; set;} = 400;
 
         public float shotTime = 0.66f;
         DateTime lastShot = DateTime.Now;
