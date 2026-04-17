@@ -294,7 +294,7 @@ void GenerateStars()
 
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
-
+            //Console.WriteLine("laoding gamestate...");
             gl.LoadGameState(gameState, incomingObjects,destroyedObjects);
             GameStateCheck(incomingObjects,destroyedObjects);
 

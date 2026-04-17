@@ -38,6 +38,7 @@ public class Button : DrawText
 
     public void Update()
     {
+        if (this.disableRender) return;
         if (this.transform.rect.IntersectsWith(InputManager.MouseRect))
         {
             this.setTextColor(hoverColor,255);
