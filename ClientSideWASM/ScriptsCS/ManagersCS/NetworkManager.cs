@@ -15,7 +15,7 @@ public class NetworkManager
     public string myLobby = "";
     public bool isHost = false;
     public StateManager StateQueue = new StateManager(8,65536);
-        private Stopwatch _intervalTimer = Stopwatch.StartNew();
+    private Stopwatch _intervalTimer = Stopwatch.StartNew();
 
     public List<byte[]> inputsReceived = new List<byte[]>();
     public List<byte[]> objsToAdd = new List<byte[]>();
@@ -37,7 +37,6 @@ public class NetworkManager
 
     public long PeekArrivalTime()
     {
-        
         return this.StateQueue.PeekArrivalTime();
 
     }

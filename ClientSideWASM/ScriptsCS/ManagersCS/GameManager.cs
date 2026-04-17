@@ -251,7 +251,8 @@ void GenerateStars()
         long arrivalTime = nm.PeekArrivalTime();
         //Console.WriteLine("Arrival time: " + arrivalTime + ", Rendertime: " + renderTime);
             // While the next packet in line is "due" to be played...
-        if (arrivalTime != -1 && arrivalTime <= renderTime) {
+        
+        while (arrivalTime != -1 && arrivalTime <= renderTime) {
             //Console.WriteLine("loading tick: " + nm.PeekTick());
             byte[] gameState = nm.GetGameState(out arrivalTime); //redundant. will fix if really truly unneccesary.
             
@@ -273,10 +274,11 @@ void GenerateStars()
             localPlayer.CenterCameraOnMe();
 
         }
-        else
-        {
+        if (arrivalTime == -1 || arrivalTime > renderTime) {
             _timeSinceLastLoad += deltaTime;
         }
+            
+        
         
         
 

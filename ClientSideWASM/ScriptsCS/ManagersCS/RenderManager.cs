@@ -228,7 +228,7 @@ public class RenderManager
     {
         // No more constants! We use the measured gap between the packets.
         // We still add a tiny bit of "slack" (e.g., 0.5ms) just in case of float rounding.
-        if (_currentInterpolationDuration <= 0.0001f) {
+        if (_currentInterpolationDuration == 0) {
             Console.WriteLine("error: divide by 0 prevention, _cUD = " + _currentInterpolationDuration);
             return 1f; // Avoid division by zero, snap to target.
         }
