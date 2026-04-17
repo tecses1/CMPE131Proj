@@ -110,12 +110,13 @@ public class Lobby
         }
         //update the world.
         gl.Update();
+        //Create gamestate CULLED for each user.
 
         //Create the gamestate to send back.
         State = gl.GetGameState(frameStamp);
 
         //Update Gamestate to clients
-        UpdateState(State);
+        UpdateState();
 
         if (DateTime.Now - clock > TimeSpan.FromSeconds(1))
         {
@@ -131,11 +132,13 @@ public class Lobby
         return users[0] == user;
     }
     //Called when host sends over their gamestate.
-    public void UpdateState(byte[] newState)
+    public void UpdateState()
     {
         for (int i = 0; i < users.Count; i++)
         {
             //Console.WriteLine ("Sending gamestate to user " + i);
+            byte[] newState = gl.GetGameStateCulled(DateTime.Now, users[i].uid);
+            //Console.WriteLine("DEBUG: CUlled length: " + newState.Length + ", Unculled length: " + State.Length);   
             users[i].Send("{GameStateUpdate}", newState);
         }
 

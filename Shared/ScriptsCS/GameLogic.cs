@@ -294,7 +294,6 @@ public class GameLogic
             Console.WriteLine("Could not find match for instantiate: " + className);
             return null;
         }
-
         newObj.uid = Guid.Parse(uid);
         return newObj;
     }
@@ -304,6 +303,10 @@ public class GameLogic
     public byte[] GetGameState(DateTime frameStamp)
     {
         return this.GetGameState(frameStamp, players, activeObjects);
+    }
+    public byte[] GetGameStateCulled(DateTime frameStamp, Guid playerID)
+    {
+        return this.GetGameStateCulled(frameStamp, playerID, players, activeObjects);
     }
 
     public long LoadGameState(byte[] gameState, List<ObjChangeWrapper> newObjects = null, List<ObjChangeWrapper> destroyedObjects = null)
@@ -323,13 +326,54 @@ public class GameLogic
         this.destroyedObjectsLoaded.Clear();
         return r;
     }
-    //Go through all groups passed, and, in order, write their meta data and object data.
-    byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
+    byte[] GetGameStateCulled(DateTime frameStamp, Guid playerID, params List<GameObject>[] groups)
     {
+        Player p = getPlayerWithUID(playerID);
+        if (p == null)        {
+            Console.WriteLine("[WARNING] Player not found for network culling! Sending full gamestate.");
+            return GetGameState(frameStamp, groups);
+        }
         //Make sure buffers are clear!
         this.newObjectsLoaded.Clear();
         this.destroyedObjectsLoaded.Clear();
 
+        using (MemoryStream ms = new MemoryStream())
+        using (BinaryWriter writer = new BinaryWriter(ms))
+        {
+            writer.Write(frameStamp.Ticks);
+            foreach (List<GameObject> group in groups)
+            {
+                //write the group size.
+                long countPosition = ms.Position;
+                int objectsWrote = 0;
+                writer.Write((int)0);
+                int playerViewX = 1024;
+                int playerViewY = 768;
+                Rect playerView = new Rect(p.transform.rect.X, p.transform.rect.Y, playerViewX * 2, playerViewY * 2);
+                foreach (GameObject go in group)
+                {
+                    //Add a basic culling. Can be optimized later. Server side is not starved for resources...
+                    if (go.InteresectsWith(playerView))
+                    {
+                        objectsWrote++;
+                        go.WriteMetaData(writer);
+                        go.Encode(writer);
+                    }
+
+
+                }
+                long endPosition = ms.Position; // Save the end of the stream
+                ms.Position = countPosition;    // Jump back to the placeholder
+                writer.Write(objectsWrote);     // Overwrite with the real count
+                ms.Position = endPosition;      // Jump back to the end to continue writing
+      
+            }
+            return ms.ToArray();
+        }
+    }
+    //Go through all groups passed, and, in order, write their meta data and object data.
+    byte[] GetGameState(DateTime frameStamp, params List<GameObject>[] groups)
+    {
         using (MemoryStream ms = new MemoryStream())
         using (BinaryWriter writer = new BinaryWriter(ms))
         {

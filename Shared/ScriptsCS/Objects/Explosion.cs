@@ -27,6 +27,7 @@ public class Explosion : GameObject
                 currentFrame += 1;
                 if (currentFrame > 5)
                 {
+                    if (this.gl == null){ Console.WriteLine("GL is null in explosion!"); return; }
                      base.Kill();
 
                 }

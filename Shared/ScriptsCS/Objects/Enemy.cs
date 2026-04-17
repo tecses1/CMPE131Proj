@@ -150,24 +150,24 @@ public class Enemy : GameObject
         switch (edge)
         {
             case 0: //top
-                spawnX = r.Next(0, GameConstants.worldSizeX);
+                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
                 spawnY = -size;
                 break;
             case 1: //right
                 spawnX = GameConstants.worldSizeX + size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
+                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
                 break;
             case 2: //bottom
-                spawnX = r.Next(0, GameConstants.worldSizeX);
+                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
                 spawnY = GameConstants.worldSizeY + size;
                 break;
             case 3: //left
                 spawnX = -size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
+                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
                 break;
             default:
                 spawnX = -size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
+                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
                 break;
 
         }
