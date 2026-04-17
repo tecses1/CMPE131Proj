@@ -192,7 +192,7 @@ public class GameLogic
             {
                 //Enemy a = Enemy.GenerateEnemy();
 
-                AlienSM UFO = new AlienSM(Enemy.GenerateTransform());
+                AlienSM UFO = new AlienSM(Transform.GenerateTransform(50));
                 AddGameObject(UFO);
             }
 

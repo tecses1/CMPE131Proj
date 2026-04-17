@@ -141,46 +141,12 @@ public class Enemy : GameObject
             
         }
     //generate random trasnform out outside bundaries of world
-        public static Transform GenerateTransform()
-    {
-        Random r = new Random();
-        int size = 50;
-        int spawnX,spawnY;
-        int edge = r.Next(0,4);
-        switch (edge)
-        {
-            case 0: //top
-                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
-                spawnY = -size;
-                break;
-            case 1: //right
-                spawnX = GameConstants.worldSizeX + size;
-                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
-                break;
-            case 2: //bottom
-                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
-                spawnY = GameConstants.worldSizeY + size;
-                break;
-            case 3: //left
-                spawnX = -size;
-                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
-                break;
-            default:
-                spawnX = -size;
-                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
-                break;
 
-        }
-        Transform t = new Transform(spawnX, spawnY, size, size);
-        //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
-        return t;
-        //gl.AddGameObject(e):
-        }
     //Helper function to spawn an enemy on world bounds.
     public static Enemy GenerateEnemy()
     {
 
-        Enemy e = new Enemy(GenerateTransform());
+        Enemy e = new Enemy(Transform.GenerateTransform(50));
         //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
         return e;
         //gl.AddGameObject(e):

@@ -84,33 +84,7 @@ public class Asteroid : GameObject
             size = size * 5;
         }
                 
-        int spawnX,spawnY;
-        int edge = r.Next(0,4);
-        switch (edge)
-        {
-            case 0: //top
-                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
-                spawnY = -size;
-                break;
-            case 1: //right
-                spawnX = GameConstants.worldSizeX + size;
-                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
-                break;
-            case 2: //bottom
-                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
-                spawnY = GameConstants.worldSizeY + size;
-                break;
-            case 3: //left
-                spawnX = -size;
-                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
-                break;
-            default:
-                spawnX = -size;
-                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
-                break;
-
-        }
-        Transform t = new Transform(spawnX, spawnY, size, size);
+        Transform t = Transform.GenerateTransform(size);
         Asteroid a = new Asteroid(t,r.Next(3,6));
         a.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
         return a;

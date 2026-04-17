@@ -23,22 +23,22 @@ public class HomeManager : RenderManager
     List<DrawText> collideableTexts = new List<DrawText>();
         // main screen
             DrawText title;
-            DrawText settingsText;
-            DrawText playText;
+            Button settingsText;
+            Button playText;
         //lobby screen
             DrawText lobbyTitle;
             DrawText currentLobyText;
             InputField lobbyInput;
-            DrawText launchText;
-            DrawText requestButton;
-            DrawText joinButton;
+            Button launchText;
+            Button requestButton;
+            Button joinButton;
 
-            DrawText lobbyBack;
+            Button lobbyBack;
         //settings screen
             DrawText settingsTitle;
             InputField playerNameTextBox;
             
-            DrawText settingsBack;
+            Button settingsBack;
 
     //bg stars
     float starSpeed = 0.1f;
@@ -97,12 +97,9 @@ public class HomeManager : RenderManager
 
     //screen functions
 
-    public void RegisterText(DrawText t, bool collideable = false)
+    public void RegisterText(DrawText t)
     {
-        if (collideable)
-        {
-            this.collideableTexts.Add(t);
-        }
+        collideableTexts.Add(t);
         RegisterDrawTextToRender(t);
     }
     public void Initialize()
@@ -112,63 +109,63 @@ public class HomeManager : RenderManager
         //Main Title Inititialize
         Transform titleTransform = new Transform(Settings.CanvasWidth / 2, 100, 600, 70);
         title = new DrawText("GALAX.IO", titleTransform);
-        RegisterText(title,false);   
+        RegisterText(title);   
 
 
         Transform playTransform = new Transform(Settings.CanvasWidth / 2, 250, 250, 50);
-        playText = new DrawText("Play", playTransform);
-        RegisterText(playText,true);   
+        playText = new Button("Play", playTransform);
+        RegisterText(playText);   
 
         Transform settingsTransform = new Transform(Settings.CanvasWidth / 2, 300, 250, 50);
-         settingsText = new DrawText("Settings", settingsTransform);
-        RegisterText(settingsText,true);   
+         settingsText = new Button("Settings", settingsTransform);
+        RegisterText(settingsText);   
 
 
         //Lobby screen
   
         Transform lobbyTitleTrasnform = new Transform(Settings.CanvasWidth / 2, 100, 250, 70);
         lobbyTitle = new DrawText("Lobbies", lobbyTitleTrasnform);
-        RegisterText(lobbyTitle,false);   
+        RegisterText(lobbyTitle);   
 
         Transform currentLobbyTransform = new Transform(Settings.CanvasWidth / 2, 200, 200, 50);
         currentLobyText = new DrawText("Current Lobby: None", currentLobbyTransform);
-        RegisterText(currentLobyText,false);   
+        RegisterText(currentLobyText);   
 
         Transform lobbyTextBoxTransform = new Transform(Settings.CanvasWidth / 2, 300, 400, 50);
         lobbyInput = new InputField("", lobbyTextBoxTransform);
-        RegisterText(lobbyInput,true);   
+        RegisterText(lobbyInput);   
 
         Transform requestButtonTransform = new Transform(Settings.CanvasWidth / 2-50, 400, 100, 50);
-        requestButton = new DrawText("Create", requestButtonTransform);
-        RegisterText(requestButton,true);   
+        requestButton = new Button("Create", requestButtonTransform);
+        RegisterText(requestButton);   
 
         Transform joinButtonTransform = new Transform(Settings.CanvasWidth / 2 + 50, 400, 100, 50);
-        joinButton = new DrawText("Join", joinButtonTransform);
-        RegisterText(joinButton,true);   
+        joinButton = new Button("Join", joinButtonTransform);
+        RegisterText(joinButton);   
 
         Transform launchTextTransform = new Transform(Settings.CanvasWidth / 2, 400, 250, 70);
-        launchText = new DrawText("LAUNCH!", launchTextTransform);
-        RegisterText(launchText,true);   
+        launchText = new Button("LAUNCH!", launchTextTransform);
+        RegisterText(launchText);   
 
         Transform lobbyBackTransform = new Transform(Settings.CanvasWidth / 2, 500, 250, 50);
-        lobbyBack = new DrawText("Back", lobbyBackTransform);
-        RegisterText(lobbyBack,true);   
+        lobbyBack = new Button("Back", lobbyBackTransform);
+        RegisterText(lobbyBack);   
 
         //Settings screen
         Transform settingsTitleTransform = new Transform(Settings.CanvasWidth / 2, 100, 250, 70);
         settingsTitle = new DrawText("Settings", settingsTitleTransform);
-        RegisterText(settingsTitle,false);   
+        RegisterText(settingsTitle);   
 
         Transform settingsPlayerNameTextBoxTransform = new Transform(Settings.CanvasWidth / 2, 200, 250, 50);
         playerNameTextBox = new InputField(Settings.name, settingsPlayerNameTextBoxTransform);
 
-        RegisterText(playerNameTextBox,true);   
+        RegisterText(playerNameTextBox);   
 
 
 
         Transform settingsBackTrasnform = new Transform(Settings.CanvasWidth / 2, 500, 250, 50);
-        settingsBack = new DrawText("Back", settingsBackTrasnform);
-        RegisterText(settingsBack,true);   
+        settingsBack = new Button("Back", settingsBackTrasnform);
+        RegisterText(settingsBack);   
 
 
 
@@ -214,50 +211,27 @@ public class HomeManager : RenderManager
             playerNameTextBox.disableRender = false;
         }
     }
-    public void MainScreen(List<DrawText> hovered)
+    public void MainScreen()
     {
 
 
-        if (hovered.Contains(playText))
+        if (playText.clicked)
         {
-            playText.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
-            {
-                SwitchScreen(1);
-            }
-        }
-        else
-        {
-            playText.setTextColor(Color.White,255);
+            SwitchScreen(1);
         }
 
-        if (hovered.Contains(settingsText))
+
+        if (settingsText.clicked)
         {
-            settingsText.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
-            {
-                SwitchScreen(2);
-            }
+            SwitchScreen(2);
         }
-        else
-        {
-            settingsText.setTextColor(Color.White,255);
-        }
+
+
     }
 
-    public async Task LobbyScreen(List<DrawText> hovered)
+    public async Task LobbyScreen()
     {
-        if (editing == lobbyInput)
-        {
-            //check if player clicked outside of the textbox.
-            bool check = userInput.CLeftPressed && !hovered.Contains(lobbyInput); 
-            if (lobbyInput.Update(userInput) || check) // handles the ticking
-            {
-                // Handle the case when the user presses Enter
-                editing = null; // stop editing
 
-            }
-        }
         if (nm.myLobby == "")
         {
             currentLobyText.text = "Current Lobby: None";
@@ -275,10 +249,8 @@ public class HomeManager : RenderManager
             currentLobyText.text = "Current Lobby: " + nm.myLobby;
         }
 
-        if (hovered.Contains(joinButton))
-        {
-            joinButton.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
+
+            if (joinButton.clicked)
             {
                 bool success = await RequestJoinLobby(lobbyInput.placeholder);
                 if (success)
@@ -291,16 +263,10 @@ public class HomeManager : RenderManager
                     this.lobbyInput.placeholder = "FAILED";
                 }
             }
-        }
-        else
-        {
-            joinButton.setTextColor(Color.White,255);
-        }
 
-        if (hovered.Contains(requestButton))
-        {
-            requestButton.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
+
+
+            if (requestButton.clicked)
             {
                 bool success = await RequestNewLobby(lobbyInput.placeholder);
                 if (success)
@@ -313,104 +279,35 @@ public class HomeManager : RenderManager
                     this.lobbyInput.placeholder = "FAILED";
                 }
             }
-        }
-        else
-        {
-            requestButton.setTextColor(Color.White,255);
-        }
+        
 
-        if (hovered.Contains(launchText))
-        {
-            launchText.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
+
+   
+            if (launchText.clicked)
             {
                 //launch the game!
                 //naviate to the game screen
                 Nav.NavigateTo("/Game");
 
             }
-        }
-        else
-        {
-            launchText.setTextColor(Color.White,255);
-        }
+        
 
-        if (hovered.Contains(lobbyBack))
-        {
-            lobbyBack.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
+
+
+            if (lobbyBack.clicked)
             {
                 SwitchScreen(0);
             }
-        }
-        else
-        {
-            lobbyBack.setTextColor(Color.White,255);
-        }
+        
 
-
-        if (hovered.Contains(lobbyInput))
-        {
-            lobbyInput.setFillColor(Color.LightYellow,255);
-            if (userInput.CLeftPressed)
-            {
-                editing = lobbyInput;
-                lobbyInput.Select();
-            }
-        }
-        else
-        {
-            lobbyInput.setFillColor(Color.White,255);
-        }
     }
 
-    public void SettingsScreen(List<DrawText> hovered)
+    public void SettingsScreen()
     {
-        if (editing == playerNameTextBox)
+        if (settingsBack.clicked)
         {
-            //check if player clicked outside of the textbox.
-            bool check = userInput.CLeftPressed && !hovered.Contains(playerNameTextBox); 
-            if (playerNameTextBox.Update(userInput) || check) // handles the ticking
-            {
-                if(playerNameTextBox.placeholder == "") { //Doesn't allow blank name
-                    playerNameTextBox.placeholder = "Player";
-                }
-                // Handle the case when the user presses Enter
-                editing = null; // stop editing
-                Settings.name = playerNameTextBox.placeholder; // save the new name
-                SaveToStorage(); // save to local storage and send to server
-                playerNameTextBox.Deselect();
-            }
-        }
-
-        if (hovered.Contains(settingsBack))
-        {
-            settingsBack.setTextColor(Color.Blue,255);
-            if (userInput.CLeftPressed)
-            {
-                SwitchScreen(0);
-            }
-        }
-        else
-        {
-            settingsBack.setTextColor(Color.White,255);
-        }
-
-        if (hovered.Contains(playerNameTextBox))
-        {
-            playerNameTextBox.setFillColor(Color.LightYellow,255);
-            if (userInput.CLeftPressed)
-            {
-                editing = playerNameTextBox;
-                playerNameTextBox.Select();
-                if (playerNameTextBox.placeholder == "Player") {
-                    playerNameTextBox.placeholder = "";
-                }
-            }
-        }
-        else
-        {
-            playerNameTextBox.setFillColor(Color.White,255);
+            SaveToStorage();
+            SwitchScreen(0);
         }
 
 
@@ -420,9 +317,6 @@ public class HomeManager : RenderManager
     {
         base.Update();
 
-        //FIX THIS LTATER.
-        //All classes can now reference input directly.
-        this.userInput = InputManager.currentInput;
 
         foreach (Star s in stars)
         {
@@ -433,33 +327,33 @@ public class HomeManager : RenderManager
             }
         }
 
-        //make sure the rect for the mouse is updated to our client input
-        this.mouse.rect.X = (float) userInput.MouseX;
-        this.mouse.rect.Y = (float) userInput.MouseY;
-        //C heck if mouse is over these texts, we can do dynamic stuff with this.
-        List<DrawText> texthovered = new List<DrawText>();
-        foreach(DrawText t in this.collideableTexts)
+        foreach (DrawText t in collideableTexts)
         {
-            //Console.WriteLine("Checking intersection with text: " + t.text + " at " + t.transform.rect.X + "," + 
-            //t.transform.rect.Y + "," + t.transform.rect.Width + "," + t.transform.rect.Height + " | mosue at " 
-            //+ mouse.rect.X + "," + mouse.rect.Y + "," + mouse.rect.Width + "," + mouse.rect.Height);
-            if (mouse.rect.IntersectsWith(t.transform.rect) && !t.disableRender)
+            if (!t.disableRender)
             {
-                //clicked on a text object, pass that info to the update function so it can handle it.
-                texthovered.Add(t);
+                if (t.GetType() == typeof(Button))
+                {
+                    Button b = (Button)t;
+                    b.Update();
+                }
+                else if (t.GetType() == typeof(InputField))
+                {
+                    InputField i = (InputField)t;
+                    i.Update();
+                }
             }
         }
         
         switch (cScreen)
         {
             case 0:
-                MainScreen(texthovered);
+                MainScreen();
                 break;
             case 1:
-                LobbyScreen(texthovered);
+                LobbyScreen();
                 break;
             case 2:
-                SettingsScreen(texthovered);
+                SettingsScreen();
                 break;
         }
 
