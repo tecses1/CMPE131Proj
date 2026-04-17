@@ -268,6 +268,10 @@ public class HomeManager : RenderManager
 
             if (requestButton.clicked)
             {
+                if (lobbyInput.placeholder == "")
+                {
+                    lobbyInput.placeholder = Settings.name + "'s Game";
+                }
                 bool success = await RequestNewLobby(lobbyInput.placeholder);
                 if (success)
                 {
