@@ -59,7 +59,13 @@
                                 <TextBlock Text="{Binding PlayerCount, StringFormat='Players: {0}'}" Foreground="#AAA"/>
                                 
                                 <TextBlock Text="{Binding tps}" Foreground="#AAA"/>
-                                
+
+                                <TextBlock Text="{Binding ContaminationTime, StringFormat='Contamination time: {0} ms'}" Foreground="#AAA"/>
+                                <TextBlock Text="{Binding ExtraTime, StringFormat='    UI and other time: {0} ms'}" Foreground="#AAA"/>
+                                <TextBlock Text="{Binding UpdateTime, StringFormat='    Time to update GameState: {0} ms'}" Foreground="#AAA"/>
+                                <TextBlock Text="{Binding UserTime, StringFormat='    Time To Update Users: {0} ms'}" Foreground="#AAA"/>
+
+
                                 <TextBlock Text="{Binding Uptime}" Foreground="#AAA"/>
                                 
                                 <TextBlock Text="{Binding UserList}" Foreground="#777" FontStyle="Italic" TextWrapping="Wrap"/>

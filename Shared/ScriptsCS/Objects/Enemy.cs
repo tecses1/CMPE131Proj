@@ -13,8 +13,8 @@ public class Enemy : GameObject
         float wanderTimer = 0f;
 
         float radius = 600f; // how far the enemy can see. also used for wandering distance.
-
-        public int hp = 400;
+        [Network(0)]
+        public int hp {get; set;} = 400;
 
         public float shotTime = 0.66f;
         DateTime lastShot = DateTime.Now;
@@ -141,46 +141,12 @@ public class Enemy : GameObject
             
         }
     //generate random trasnform out outside bundaries of world
-        public static Transform GenerateTransform()
-    {
-        Random r = new Random();
-        int size = 50;
-        int spawnX,spawnY;
-        int edge = r.Next(0,4);
-        switch (edge)
-        {
-            case 0: //top
-                spawnX = r.Next(0, GameConstants.worldSizeX);
-                spawnY = -size;
-                break;
-            case 1: //right
-                spawnX = GameConstants.worldSizeX + size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
-                break;
-            case 2: //bottom
-                spawnX = r.Next(0, GameConstants.worldSizeX);
-                spawnY = GameConstants.worldSizeY + size;
-                break;
-            case 3: //left
-                spawnX = -size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
-                break;
-            default:
-                spawnX = -size;
-                spawnY = r.Next(0, GameConstants.worldSizeY);
-                break;
 
-        }
-        Transform t = new Transform(spawnX, spawnY, size, size);
-        //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
-        return t;
-        //gl.AddGameObject(e):
-        }
     //Helper function to spawn an enemy on world bounds.
     public static Enemy GenerateEnemy()
     {
 
-        Enemy e = new Enemy(GenerateTransform());
+        Enemy e = new Enemy(Transform.GenerateTransform(50));
         //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
         return e;
         //gl.AddGameObject(e):

@@ -30,6 +30,7 @@ public class GameManager : RenderManager
     public List<ObjChangeWrapper> incomingObjects = new List<ObjChangeWrapper>(); //used to hold objects that are created from gamestate updates, so we can add them to the render manager after loading the gamestate. 
     public List<ObjChangeWrapper> destroyedObjects = new List<ObjChangeWrapper>(); //used to hold objects that are destroyed from gamestate updates, so we can add them to the render manager after loading the gamestate. 
 
+    public List<GameObject> renderables = new List<GameObject>();
     DrawText isLocal;
 
     ClientInputWrapper cInput;
@@ -199,13 +200,28 @@ void GenerateStars()
                 //Because we modififed the collection, we have to close this loop.
                 return;
 
-            }else
-            if (go.GetType() == typeof(Enemy))
+            }
+            else if (go.GetType() == typeof(Enemy))
             {
                 //Replace the enemy with our client side render that handles healthbars! :) 
-                wrapper.myGroup.Add(wrapper.myObj);
-            }else{
-                wrapper.myGroup.Add(wrapper.myObj);
+                //wrapper.myGroup.Add(wrapper.myObj);
+                ClientEnemy e = new ClientEnemy(this,go.transform);
+                e.uid = go.uid;
+
+                myGroup.Add(e);
+                renderables.Add(e);
+            }
+            else if (go.GetType() == typeof(AlienSM))
+            {
+                ClientUFO e = new ClientUFO(this,go.transform);
+                e.uid = go.uid;
+
+                myGroup.Add(e);   
+                renderables.Add(e);
+            }
+
+            else{
+                myGroup.Add(go);
             }
         
         }
@@ -216,6 +232,19 @@ void GenerateStars()
             List<GameObject> myGroup = wrapper.myGroup;
             //for now, just remove them so GC destroys them.
             myGroup.Remove(go);
+            if (go.GetType() == typeof(ClientEnemy) || go.GetType() == typeof(ClientUFO))
+            {
+                if (go.GetType() == typeof(ClientEnemy))
+                {
+                    ((ClientEnemy)go).Deregister();
+                }
+                else
+                {
+                    ((ClientUFO)go).Deregister();
+                }
+                renderables.Remove(go);
+
+            }
         }
 
     }
@@ -248,22 +277,24 @@ void GenerateStars()
         }
         
         double renderTime = timestamp - InterpolationDelay;
-        long arrivalTime = nm.PeekArrivalTime();
-        //Console.WriteLine("Arrival time: " + arrivalTime + ", Rendertime: " + renderTime);
+        long nextArrivalTime = nm.PeekArrivalTime();
+        long currentArrivalTime;
+        //Console.WriteLine("Arrival time: " + nextArrivalTime + ", Rendertime: " + renderTime);
             // While the next packet in line is "due" to be played...
-        if (arrivalTime != -1 && arrivalTime <= renderTime) {
+        bool updated = false;
+        while (nextArrivalTime != -1 && nextArrivalTime <= renderTime) {
             //Console.WriteLine("loading tick: " + nm.PeekTick());
-            byte[] gameState = nm.GetGameState(out arrivalTime); //redundant. will fix if really truly unneccesary.
-            
+            byte[] gameState = nm.GetGameState(out currentArrivalTime); //redundant. will fix if really truly unneccesary.
+
             //Console.WriteLine("DEBUG: PROCESSING GAME STATE!!!!");
             // We need to know the time gap between the state we are LEAVING
             // and the state we just LOADED.
             _lastTransformTime = _nextTransformTime;
-            _nextTransformTime = arrivalTime;
+            _nextTransformTime = currentArrivalTime;
 
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
-
+            //Console.WriteLine("laoding gamestate...");
             gl.LoadGameState(gameState, incomingObjects,destroyedObjects);
             GameStateCheck(incomingObjects,destroyedObjects);
 
@@ -271,12 +302,16 @@ void GenerateStars()
             destroyedObjects.Clear();
             //CenterCameraOn(this.localPlayer.transform, false, false);
             localPlayer.CenterCameraOnMe();
+            updated = true;
+            nextArrivalTime = nm.PeekArrivalTime();
 
         }
-        else
+        if (!updated)
         {
             _timeSinceLastLoad += deltaTime;
         }
+
+        
         
         
 
@@ -285,6 +320,11 @@ void GenerateStars()
         foreach (ClientPlayer cp in clientPlayers)
         {
             cp.Render(deltaTime); //render local only stuff, like names and healthbars.
+        }
+
+        foreach (GameObject go in renderables)
+        {
+            go.Render(deltaTime);
         }
         //localPlayer.CenterCameraOnMe((float)renderTime);
         //localPlayer.CenterCameraOnMe(deltaTime);

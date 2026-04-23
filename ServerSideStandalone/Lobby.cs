@@ -20,7 +20,13 @@ public class Lobby
     public LobbyNode node;
     int tps;
     int ticks;
-    DateTime clock = DateTime.Now;
+    Stopwatch tickClock = Stopwatch.StartNew();
+    DateTime clock;
+    Stopwatch contaminationTimer = new Stopwatch();
+
+    int timeToUpdate_e; //extra update time
+    int timeToUpdate_s; //lolad inputs and update logic
+    int timeToUpdate_u; //time to update users
     public Lobby()
     {
         gl = new GameLogic();
@@ -32,7 +38,7 @@ public class Lobby
     }
     public void AddUser(User user)
     {
-
+        if (users.Contains(user)) return;
         users.Add(user);
         Console.WriteLine("user added: " +user.name + ", Debug: " + users.Count);
         //GeneratePlayer(user);
@@ -52,12 +58,13 @@ public class Lobby
         
 
     }
-    public void GeneratePlayer(User u)
+    public void GeneratePlayer(User u, InputWrapper ci)
     {
                 //Add a player, 0,0 is center of world.
         Player p = new Player(new Transform(0, 0, 50,50));
         p.playerNameString = u.name;
         p.uid = u.uid;
+        p.cInput = ci;
         gl.AddPlayer(p);
         p.RegisterGameLogic(gl);
         Console.WriteLine("Making new player: " + p.playerNameString);  
@@ -68,11 +75,17 @@ public class Lobby
     }
     public void Update()
     {
+        contaminationTimer.Restart();
         Application.Current.Dispatcher.Invoke(() =>
         {
             node.PlayerCount = users.Count;
             node.UserList = GetUsers();
             node.tps = "Ticks per second: " + tps;
+            node.ContaminationTime = timeToUpdate_e + timeToUpdate_s + timeToUpdate_u;
+            node.ExtraTime = timeToUpdate_e;
+            node.UserTime = timeToUpdate_u;
+            node.UpdateTime = timeToUpdate_s;
+
         });
         if (isEmpty())
         {
@@ -87,7 +100,7 @@ public class Lobby
         ticks++;
 
         
-        DateTime frameStamp = DateTime.Now;
+        
         //Get the input wrappers for each player.
         for (int i = 0; i < users.Count; i++){
             if (users[i].myInputData == null)
@@ -104,18 +117,22 @@ public class Lobby
             }
             else //otherwise, we should check if we have input and make the player
             {
-                GeneratePlayer(users[i]);
+                GeneratePlayer(users[i],input);
+
                 
             } 
         }
+        timeToUpdate_e = (int)contaminationTimer.ElapsedMilliseconds;
         //update the world.
         gl.Update();
+        timeToUpdate_s = (int)contaminationTimer.ElapsedMilliseconds;
+        timeToUpdate_s -= timeToUpdate_e;
 
         //Create the gamestate to send back.
-        State = gl.GetGameState(frameStamp);
+        //State = gl.GetGameState(frameStamp);
 
         //Update Gamestate to clients
-        UpdateState(State);
+        UpdateState();
 
         if (DateTime.Now - clock > TimeSpan.FromSeconds(1))
         {
@@ -125,17 +142,29 @@ public class Lobby
             clock = DateTime.Now;
         }
 
+        timeToUpdate_u = (int)contaminationTimer.ElapsedMilliseconds;
+        timeToUpdate_u -= (timeToUpdate_e + timeToUpdate_s);
+        
+
+
     }
     public bool isHost(User user)
     {
         return users[0] == user;
     }
     //Called when host sends over their gamestate.
-    public void UpdateState(byte[] newState)
+    public void UpdateState()
     {
         for (int i = 0; i < users.Count; i++)
         {
             //Console.WriteLine ("Sending gamestate to user " + i);
+            byte[] newState = gl.GetGameStateCulled(tickClock.ElapsedMilliseconds, users[i].uid);
+            if (newState == null)
+            {
+                newState = gl.GetGameState(tickClock.ElapsedMilliseconds);
+                Console.WriteLine("Player " + users[i].uid + " not found. Likely not updated yet. Sending full state.");
+            }
+            //Console.WriteLine("DEBUG: CUlled length: " + newState.Length + ", Unculled length: " + State.Length);   
             users[i].Send("{GameStateUpdate}", newState);
         }
 
