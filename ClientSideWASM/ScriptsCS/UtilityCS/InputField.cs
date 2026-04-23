@@ -33,20 +33,19 @@ public class InputField : DrawText
     //returns true if enter is pressed, to signal we're done editing.
     public void Update()
     {
-        ClientInputWrapper ci = InputManager.currentInput;
         // If the text is currently the placeholder, and it's been at least 500ms since the last tick, toggle the visibility of the placeholder text
         //TODO: Fix | showing when deselected on that frame
 
         if (InputManager.MouseRect.IntersectsWith(this.transform.rect))
         {
-            if (InputManager.currentInput.LeftPressed)
+            if (InputManager.currentInput.CLeftPressed)
             {
                 Select();
             }
         }
         else
         {
-            if (InputManager.currentInput.LeftPressed)
+            if (InputManager.currentInput.CLeftPressed)
             {
                 Deselect();
             }
@@ -71,10 +70,10 @@ public class InputField : DrawText
         }
         if (selected){
             this.setFillColor(Color.LightYellow,255);
-            foreach (var key in ci.keysPressed)
+            foreach (var key in InputManager.currentInput.keysPressed)
             {
                 
-                if (ci.CKeyPressed(key.Key)) // Check if this key was just pressed
+                if (InputManager.currentInput.CKeyPressed(key.Key)) // Check if this key was just pressed
                 {
                 
                 

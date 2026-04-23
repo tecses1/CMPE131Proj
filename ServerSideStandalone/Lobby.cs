@@ -58,12 +58,13 @@ public class Lobby
         
 
     }
-    public void GeneratePlayer(User u)
+    public void GeneratePlayer(User u, InputWrapper ci)
     {
                 //Add a player, 0,0 is center of world.
         Player p = new Player(new Transform(0, 0, 50,50));
         p.playerNameString = u.name;
         p.uid = u.uid;
+        p.cInput = ci;
         gl.AddPlayer(p);
         p.RegisterGameLogic(gl);
         Console.WriteLine("Making new player: " + p.playerNameString);  
@@ -116,7 +117,8 @@ public class Lobby
             }
             else //otherwise, we should check if we have input and make the player
             {
-                GeneratePlayer(users[i]);
+                GeneratePlayer(users[i],input);
+
                 
             } 
         }
@@ -157,6 +159,11 @@ public class Lobby
         {
             //Console.WriteLine ("Sending gamestate to user " + i);
             byte[] newState = gl.GetGameStateCulled(tickClock.ElapsedMilliseconds, users[i].uid);
+            if (newState == null)
+            {
+                newState = gl.GetGameState(tickClock.ElapsedMilliseconds);
+                Console.WriteLine("Player " + users[i].uid + " not found. Likely not updated yet. Sending full state.");
+            }
             //Console.WriteLine("DEBUG: CUlled length: " + newState.Length + ", Unculled length: " + State.Length);   
             users[i].Send("{GameStateUpdate}", newState);
         }

@@ -330,8 +330,7 @@ public class GameLogic
     {
         Player p = getPlayerWithUID(playerID);
         if (p == null)        {
-            Console.WriteLine("[WARNING] Player not found for network culling! Sending full gamestate.");
-            return GetGameState(timestamp, groups);
+            return null;
         }
 
 
