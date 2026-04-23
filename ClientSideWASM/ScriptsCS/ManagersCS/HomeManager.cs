@@ -75,9 +75,9 @@ public class HomeManager : RenderManager
         
         // Instead of iterating 25 million times, we calculate how many stars we want.
         // Adjust 'DensityConstant' to get the look you want (e.g., 0.0001 for 1 star per 10k pixels)
-        int starCount = (int)(totalArea * Settings.Sparseness / Math.Sqrt(totalArea) ); 
+        int starCount = (int)(totalArea * Settings.Sparseness / Math.Sqrt(totalArea) ) ; 
         Console.WriteLine("spawning " + starCount + " stars for bg");
-        for (int i = 0; i < starCount; i++)
+        for (int i = 0; i < starCount / 2; i++)
         {
             int x = r.Next(0, Settings.CanvasWidth);
             int y = r.Next(0, Settings.CanvasHeight);
@@ -225,7 +225,8 @@ public class HomeManager : RenderManager
         {
             SwitchScreen(2);
         }
-
+        this.playText.Update();
+        this.settingsText.Update();
 
     }
 
@@ -239,6 +240,11 @@ public class HomeManager : RenderManager
             this.requestButton.disableRender = false;
             this.joinButton.disableRender = false;
             this.lobbyInput.disableRender = false;
+            this.lobbyBack.Update();
+            this.requestButton.Update();
+            this.joinButton.Update();
+            this.lobbyInput.Update();
+
         }
         else
         {
@@ -247,6 +253,9 @@ public class HomeManager : RenderManager
             this.lobbyInput.disableRender = true;
             this.launchText.disableRender = false;
             currentLobyText.text = "Current Lobby: " + nm.myLobby;
+
+            this.launchText.Update();
+            this.lobbyBack.Update();
         }
 
 
@@ -314,13 +323,16 @@ public class HomeManager : RenderManager
             SwitchScreen(0);
         }
 
+        settingsBack.Update();
+        settingsText.Update();
+
+
 
     }
     //update functions. Unlike game, these are called at the same rate! 
     public override void Update()
     {
         base.Update();
-
 
         foreach (Star s in stars)
         {
@@ -331,22 +343,7 @@ public class HomeManager : RenderManager
             }
         }
 
-        foreach (DrawText t in collideableTexts)
-        {
-            if (!t.disableRender)
-            {
-                if (t.GetType() == typeof(Button))
-                {
-                    Button b = (Button)t;
-                    b.Update();
-                }
-                else if (t.GetType() == typeof(InputField))
-                {
-                    InputField i = (InputField)t;
-                    i.Update();
-                }
-            }
-        }
+
         
         switch (cScreen)
         {

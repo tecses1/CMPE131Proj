@@ -9,6 +9,8 @@ public class InputField : DrawText
     public bool stroke = false;
     public bool selected = false;
     public bool WipeOnClick = true;    
+
+    public string adj = "_";
     
     public InputField(string placeholder, Transform t) : base(placeholder, t)
     {
@@ -56,14 +58,11 @@ public class InputField : DrawText
         {
             if(selected) {
                 if (stroke) {
-                    this.text = placeholder + " "; // Show the placeholder
+                    this.adj = "  "; // Show the placeholder
                 }
                 else {
-                    this.text = placeholder + "|"; // Hide the placeholder
+                    this.adj = "_"; // Hide the placeholder
                 }
-            }
-            else {
-                this.text = placeholder; // Ensure the text is just the placeholder when not selected
             }
             stroke = !stroke; // Toggle the stroke state
             lastTick = DateTime.Now; // Reset the tick timer
@@ -75,9 +74,9 @@ public class InputField : DrawText
                 
                 if (InputManager.currentInput.CKeyPressed(key.Key)) // Check if this key was just pressed
                 {
+                //Console.WriteLine("Key pressed: " + key.Key);
                 
-                
-                if (key.Key == "Backspace")
+                    if (key.Key == "Backspace")
                     {
                         if (this.placeholder.Length > 0)
                         {
@@ -106,7 +105,9 @@ public class InputField : DrawText
         else
         {
             this.setFillColor(Color.White,255);
+            this.adj = "";
         }
+        this.text = placeholder + adj;
     }
 
 }
