@@ -1,6 +1,7 @@
 using ClientSideWASM;
 using Shared;
 using System.Drawing;
+using System.Security.Authentication;
 public class InputField : DrawText
 {
     public string placeholder;
@@ -8,6 +9,8 @@ public class InputField : DrawText
     public bool stroke = false;
     public bool selected = false;
     public bool WipeOnClick = true;    
+
+    public string adj = "_";
     
     public InputField(string placeholder, Transform t) : base(placeholder, t)
     {
@@ -30,60 +33,81 @@ public class InputField : DrawText
         this.text = placeholder; // Reset the text to the placeholder when deselected
     }
     //returns true if enter is pressed, to signal we're done editing.
-    public bool Update(ClientInputWrapper ci)
+    public void Update()
     {
         // If the text is currently the placeholder, and it's been at least 500ms since the last tick, toggle the visibility of the placeholder text
         //TODO: Fix | showing when deselected on that frame
+
+        if (InputManager.MouseRect.IntersectsWith(this.transform.rect))
+        {
+            if (InputManager.currentInput.CLeftPressed)
+            {
+                Select();
+            }
+        }
+        else
+        {
+            if (InputManager.currentInput.CLeftPressed)
+            {
+                Deselect();
+            }
+        }
+
+
         if ((DateTime.Now - lastTick).TotalMilliseconds >= 500)
         {
             if(selected) {
                 if (stroke) {
-                    this.text = placeholder + " "; // Show the placeholder
+                    this.adj = "  "; // Show the placeholder
                 }
                 else {
-                    this.text = placeholder + "|"; // Hide the placeholder
+                    this.adj = "_"; // Hide the placeholder
                 }
-            }
-            else {
-                this.text = placeholder; // Ensure the text is just the placeholder when not selected
             }
             stroke = !stroke; // Toggle the stroke state
             lastTick = DateTime.Now; // Reset the tick timer
         }
-        foreach (var key in ci.keysPressed)
-        {
-            
-            if (ci.CKeyPressed(key.Key)) // Check if this key was just pressed
+        if (selected){
+            this.setFillColor(Color.LightYellow,255);
+            foreach (var key in InputManager.currentInput.keysPressed)
             {
-            
-            
-              if (key.Key == "Backspace")
+                
+                if (InputManager.currentInput.CKeyPressed(key.Key)) // Check if this key was just pressed
                 {
-                    if (this.placeholder.Length > 0)
+                //Console.WriteLine("Key pressed: " + key.Key);
+                
+                    if (key.Key == "Backspace")
                     {
-                        this.placeholder = this.placeholder.Substring(0, this.placeholder.Length - 1);
-                    }
-                }
-                else if (key.Key == "Enter")
-                {
-                    // You can handle the enter key here if needed
-                    this.text = placeholder; // Ensure the text is updated to the final input
-                    return true;
-                }
-                else 
-                {
-                    if (key.Key.Length == 1) // Only consider single-character keys
-                    {
-                        if (Char.IsLetterOrDigit(key.Key[0]) || Char.IsWhiteSpace(key.Key[0]) || Char.IsPunctuation(key.Key[0]))
+                        if (this.placeholder.Length > 0)
                         {
-                            this.placeholder += key.Key; // Append the pressed key to the placeholder
+                            this.placeholder = this.placeholder.Substring(0, this.placeholder.Length - 1);
                         }
                     }
-                }
-            } 
-            
+                    else if (key.Key == "Enter")
+                    {
+                        // You can handle the enter key here if needed
+                        Deselect();
+                    }
+                    else 
+                    {
+                        if (key.Key.Length == 1) // Only consider single-character keys
+                        {
+                            if (Char.IsLetterOrDigit(key.Key[0]) || Char.IsWhiteSpace(key.Key[0]) || Char.IsPunctuation(key.Key[0]))
+                            {
+                                this.placeholder += key.Key; // Append the pressed key to the placeholder
+                            }
+                        }
+                    }
+                } 
+                
+            }
         }
-        return false;
+        else
+        {
+            this.setFillColor(Color.White,255);
+            this.adj = "";
+        }
+        this.text = placeholder + adj;
     }
 
 }

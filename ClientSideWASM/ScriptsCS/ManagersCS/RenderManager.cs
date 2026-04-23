@@ -228,9 +228,9 @@ public class RenderManager
     {
         // No more constants! We use the measured gap between the packets.
         // We still add a tiny bit of "slack" (e.g., 0.5ms) just in case of float rounding.
-        if (_currentInterpolationDuration <= 0.0001f) {
-            Console.WriteLine("error: divide by 0 prevention, _cUD = " + _currentInterpolationDuration);
-            return 1f; // Avoid division by zero, snap to target.
+        if (_currentInterpolationDuration == 0) {
+            //Console.WriteLine("error: divide by 0 prevention, _cUD = " + _currentInterpolationDuration);
+            return 0f; // Avoid division by zero, snap to target. //
         }
         float raw = _timeSinceLastLoad / _currentInterpolationDuration ;
         float clamped = Math.Clamp(raw, 0f, 1.0f); // prevent divide by 0 situation.
@@ -249,8 +249,7 @@ public class RenderManager
         foreach (List<GameObject> group in groupsToRender) {
             foreach (var obj in group) {               
                     //var pos = obj.transform.position;
-                    //var size = obj.transform.size;
-
+                    //var size = obj.transform.size;w
                 // "Loose" Culling: Check if object is roughly in view
                 // If it's outside these bounds, we don't even put it in the int[]
 
@@ -277,7 +276,6 @@ public class RenderManager
 
                 // 2. Interpolate between the RELATIVE points
                 float t = GetInterpolationFactor();
-
                 interpolationOffsetX = prevRelX + (currRelX - prevRelX) * t;
                 interpolationOffsetY = prevRelY + (currRelY - prevRelY) * t;
 
@@ -304,8 +302,11 @@ public class RenderManager
                 //    Console.WriteLine("Target: " + obj.transform.position.X + "," + obj.transform.position.Y + " | Interpolated: " + interpolationOffsetX + "," + interpolationOffsetY + " | Interpolation Factor: " + GetInterpolationFactor() + " Prev: " + obj.previousTransform?.position.X + "," + obj.previousTransform?.position.Y);
                 //}
                 //culling problem, we need the interpolation position of the object...
+                int idx = obj.spriteOverrideIndex;
+                if (idx == -1) {
+                    idx = getCacheIndex(obj);
+                }
 
-                int idx = getCacheIndex(obj);
                 if (idx == -1) idx = 0; // Fallback to "MissingImage" if asset not found
                 megaBuffer[cursor++] = 0;
                 megaBuffer[cursor++] = (int)((interpolationOffsetX - worldOffsetX) * 100);

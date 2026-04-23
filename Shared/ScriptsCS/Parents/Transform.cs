@@ -52,7 +52,40 @@ public class Transform
     public float RotationRadians() => rotation * (float)Math.PI / 180f;
 
     public float GetHypotenuse() => (float)Math.Sqrt(rect.Width * rect.Width + rect.Height * rect.Height);
+    public static Transform GenerateTransform(int size)
+    {
+        Random r = new Random();
+        int spawnX,spawnY;
+        int edge = r.Next(0,4);
+        switch (edge)
+        {
+            case 0: //top
+                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
+                spawnY = -GameConstants.worldSizeY/2 - size;
+                break;
+            case 1: //right
+                spawnX = GameConstants.worldSizeX/2 + size;
+                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
+                break;
+            case 2: //bottom
+                spawnX = r.Next(-GameConstants.worldSizeX/2, GameConstants.worldSizeX/2);
+                spawnY = GameConstants.worldSizeY/2 + size;
+                break;
+            case 3: //left
+                spawnX = -GameConstants.worldSizeX/2 - size;
+                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
+                break;
+            default:
+                spawnX = -GameConstants.worldSizeX/2 - size;
+                spawnY = r.Next(-GameConstants.worldSizeY/2, GameConstants.worldSizeY/2);
+                break;
 
+        }
+        Transform t = new Transform(spawnX, spawnY, size, size);
+        //e.SetTarget(new Vector2(GameConstants.worldSizeX/2, GameConstants.worldSizeY/2));//toggle center of screen for now.
+        return t;
+        //gl.AddGameObject(e):
+    }
     public void RotateTo(Vector2 targetPos)
     {
         Vector2 position = new Vector2(this.rect.X, this.rect.Y);

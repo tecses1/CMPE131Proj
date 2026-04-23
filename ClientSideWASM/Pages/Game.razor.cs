@@ -98,7 +98,7 @@ public partial class Game
         
         main.Render( timestamp); 
 
-
+        InputManager.Flush();
         
 
         

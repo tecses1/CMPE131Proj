@@ -107,7 +107,8 @@ public class User : NetworkModel
         switch (purpose)
             {
                 case "{GameStateUpdate}":
-                    myLobby.UpdateState(data);
+                    //myLobby.UpdateState(data);
+                    Console.WriteLine("Weird call for gamestate update...");
                     break;
                 case "{SetName}":
                     this.name = args[0];

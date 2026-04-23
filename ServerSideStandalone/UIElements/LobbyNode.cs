@@ -34,6 +34,35 @@ public class LobbyNode : INotifyPropertyChanged
             get => _uptime;
             set { _uptime = value; OnPropertyChanged(); }
         }
+
+        private int _contaiminationTime;
+        public int ContaminationTime
+        {
+            get => _contaiminationTime;
+            set { _contaiminationTime = value; OnPropertyChanged(); }
+        }
+
+        private int _extraTime;
+        public int ExtraTime
+        {
+            get => _extraTime;
+            set { _extraTime = value; OnPropertyChanged(); }
+        }
+
+        private int _updateTime;
+        public int UpdateTime
+        {
+            get => _updateTime;
+            set { _updateTime = value; OnPropertyChanged(); }
+        }
+
+        private int _userTime;
+        public int UserTime
+        {
+            get => _userTime;
+            set { _userTime = value; OnPropertyChanged(); }
+        }
+
     public event PropertyChangedEventHandler PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
