@@ -88,22 +88,27 @@ public class Transform
     }
     public void RotateTo(Vector2 targetPos)
     {
-        Vector2 position = new Vector2(this.rect.X, this.rect.Y);
-        Vector2 viewDirection = targetPos - position;
-        if (viewDirection.LengthSquared() == 0f) viewDirection = new Vector2(0, -1);
-        
-        double angleRadians = Math.Atan2(viewDirection.X, viewDirection.Y);
-        rotation = -(float)(angleRadians * (180.0 / Math.PI));
+        this.rotation = AngleBetween(targetPos);
     }
-    public void RotateTo(Transform target)
+    public float AngleBetween(Vector2 targetPos)
     {
         Vector2 position = new Vector2(this.rect.X, this.rect.Y);
-        Vector2 targetPos = new Vector2(target.rect.X, target.rect.Y);
         Vector2 viewDirection = targetPos - position;
         if (viewDirection.LengthSquared() == 0f) viewDirection = new Vector2(0, -1);
         
         double angleRadians = Math.Atan2(viewDirection.X, viewDirection.Y);
-        rotation = -(float)(angleRadians * (180.0 / Math.PI));
+        return -(float)(angleRadians * (180.0 / Math.PI));
+    }
+    public float AngleBetween(Transform t)
+    {
+        Vector2 targetPos = new Vector2(t.rect.X,t.rect.Y);
+        return AngleBetween(targetPos);
+    }
+
+    public void RotateTo(Transform target)
+    {
+        Vector2 targetPos = new Vector2(target.rect.X, target.rect.Y);
+        RotateTo(targetPos);
     }
     public void Update()
     {
