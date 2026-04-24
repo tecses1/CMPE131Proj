@@ -38,11 +38,18 @@ public class Button : DrawText
 
     public void Update()
     {
-        if (this.disableRender) return;
+        if (this.disableRender) {
+            this.clicked = false;
+            return;
+        }
         if (this.transform.rect.IntersectsWith(InputManager.MouseRect))
         {
             this.setTextColor(hoverColor,255);
-            this.clicked = InputManager.currentInput.LeftPressed;
+            if (InputManager.currentInput.CLeftPressed)
+            {
+                Console.WriteLine("clicked!");
+                this.clicked = true;
+            }
         }
         else
         {

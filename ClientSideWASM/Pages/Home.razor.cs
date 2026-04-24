@@ -71,6 +71,7 @@ public partial class Home
        // home.ApplyInput(inputWrapper);
         home.Update();
         home.Render(timestamp);
+        InputManager.Flush();
 
         
     }

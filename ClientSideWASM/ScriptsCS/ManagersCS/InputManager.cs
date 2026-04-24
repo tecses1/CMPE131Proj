@@ -52,4 +52,9 @@ public static class InputManager
         }
     }
 
+    public static void Flush()
+    {
+        currentInput.Flush();
+    }
+
 }

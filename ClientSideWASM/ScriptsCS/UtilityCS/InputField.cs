@@ -9,6 +9,8 @@ public class InputField : DrawText
     public bool stroke = false;
     public bool selected = false;
     public bool WipeOnClick = true;    
+
+    public string adj = "_";
     
     public InputField(string placeholder, Transform t) : base(placeholder, t)
     {
@@ -33,20 +35,19 @@ public class InputField : DrawText
     //returns true if enter is pressed, to signal we're done editing.
     public void Update()
     {
-        ClientInputWrapper ci = InputManager.currentInput;
         // If the text is currently the placeholder, and it's been at least 500ms since the last tick, toggle the visibility of the placeholder text
         //TODO: Fix | showing when deselected on that frame
 
         if (InputManager.MouseRect.IntersectsWith(this.transform.rect))
         {
-            if (InputManager.currentInput.LeftPressed)
+            if (InputManager.currentInput.CLeftPressed)
             {
                 Select();
             }
         }
         else
         {
-            if (InputManager.currentInput.LeftPressed)
+            if (InputManager.currentInput.CLeftPressed)
             {
                 Deselect();
             }
@@ -57,28 +58,25 @@ public class InputField : DrawText
         {
             if(selected) {
                 if (stroke) {
-                    this.text = placeholder + " "; // Show the placeholder
+                    this.adj = "  "; // Show the placeholder
                 }
                 else {
-                    this.text = placeholder + "|"; // Hide the placeholder
+                    this.adj = "_"; // Hide the placeholder
                 }
-            }
-            else {
-                this.text = placeholder; // Ensure the text is just the placeholder when not selected
             }
             stroke = !stroke; // Toggle the stroke state
             lastTick = DateTime.Now; // Reset the tick timer
         }
         if (selected){
             this.setFillColor(Color.LightYellow,255);
-            foreach (var key in ci.keysPressed)
+            foreach (var key in InputManager.currentInput.keysPressed)
             {
                 
-                if (ci.CKeyPressed(key.Key)) // Check if this key was just pressed
+                if (InputManager.currentInput.CKeyPressed(key.Key)) // Check if this key was just pressed
                 {
+                //Console.WriteLine("Key pressed: " + key.Key);
                 
-                
-                if (key.Key == "Backspace")
+                    if (key.Key == "Backspace")
                     {
                         if (this.placeholder.Length > 0)
                         {
@@ -107,7 +105,9 @@ public class InputField : DrawText
         else
         {
             this.setFillColor(Color.White,255);
+            this.adj = "";
         }
+        this.text = placeholder + adj;
     }
 
 }
