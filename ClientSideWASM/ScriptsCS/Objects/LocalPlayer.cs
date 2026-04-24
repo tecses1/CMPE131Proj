@@ -57,7 +57,9 @@ public class LocalPlayer : Player
 
         // score system
         Transform scoreTransform = new Transform(Settings.CanvasWidth - 50, Settings.CanvasHeight - 8, 100, 125);
-        scoreText = new DrawText("Score: 0",  scoreTransform);
+        // scoreText = new DrawText("Score: 0",  scoreTransform);
+        scoreText = new DrawText(" ",  scoreTransform);
+
         scoreText.worldSpace = false; 
 
 
