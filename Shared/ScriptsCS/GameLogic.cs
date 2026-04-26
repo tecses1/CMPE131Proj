@@ -83,12 +83,12 @@ public class GameLogic
                         int dropRate = Random.Shared.Next(0,10);
                         if (dropRate < 2) //20% chance to spawn missile ammo
                         {
-                            Items i = Items.GenerateItem(asteroid.transform, "MissileAmmo");
-                            AddGameObject(i);
+                            MissileAmmo m = MissileAmmo.GenerateMissileAmmo(asteroid.transform);
+                            AddGameObject(m);
                         }
                         else if(dropRate > 8)   //10% chance to spawn siesmic charge
                         {
-                            Items i = Items.GenerateItem(asteroid.transform, "Mine");
+                            Mine i = Mine.GenerateMine(asteroid.transform);
                             AddGameObject(i);
                         }
                         //getPlayerWithUID(proj.owner).AddScore(10); returns null for enemies. standby.
@@ -139,13 +139,13 @@ public class GameLogic
                         int dropRate = Random.Shared.Next(0,10);
                         if (dropRate < 2) //20% chance to spawn missile ammo
                         {
-                            Items i = Items.GenerateItem(asteroid3.transform, "MissileAmmo");
-                            AddGameObject(i);
+                            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(asteroid3.transform);
+                            AddGameObject(box);
                         }
                         else if(dropRate > 8)   //10% chance to spawn siesmic charge
                         {
-                            Items i = Items.GenerateItem(asteroid3.transform, "Mine");
-                            AddGameObject(i);
+                            Mine m  = Mine.GenerateMine(asteroid3.transform);
+                            AddGameObject(m);
                         }
                             asteroid3.Kill();
                         }
@@ -157,15 +157,15 @@ public class GameLogic
                         if (enemy1.hp <= 0)
                         {   
                         int dropRate = Random.Shared.Next(0,10);
-                        if (dropRate < 3) //30% chance to spawn missile ammo
+                        if (dropRate < 3) //20% chance to spawn missile ammo
                         {
-                            Items i = Items.GenerateItem(enemy1.transform, "MissileAmmo");
-                            AddGameObject(i);
+                            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(enemy1.transform);
+                            AddGameObject(box);
                         }
-                        else if(dropRate > 7)   //20% chance to spawn siesmic charge
+                        else if(dropRate > 7)   //10% chance to spawn siesmic charge
                         {
-                            Items i = Items.GenerateItem(enemy1.transform, "Mine");
-                            AddGameObject(i);
+                            Mine m  = Mine.GenerateMine(enemy1.transform);
+                            AddGameObject(m);
                         }
                             enemy1.Kill();
                         }
@@ -190,35 +190,25 @@ public class GameLogic
                         if (enemy2.hp <= 0)
                         {
                         int dropRate = Random.Shared.Next(0,10);
-                        if (dropRate < 3) //30% chance to spawn missile ammo
-                        {
-                            Items i = Items.GenerateItem(enemy2.transform, "MissileAmmo");
-                            AddGameObject(i);
-                        }
-                        else if(dropRate > 7)   //20% chance to spawn siesmic charge
-                        {
-                            Items i = Items.GenerateItem(enemy2.transform, "Mine");
-                            AddGameObject(i);
-                        }
-                            //getPlayerWithUID(proj3.owner).AddScore(50); returns null for enemies. standby.
+                        if (dropRate < 3) //20% chance to spawn missile ammo
+                            {
+                            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(enemy2.transform);
+                            AddGameObject(box);
+                            }
+                        else if(dropRate > 7)   //10% chance to spawn siesmic charge
+                            {
+                            Mine m  = Mine.GenerateMine(enemy2.transform);
+                            AddGameObject(m);
+                            }
                             enemy2.Kill();
                         }
                     }
                     break;
-                case (Player, Items):
-                case (Items, Player):
+                    case (Player, Items):
+                    case (Items, Player):
                     Items item = A is Items ? (Items)A : (Items)B;
                      Player p = A is Player ? (Player)A : (Player)B;
-                     if (item.itemType == "MissileAmmo")
-                    {
-                        p.MissileAmmo += 2;
-                        Console.WriteLine("Missile Ammo: +2");
-                    }
-                    else if (item.itemType == "Mine")
-                    {
-                        p.mines += 1;
-                        Console.WriteLine("Mines: +1");
-                    }
+                    item.Collect(p);
                     item.Kill();
                     break;
             }   
@@ -348,16 +338,19 @@ public class GameLogic
                 newObj = new Healthpack(defaultT);
                 break;
             case "Items":
-                newObj = new Items(defaultT, "default");
+                newObj = new Items(defaultT);
                 break;
             case "MissileAmmo":
-                newObj = new Items(defaultT, "MissileAmmo");
+                newObj = new MissileAmmo(defaultT);
                 break;
             case "Missile":
                 newObj = new Missile(defaultT, new Vector2(0,0));
                 break;
             case "Explosion":
                 newObj = new Explosion(defaultT, new Vector2(0,0), 0f);
+                break;
+            case "Mine":
+                newObj = new Mine(defaultT);
                 break;
             case "Enemy":
                 newObj = new Enemy(defaultT);
