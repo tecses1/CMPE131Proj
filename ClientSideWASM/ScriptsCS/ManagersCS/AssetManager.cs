@@ -31,6 +31,7 @@ public static class AssetManager
 
 
         { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
+        {"MissileAmmo", new GameAsset {Name = "MissileAmmo", FrameRefs = new[] {"images/MissileAmmo.png"}}},
 
         {"ClientUFO", new GameAsset {Name = "ClientUFO", FrameRefs = new[] {"images/AlienSmAnim/AlienSM1.png", "images/AlienSmAnim/AlienSM2.png"}}}
                                 

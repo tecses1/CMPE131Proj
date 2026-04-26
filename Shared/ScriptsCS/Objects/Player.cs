@@ -32,6 +32,9 @@ public class Player : GameObject
     bool barrel = true;
     int shooting = -1;
 
+    public int MissileAmmo = 0;
+    public int mines = 0;
+
     // death animation
     [Network(3)] // Add _isDead to the network.
     public bool IsDead {get; set;} = false;
@@ -133,6 +136,8 @@ public class Player : GameObject
                     this.gl.AddGameObject(shot);
                 }else if (guntype == 2) // added for misile implementation
                 {
+                    if (this.MissileAmmo >0){
+
                     GameObject[] targets = this.gl.collisionManager.GetNearby(this,500);
                     GameObject target = null;
                     if (targets.Length != 0)
@@ -148,6 +153,13 @@ public class Player : GameObject
                     }
                     GameObject shot = SpawnMissile(target);
                     this.gl.AddGameObject(shot);
+                    this.MissileAmmo--;
+                    Console.WriteLine("Missile: " + this.MissileAmmo);
+                    }
+                    else
+                {
+                    Console.WriteLine("Out of Ammo");
+                }
                 }
 
             lastShotTime = DateTime.UtcNow;

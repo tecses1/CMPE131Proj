@@ -80,7 +80,19 @@ public class GameLogic
                     asteroid.hp -= proj.damage;
                     if (asteroid.hp <= 0)
                     {
+                        int dropRate = Random.Shared.Next(0,10);
+                        if (dropRate < 2) //20% chance to spawn missile ammo
+                        {
+                            Items i = Items.GenerateItem(asteroid.transform, "MissileAmmo");
+                            AddGameObject(i);
+                        }
+                        else if(dropRate > 8)   //10% chance to spawn siesmic charge
+                        {
+                            Items i = Items.GenerateItem(asteroid.transform, "Mine");
+                            AddGameObject(i);
+                        }
                         //getPlayerWithUID(proj.owner).AddScore(10); returns null for enemies. standby.
+
                         asteroid.Kill();
                     }
                     break;
@@ -123,8 +135,39 @@ public class GameLogic
                         Asteroid asteroid3 = (Asteroid)other;
                         asteroid3.hp -= explosion.damage;
                         if (asteroid3.hp <= 0)
+                        {   
+                        int dropRate = Random.Shared.Next(0,10);
+                        if (dropRate < 2) //20% chance to spawn missile ammo
                         {
+                            Items i = Items.GenerateItem(asteroid3.transform, "MissileAmmo");
+                            AddGameObject(i);
+                        }
+                        else if(dropRate > 8)   //10% chance to spawn siesmic charge
+                        {
+                            Items i = Items.GenerateItem(asteroid3.transform, "Mine");
+                            AddGameObject(i);
+                        }
                             asteroid3.Kill();
+                        }
+                    }
+                    if (other is Enemy)
+                    {
+                        Enemy enemy1 = (Enemy)other;
+                        enemy1.hp -= explosion.damage;
+                        if (enemy1.hp <= 0)
+                        {   
+                        int dropRate = Random.Shared.Next(0,10);
+                        if (dropRate < 3) //30% chance to spawn missile ammo
+                        {
+                            Items i = Items.GenerateItem(enemy1.transform, "MissileAmmo");
+                            AddGameObject(i);
+                        }
+                        else if(dropRate > 7)   //20% chance to spawn siesmic charge
+                        {
+                            Items i = Items.GenerateItem(enemy1.transform, "Mine");
+                            AddGameObject(i);
+                        }
+                            enemy1.Kill();
                         }
                     }
                     
@@ -146,10 +189,37 @@ public class GameLogic
                         enemy2.hp -= proj3.damage;
                         if (enemy2.hp <= 0)
                         {
+                        int dropRate = Random.Shared.Next(0,10);
+                        if (dropRate < 3) //30% chance to spawn missile ammo
+                        {
+                            Items i = Items.GenerateItem(enemy2.transform, "MissileAmmo");
+                            AddGameObject(i);
+                        }
+                        else if(dropRate > 7)   //20% chance to spawn siesmic charge
+                        {
+                            Items i = Items.GenerateItem(enemy2.transform, "Mine");
+                            AddGameObject(i);
+                        }
                             //getPlayerWithUID(proj3.owner).AddScore(50); returns null for enemies. standby.
                             enemy2.Kill();
                         }
                     }
+                    break;
+                case (Player, Items):
+                case (Items, Player):
+                    Items item = A is Items ? (Items)A : (Items)B;
+                     Player p = A is Player ? (Player)A : (Player)B;
+                     if (item.itemType == "MissileAmmo")
+                    {
+                        p.MissileAmmo += 2;
+                        Console.WriteLine("Missile Ammo: +2");
+                    }
+                    else if (item.itemType == "Mine")
+                    {
+                        p.mines += 1;
+                        Console.WriteLine("Mines: +1");
+                    }
+                    item.Kill();
                     break;
             }   
         }
@@ -274,6 +344,12 @@ public class GameLogic
                 break;
             case "Healthpack":
                 newObj = new Healthpack(defaultT);
+                break;
+            case "Items":
+                newObj = new Items(defaultT, "default");
+                break;
+            case "MissileAmmo":
+                newObj = new Items(defaultT, "MissileAmmo");
                 break;
             case "Missile":
                 newObj = new Missile(defaultT, new Vector2(0,0));
