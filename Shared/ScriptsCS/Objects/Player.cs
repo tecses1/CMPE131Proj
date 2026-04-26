@@ -133,20 +133,21 @@ public class Player : GameObject
                     this.gl.AddGameObject(shot);
                 }else if (guntype == 2) // added for misile implementation
                 {
-                    GameObject[] targets = this.gl.collisionManager.GetNearby(this,500);
+
+                    GameObject[] targets = this.gl.collisionManager.GetNearby(mousePos,400);
                     GameObject target = null;
                     if (targets.Length != 0)
                     {
                         foreach (GameObject go in targets)
                         {
-                            if (go is Player || go is Asteroid) // only target other players or asteroids for now.
+                            if (go != this && (go is Player || go is Asteroid || go is Enemy)) // only target other players or asteroids for now.
                             {
                                 target = go;
                                 break;
                             }
                         }
                     }
-                    GameObject shot = SpawnMissile(target);
+                    GameObject shot = SpawnMissile(target, mousePos);
                     this.gl.AddGameObject(shot);
                 }
 
@@ -154,6 +155,7 @@ public class Player : GameObject
         }
 
     }
+
 
     private Projectile[] SpawnGuntype1(Vector2 target)
     {
@@ -210,24 +212,35 @@ public class Player : GameObject
         return proj;
     }
 
-    private Missile SpawnMissile(GameObject target)
+        private GameObject SpawnMissile(GameObject target, Vector2 mousePos)
     {
         shotCooldownSeconds = 2.0f;
 
-        Transform t = new Transform(transform.rect.X, transform.rect.Y, 15, 20);
-        if (target == null)
-        {
-            t.rotation = this.transform.rotation;
-        }
+        string newUid = Guid.NewGuid().ToString(); 
+        GameObject shot = this.gl.CreateGameObject("Missile", newUid); 
 
-        Missile m = new Missile(t,t.Forward() * 10f);
+        // 1. Force position to player
+        shot.transform.rect.X = this.transform.rect.X;
+        shot.transform.rect.Y = this.transform.rect.Y;
+
+        // 2. Fix the veer
+        Vector2 dir = mousePos - this.transform.GetPosition();
+        if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
+        dir = Vector2.Normalize(dir);
+
+        Transform t = new Transform(transform.rect.X, transform.rect.Y, 15,20);
+
+        t.RotateTo(mousePos);
+
+        Missile m = new Missile(t, t.Forward() * 10f);
+        
         m.target = target;
         m.LifetimeFrames = 120;
         m.owner = this.uid;
 
-
         return m;
     }
+
     //score
     public void AddScore(int points)
     {

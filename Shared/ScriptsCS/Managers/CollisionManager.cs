@@ -90,6 +90,8 @@ public class CollisionManager{
             range*2, 
             range*2
         );
+
+        
         
         var candidates = new List<GameObject>();
         _tree.Retrieve(candidates, searchArea);
@@ -111,4 +113,29 @@ public class CollisionManager{
             })
             .ToArray();
     }
+
+    public GameObject[] GetNearby(System.Numerics.Vector2 point, float range)
+{
+    float rangeSq = range * range;
+    
+    var searchArea = new Rect(point.X - range, point.Y - range, range * 2, range * 2);
+    
+    var candidates = new List<GameObject>();
+    _tree.Retrieve(candidates, searchArea);
+
+    return candidates
+        .Where(other => {
+            if (other.disableCollision) return false;
+            
+            float dx = point.X - other.transform.rect.X;
+            float dy = point.Y - other.transform.rect.Y;
+            return (dx * dx) + (dy * dy) <= rangeSq;
+        })
+        .OrderBy(other => {
+            float dx = point.X - other.transform.rect.X;
+            float dy = point.Y - other.transform.rect.Y;
+            return (dx * dx) + (dy * dy);
+        })
+        .ToArray();
+}
 }

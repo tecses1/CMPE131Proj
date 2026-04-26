@@ -210,6 +210,8 @@ public class GameLogic
         }
         mvoe to asteroid death! :D */
     }
+
+
     public Player getPlayerWithUID(Guid uid)
     {
         foreach (Player p in players)
