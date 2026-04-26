@@ -249,7 +249,7 @@ public class GameLogic
         
         if ((DateTime.Now - counter).TotalSeconds >= AsteroidSpawnCooldownSeconds)
         {
-            if (Random.Shared.NextInt64(0,5) >= 3) { // 40% chance to spawn an enemy every 2 seconds. Adjust as needed.
+            if (Random.Shared.NextInt64(0,10) >= 7) { // 40% chance to spawn an enemy every 2 seconds. Adjust as needed.
                 Enemy e = Enemy.GenerateEnemy();
                 AddGameObject(e);
             }else{
@@ -258,7 +258,7 @@ public class GameLogic
                 if (players.Count > 0) newAsteroid.SetTarget(players[(int)Random.Shared.NextInt64(0,players.Count)].transform.GetPosition());
                 AddGameObject(newAsteroid);
             }
-            if(Random.Shared.NextInt64(0,10) > 6)
+            if(Random.Shared.NextInt64(0,10) >= 8)
             {
                 //Enemy a = Enemy.GenerateEnemy();
 
@@ -280,6 +280,8 @@ public class GameLogic
         }
         mvoe to asteroid death! :D */
     }
+
+
     public Player getPlayerWithUID(Guid uid)
     {
         foreach (Player p in players)
@@ -363,6 +365,9 @@ public class GameLogic
             // Add more types here as your game grows
             case "AlienSM":
                 newObj = new AlienSM(defaultT);
+                break;
+            case "EnemyLaser":
+                newObj = new EnemyLaser(defaultT, new Vector2(0, 0));
                 break;
         }
         if (newObj == null)

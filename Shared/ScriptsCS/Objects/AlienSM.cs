@@ -26,7 +26,7 @@ public class AlienSM : Enemy
         //take tangent of the vector
         //set rotation tpo that angle
 
-        Projectile proj = new Projectile(new Transform(this.transform.rect.X, this.transform.rect.Y, 10, 10,this.transform.rotation), this.transform.Forward() * 20f, lifetime: 60);
+        EnemyLaser proj = new EnemyLaser(new Transform(this.transform.rect.X, this.transform.rect.Y, 20, 20,this.transform.rotation), this.transform.Forward() * 25f, lifetime: 20);
         proj.owner = this.uid;
         proj.damage = 15; //More is too op lol
         gl.AddGameObject(proj);
