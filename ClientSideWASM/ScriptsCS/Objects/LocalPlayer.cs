@@ -22,8 +22,6 @@ public class LocalPlayer : Player
     private int healthBarHeight = 10;
     private Color currentHealthColor = Color.Green;
 
-    [Network(0)]
-
     //UI elements
     public DrawText playerName;
     DrawText outOfBoundsText;
@@ -220,6 +218,7 @@ public class LocalPlayer : Player
         playerNameString = Settings.name;
         //Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
         scoreText.disableRender = false;
+        scoreText.text = "Score: " + this.Score;
         this.UpdateHealthBarVisual();
         healthBarBackground.disableRender = false;
         healthBarFill.disableRender = false;
