@@ -162,7 +162,7 @@ public class GameLogic
                             MissileAmmo box = MissileAmmo.GenerateMissileAmmo(enemy1.transform);
                             AddGameObject(box);
                         }
-                        else if(dropRate > 7)   //10% chance to spawn siesmic charge
+                        else if(dropRate > 8)   //10% chance to spawn siesmic charge
                         {
                             Mine m  = Mine.GenerateMine(enemy1.transform);
                             AddGameObject(m);
@@ -195,7 +195,7 @@ public class GameLogic
                             MissileAmmo box = MissileAmmo.GenerateMissileAmmo(enemy2.transform);
                             AddGameObject(box);
                             }
-                        else if(dropRate > 7)   //10% chance to spawn siesmic charge
+                        else if(dropRate > 8)   //10% chance to spawn siesmic charge
                             {
                             Mine m  = Mine.GenerateMine(enemy2.transform);
                             AddGameObject(m);
