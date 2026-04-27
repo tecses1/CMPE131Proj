@@ -32,6 +32,8 @@ public static class AssetManager
 
         { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
         {"MissileAmmo", new GameAsset {Name = "MissileAmmo", FrameRefs = new[] {"images/MissileAmmo.png"}}},
+        {"MineAmmo", new GameAsset {Name = "MineAmmo", FrameRefs = new[] {"images/MineAmmo.png"}}},
+
 
         {"AlienSM", new GameAsset {Name = "AlienSM", FrameRefs = new[] {"images/AlienSmAnim/AlienSM1.png", "images/AlienSmAnim/AlienSM2.png"}}},
         {"EnemyLaser", new GameAsset {Name = "EnemyLaser", FrameRefs = new[]{"images/AlienLaser.png"}}},
