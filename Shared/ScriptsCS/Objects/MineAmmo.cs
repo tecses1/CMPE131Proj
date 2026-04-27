@@ -3,21 +3,21 @@ namespace Shared;
 using System;
 using System.Numerics;  
 
-public class Mine : Items
+public class MineAmmo : Items
 {
     public float speed = 0.3f;
     public int amount = 1; // How many mines
     public int LifetimeFrames = 3600; 
     public int damage = 500;
-    public Mine(Transform t) : base(t) 
+    public MineAmmo(Transform t) : base(t) 
     {
     }
 
-    public static Mine GenerateMine(Transform sourceTransform)
+    public static MineAmmo GenerateMineAmmo(Transform sourceTransform)
     {
     
         Transform t = new Transform(sourceTransform.rect.X, sourceTransform.rect.Y, 20, 20);
-        Mine m = new Mine(t);
+        MineAmmo m = new MineAmmo(t);
 
         double randomAngle = 2 * Math.PI * Random.Shared.NextDouble();
         Vector2 randDir = new Vector2((float)Math.Cos(randomAngle), (float)Math.Sin(randomAngle));
