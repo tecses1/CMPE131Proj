@@ -189,6 +189,7 @@ public class GameLogic
                 case (Projectile, Enemy):
                     Enemy enemy2 = A is Enemy ? (Enemy)A : (Enemy)B;
                     Projectile proj3 = A is Projectile ? (Projectile)A : (Projectile)B;
+                    if (proj3.enemy) break; //don't let enemy projectiles damage enemies. This is a band-aid for friendly fire, which is currently the only way to differentiate player and enemy projectiles. Will need to be reworked if we add player friendly fire or more projectile types.
                     if (proj3.owner != enemy2.uid)
                     {
                         proj3.Kill();

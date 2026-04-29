@@ -28,6 +28,7 @@ public class AlienSM : Enemy
 
         EnemyLaser proj = new EnemyLaser(new Transform(this.transform.rect.X, this.transform.rect.Y, 20, 20,this.transform.rotation), this.transform.Forward() * 25f, lifetime: 20);
         proj.owner = this.uid;
+        proj.enemy = true;
         proj.damage = 15; //More is too op lol
         gl.AddGameObject(proj);
         lastShot = DateTime.Now;

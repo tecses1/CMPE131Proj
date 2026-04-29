@@ -17,6 +17,8 @@ namespace Shared;
         public int damage {get; set;} = 1;
         [Network(2)]
         public Guid owner;
+
+        public bool enemy = false;
         public Projectile( Transform transform, Vector2 velocity, int lifetime =5) : base(transform)
         {
         
