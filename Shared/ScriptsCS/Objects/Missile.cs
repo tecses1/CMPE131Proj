@@ -4,7 +4,7 @@ using System.Numerics;
 public class Missile : Projectile
 {
     public GameObject target; //the target the missile is tracking. This is set when the missile is spawned, and doesn't change after that. If the target dies before the missile does, the missile will just keep flying in the same direction until it runs out of lifetime or hits something.
-    public float speed = 20f;
+    public float speed = 22f;
     public float maxTurn = 60f;
     public float currentAngle = 0f;
 
@@ -50,8 +50,9 @@ public class Missile : Projectile
     public override void Kill()
     {
         Explosion e = new Explosion(new Transform() { rect = this.transform.rect }, this.transform.velocity / 10, 1f);
-        e.transform.rect.Width = 166; //big explosition
-        e.transform.rect.Height = 166;
+        e.transform.rect.Width = 186; //big explosition
+        e.transform.rect.Height = 186;
+        e.damage = 20;
         e.disableCollision = false; //missile explosion should damage things, unlike regular projectile explosion.
         gl.AddGameObject(e);
         base.Kill();

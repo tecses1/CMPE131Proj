@@ -7,7 +7,7 @@ public class Explosion : GameObject
 
     public int deathAnimSpeed = 2;
     int cDeathAnim = 2;
-    public int damage = 3; //applies over the course of the explosion animation, so that things that stay in the explosion longer take more damage.
+    public int damage = 0; //applies over the course of the explosion animation, so that things that stay in the explosion longer take more damage.
     public float force = 20f;
     public Explosion(Transform t, Vector2 velocity, float rotationSpeed = 1f) : base(t)
     {
