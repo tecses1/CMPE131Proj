@@ -16,7 +16,7 @@ public class MineAmmo : Items
     public static MineAmmo GenerateMineAmmo(Transform sourceTransform)
     {
     
-        Transform t = new Transform(sourceTransform.rect.X, sourceTransform.rect.Y, 20, 20);
+        Transform t = new Transform(sourceTransform.rect.X, sourceTransform.rect.Y, 30, 30);
         MineAmmo m = new MineAmmo(t);
 
         double randomAngle = 2 * Math.PI * Random.Shared.NextDouble();
