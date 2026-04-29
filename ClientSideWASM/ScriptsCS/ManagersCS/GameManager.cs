@@ -164,7 +164,8 @@ void GenerateStars()
             if (go.GetType() == typeof(Player)) //the game logic class created a player.
             {
                 Player p = (Player)go;  
-                myGroup.Remove(p);
+                gl.RemovePlayer(p); //remove the player that gamelogic made, because we need to replace it with our client side player that handles rendering.
+                myGroup.Remove(go);
                 //Replace the player with our local player.
                 //The gamestate keeps making new ones until the object is confirmed.
                 //Just keep replacing it until it doesn't need to, anymore.
@@ -188,7 +189,7 @@ void GenerateStars()
                     newPlayer.playerName.text = p.playerNameString;
                     gl.AddPlayer(newPlayer);
                     clientPlayers.Add(newPlayer);
-                    RegisterObjToRender(newPlayer);
+                    //RegisterObjToRender(newPlayer);
                     continue;
                 }
                 else
