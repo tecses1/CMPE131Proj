@@ -395,6 +395,7 @@ public class GameLogic
 
     public long LoadGameState(byte[] gameState, List<ObjChangeWrapper> newObjects = null, List<ObjChangeWrapper> destroyedObjects = null)
     {
+
         long r = this.loadGameState(gameState, players, activeObjects);
 
         if (newObjects != null)
@@ -406,6 +407,8 @@ public class GameLogic
         {
             destroyedObjects.AddRange(this.destroyedObjectsLoaded);
         }
+
+        //Console.WriteLine("Loaded " + newObjects.Count + " new objects and " + destroyedObjects.Count + " removed objects");
         this.newObjectsLoaded.Clear();
         this.destroyedObjectsLoaded.Clear();
         return r;
@@ -482,7 +485,7 @@ public class GameLogic
         using (BinaryReader reader = new BinaryReader(ms))
         {
             long frameStamp = reader.ReadInt64();
-
+            //Console.WriteLine("Loading gamestate: " + frameStamp);
             // Loop through each group list passed in
             for (int i = 0; i < localGroups.Length; i++)
             {

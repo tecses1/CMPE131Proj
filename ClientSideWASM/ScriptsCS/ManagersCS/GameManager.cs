@@ -245,6 +245,16 @@ void GenerateStars()
                 renderables.Remove(go);
 
             }
+
+            if (go.GetType() == typeof(ClientPlayer))
+            {
+                ClientPlayer p = (ClientPlayer)go;
+                this.gl.RemovePlayer(p);
+                this.clientPlayers.Remove(p);
+                p.Deregister();
+                gl.RemovePlayer((Player)go);
+                
+            }
         }
 
     }
@@ -275,18 +285,19 @@ void GenerateStars()
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-        
+        Console.WriteLine("Debug - Checking arrival time");
         double renderTime = timestamp - InterpolationDelay;
         long nextArrivalTime = nm.PeekArrivalTime();
         long currentArrivalTime;
         //Console.WriteLine("Arrival time: " + nextArrivalTime + ", Rendertime: " + renderTime);
             // While the next packet in line is "due" to be played...
         bool updated = false;
+        Console.WriteLine("Debug - Beginning while check...");
         while (nextArrivalTime != -1 && nextArrivalTime <= renderTime) {
             //Console.WriteLine("loading tick: " + nm.PeekTick());
             byte[] gameState = nm.GetGameState(out currentArrivalTime); //redundant. will fix if really truly unneccesary.
 
-            //Console.WriteLine("DEBUG: PROCESSING GAME STATE!!!!");
+            Console.WriteLine("DEBUG: PROCESSING GAME STATE!!!!");
             // We need to know the time gap between the state we are LEAVING
             // and the state we just LOADED.
             _lastTransformTime = _nextTransformTime;
@@ -294,7 +305,7 @@ void GenerateStars()
 
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
-            //Console.WriteLine("laoding gamestate...");
+            Console.WriteLine("laoding gamestate...");
             gl.LoadGameState(gameState, incomingObjects,destroyedObjects);
             GameStateCheck(incomingObjects,destroyedObjects);
 
@@ -304,8 +315,10 @@ void GenerateStars()
             localPlayer.CenterCameraOnMe();
             updated = true;
             nextArrivalTime = nm.PeekArrivalTime();
+            
 
         }
+        Console.WriteLine("Loop broken");
         if (!updated)
         {
             _timeSinceLastLoad += deltaTime;
@@ -313,7 +326,7 @@ void GenerateStars()
 
         
         
-        
+
 
         localPlayer.Render(deltaTime); // render local only stuff.
 
@@ -329,7 +342,7 @@ void GenerateStars()
         //localPlayer.CenterCameraOnMe((float)renderTime);
         //localPlayer.CenterCameraOnMe(deltaTime);
         base.Render(deltaTime); 
-    
+            Console.WriteLine("Local renders");
         this.renderTime = (int)renderTimer.ElapsedMilliseconds;
     }
 

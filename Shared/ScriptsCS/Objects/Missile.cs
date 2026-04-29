@@ -4,14 +4,14 @@ using System.Numerics;
 public class Missile : Projectile
 {
     public GameObject target; //the target the missile is tracking. This is set when the missile is spawned, and doesn't change after that. If the target dies before the missile does, the missile will just keep flying in the same direction until it runs out of lifetime or hits something.
-    public float speed = 22f;
+    public float speed = 18f;
     public float maxTurn = 60f;
     public float currentAngle = 0f;
 
     public Missile(Transform t, Vector2 velocity) : base(t, velocity)
     {
         damage = 250;
-        this.transform.velocity = velocity;
+        this.transform.velocity = velocity * speed;
 
     }
     public override void Update()

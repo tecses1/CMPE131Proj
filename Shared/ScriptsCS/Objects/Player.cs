@@ -123,7 +123,7 @@ public class Player : GameObject
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
         bool canShootMissle = (DateTime.UtcNow - lastMissleTime).TotalSeconds >= missleCooldownSeconds;
 
-        this.shooting = -1;
+        //this.shooting = -1;
         if (shotEdge && canShoot)
         {        
 
@@ -232,7 +232,7 @@ public class Player : GameObject
 
         private GameObject SpawnMissile(GameObject target, Vector2 mousePos)
     {
-        shotCooldownSeconds = 2.0f;
+        //shotCooldownSeconds = 2.0f;
 
         string newUid = Guid.NewGuid().ToString(); 
         GameObject shot = this.gl.CreateGameObject("Missile", newUid); 
@@ -250,7 +250,7 @@ public class Player : GameObject
 
         t.RotateTo(mousePos);
 
-        Missile m = new Missile(t, t.Forward() * 10f);
+        Missile m = new Missile(t, t.Forward());
         
         m.target = target;
         m.LifetimeFrames = 120;
