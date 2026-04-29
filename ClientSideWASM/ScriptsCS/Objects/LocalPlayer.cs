@@ -27,6 +27,7 @@ public class LocalPlayer : Player
     DrawText outOfBoundsText;
     DrawRect oobScreenFlashRect;
     DrawText scoreText;
+    DrawText ammoText;
     int alpha = 0;
     int direction = 1;
 
@@ -59,6 +60,11 @@ public class LocalPlayer : Player
         scoreText = new DrawText(" ",  scoreTransform);
 
         scoreText.worldSpace = false; 
+
+        Transform ammoTransform = new Transform(0 + 50, Settings.CanvasHeight - 8, 100, 125);
+        ammoText = new DrawText("Ammo: ",  ammoTransform);
+
+        ammoText.worldSpace = false; 
 
 
         // health bar in background
@@ -111,7 +117,7 @@ public class LocalPlayer : Player
     oobScreenFlashRect.Register(gm);
     outOfBoundsText.Register(gm);
     scoreText.Register(gm);
-
+    ammoText.Register(gm);
     }
     public void CenterCameraOnMe()
     {
@@ -219,6 +225,8 @@ public class LocalPlayer : Player
         //Console.WriteLine("Score TExt pos: " + scoreText.transform.position.X +"," +scoreText.transform.position.Y);
         scoreText.disableRender = false;
         scoreText.text = "Score: " + this.Score;
+
+        ammoText.text = "Ammo: " + this.MissileAmmo;
         this.UpdateHealthBarVisual();
         healthBarBackground.disableRender = false;
         healthBarFill.disableRender = false;
