@@ -98,11 +98,13 @@ public class Enemy : GameObject
             
             }else if (state == 1 && target != null){
 
-                if (target is Player p && p.CurrentHealth <= 0){
+                if (target is Player p){
                     //Console.WriteLine(uid+"Player down! Returning to wandering.");
                     if (p.IsDead)
                     {
                         state = 0;
+                        target = null;
+                        return;
                     }
                 }
                 this.transform.RotateTo(target.transform.GetPosition());
