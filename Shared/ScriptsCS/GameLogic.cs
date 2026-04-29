@@ -94,6 +94,7 @@ public class GameLogic
                         //getPlayerWithUID(proj.owner).AddScore(10); returns null for enemies. standby.
 
                         asteroid.Kill();
+                        getPlayerWithUID(proj.owner)?.AddScore((int)asteroid.transform.rect.Width / 4); //enemies give more points. standby on null for now.
                     }
                     break;
                 case (Asteroid, Player):
@@ -111,6 +112,11 @@ public class GameLogic
                     {
                         proj2.Kill();
                         player2.TakeDamage(proj2.damage);
+                        if (player2.CurrentHealth <= 0)
+                        {
+                            getPlayerWithUID(proj2.owner)?.AddScore(player2.Score / 4); //players give more points. standby on null for now.
+                            player2.Score = (int)(player2.Score * 0.75f);
+                        }
                     }
                     break;
                 case (Player, Healthpack):
@@ -201,7 +207,10 @@ public class GameLogic
                             AddGameObject(m);
                             }
                             enemy2.Kill();
+                            getPlayerWithUID(proj3.owner)?.AddScore(50); //enemies give more points. standby on null for now.
                         }
+
+
                     }
                     break;
                     case (Player, Items):

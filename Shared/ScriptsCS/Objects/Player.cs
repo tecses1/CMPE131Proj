@@ -14,7 +14,9 @@ public class Player : GameObject
     public InputWrapper cInput;
     private float bulletSpeed = 30f;
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
+    private double missleCooldownSeconds = 1.2f; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
+    private DateTime lastMissleTime = DateTime.MinValue;    
     private DateTime lastChange = DateTime.Now;
     [Network(2)]
     public int Score { get;  set; } = 0;
@@ -31,8 +33,8 @@ public class Player : GameObject
     int guntype = 1;
     bool barrel = true;
     int shooting = -1;
-
-    public int MissileAmmo = 0;
+    [Network(4)]
+    public int MissileAmmo {get; set;} = 3;
     public int mines = 0;
 
     // death animation
@@ -110,7 +112,7 @@ public class Player : GameObject
         if (e.IsKeyDown("r",true) && (DateTime.Now - lastChange).Seconds > 1)
         {
             guntype++;
-            if (guntype > 2) //to incorporate the missile
+            if (guntype > 1) //to incorporate the missile
             {
                 guntype = 0;
             }
@@ -119,6 +121,8 @@ public class Player : GameObject
 
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
+        bool canShootMissle = (DateTime.UtcNow - lastMissleTime).TotalSeconds >= missleCooldownSeconds;
+
         this.shooting = -1;
         if (shotEdge && canShoot)
         {        
@@ -136,35 +140,39 @@ public class Player : GameObject
                     this.gl.AddGameObject(shot);
                 }else if (guntype == 2) // added for misile implementation
                 {
-                    if (this.MissileAmmo > 0){
-                    GameObject[] targets = this.gl.collisionManager.GetNearby(mousePos,400);
-                    GameObject target = null;
-                    if (targets.Length != 0)
-                    {
-                        foreach (GameObject go in targets)
-                        {
-                            if (go != this && (go is Player || go is Asteroid || go is Enemy)) // only target other players or asteroids for now.
-                            {
-                                target = go;
-                                break;
-                            }
-                        }
-                    }
-                    GameObject shot = SpawnMissile(target, mousePos);
-                    this.gl.AddGameObject(shot);
-                    this.MissileAmmo--;
-                    Console.WriteLine("Missile: " + this.MissileAmmo);
-                    }
-                    else
-                {
-                    Console.WriteLine("Out of Ammo");
-                }
                 }
 
             lastShotTime = DateTime.UtcNow;
         }
 
+
+        if (canShootMissle && e.IsKeyDown(" ", true)){
+            if (this.MissileAmmo > 0){
+                GameObject[] targets = this.gl.collisionManager.GetNearby(mousePos,400);
+                GameObject target = null;
+                if (targets.Length != 0)
+                {
+                    foreach (GameObject go in targets)
+                    {
+                        if (go != this && (go is Player || go is Asteroid || go is Enemy)) // only target other players or asteroids for now.
+                        {
+                            target = go;
+                            break;
+                        }
+                    }
+                }
+                GameObject shot = SpawnMissile(target, mousePos);
+                this.gl.AddGameObject(shot);
+                this.MissileAmmo--;
+                lastMissleTime = DateTime.UtcNow;
+                //Console.WriteLine("Missile: " + this.MissileAmmo);
+            }
+          
+        }
+
+
     }
+
 
 
     private Projectile[] SpawnGuntype1(Vector2 target)
