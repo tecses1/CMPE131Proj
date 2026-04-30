@@ -50,7 +50,9 @@ public class RenderManager
     protected double _lastTransformTime = 0; // Arrival time of the state currently in 'transform'
     protected double _nextTransformTime = 0; // Arrival time of the state we are moving TOWARD
     protected float _currentInterpolationDuration = GameConstants.updateRate; // Fallback   
-    protected  float InterpolationDelay = GameConstants.updateRate * 2; // Buffer 2 updates.
+
+    public int InterpolationTicksBehind = 2; //More is smoother, but more latent.
+    protected  float InterpolationDelay;  // Buffer 2 updates.
     //debug stuff.
      Stopwatch fpsTimer = Stopwatch.StartNew();
     Stopwatch tickTimer = Stopwatch.StartNew();
@@ -67,6 +69,9 @@ public class RenderManager
 
     public RenderManager(IJSRuntime js)
      {
+
+        //set interpolation delay
+        InterpolationDelay = GameConstants.updateRate * InterpolationTicksBehind + GameConstants.updateRate / 10;
         this.js = (IJSInProcessRuntime)js;
         int currentGlobalIndex = 0;
             foreach (var asset in AssetManager._assets)

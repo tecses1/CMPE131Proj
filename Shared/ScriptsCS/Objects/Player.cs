@@ -219,11 +219,13 @@ public class Player : GameObject
         }
         Transform proj1t = new Transform(spawnPos.X-transform.Left().X*offset,spawnPos.Y-transform.Left().Y*offset, 15,15);
         proj1t.RotateTo(target);
-        Vector2 velocity = proj1t.Forward() * bulletSpeed;
+        Vector2 velocity = proj1t.Forward() * bulletSpeed / 8;
 
         var proj = new Projectile(proj1t, velocity, lifetime: 36);
+        
         proj.owner = this.uid;
         proj.damage = 18;
+        proj.transform.acceleration = Vector2.Normalize(velocity) * 4f; //gradually increase speed over time for the big bullet.    
 
         
         barrel = !barrel;
@@ -234,22 +236,20 @@ public class Player : GameObject
     {
         //shotCooldownSeconds = 2.0f;
 
-        string newUid = Guid.NewGuid().ToString(); 
-        GameObject shot = this.gl.CreateGameObject("Missile", newUid); 
-
+        //string newUid = Guid.NewGuid().ToString(); 
+        //GameObject shot = this.gl.CreateGameObject("Missile", newUid); 
         // 1. Force position to player
-        shot.transform.rect.X = this.transform.rect.X;
-        shot.transform.rect.Y = this.transform.rect.Y;
+        //shot.transform.rect.X = this.transform.rect.X;
+        //shot.transform.rect.Y = this.transform.rect.Y;
 
         // 2. Fix the veer
-        Vector2 dir = mousePos - this.transform.GetPosition();
-        if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
-        dir = Vector2.Normalize(dir);
+        //Vector2 dir = mousePos - this.transform.GetPosition();
+        //if (dir.LengthSquared() == 0f) dir = new Vector2(0, -1);
+        //dir = Vector2.Normalize(dir);
 
         Transform t = new Transform(transform.rect.X, transform.rect.Y, 15,20);
 
         t.RotateTo(mousePos);
-
         Missile m = new Missile(t, t.Forward());
         
         m.target = target;
