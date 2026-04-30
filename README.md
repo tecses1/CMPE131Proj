@@ -2,13 +2,14 @@ Placeholder README for now, NEEDS TO BE UPDATED
 
 Overview:
   - .io game to fly around and shoot stuff
-  - 
+
 Prerequisite Requirements for download:
   - .NET 9 SDK  
   https://dotnet.microsoft.com/download
   - Windows OS (required for WPF server)
   - A modern web browser (Google Chrome recommended)
   - MAYBE?? vscode with C#, git
+  - BlazorEX
 
 
 How to Build:
@@ -39,11 +40,13 @@ How to Start a game:
 How to Play:
 - WASD key: Move
 - Mouse: Aim
-- Left Click: Shoot
+- Left Click: Shoot regular projectile
+- Space Bar: Missile
 - r key: switch bullet type (regular projectile, rapid fire projectiles, tracking missiles)
 - Fight other players, enemies, and aliens
 - Avoid out of bounds and taking too much damage or you will die (but respwan soon to jump back in the action)
-- Destroy asteroids to drop health packs!
+- Destroy asteroids to drop health packs and missile ammo!
+- Get a high score!
 
 Future TODOs:
-  - implement score system
+- 
