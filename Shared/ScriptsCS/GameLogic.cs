@@ -226,7 +226,11 @@ public class GameLogic
 
         foreach (GameObject go in collisionManager.GetOutOfBoundsObjects())
         {
-            if (go is Player) continue; //players don't die from going out of bounds, they just can't move further in that direction. This is handled in the player update logic.
+            if (go is Player)
+            {
+                ((Player)go).TakeDamage(25);            
+            }
+             //players don't die from going out of bounds, they just can't move further in that direction. This is handled in the player update logic.
             if (go is Asteroid)
             {
                 Asteroid asteroid = (Asteroid)go;
