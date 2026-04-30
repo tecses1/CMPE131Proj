@@ -226,7 +226,11 @@ public class GameLogic
 
         foreach (GameObject go in collisionManager.GetOutOfBoundsObjects())
         {
-            if (go is Player) continue; //players don't die from going out of bounds, they just can't move further in that direction. This is handled in the player update logic.
+            if (go is Player)
+            {
+                ((Player)go).TakeDamage(25);            
+            }
+             //players don't die from going out of bounds, they just can't move further in that direction. This is handled in the player update logic.
             if (go is Asteroid)
             {
                 Asteroid asteroid = (Asteroid)go;
@@ -395,6 +399,7 @@ public class GameLogic
 
     public long LoadGameState(byte[] gameState, List<ObjChangeWrapper> newObjects = null, List<ObjChangeWrapper> destroyedObjects = null)
     {
+
         long r = this.loadGameState(gameState, players, activeObjects);
 
         if (newObjects != null)
@@ -406,6 +411,8 @@ public class GameLogic
         {
             destroyedObjects.AddRange(this.destroyedObjectsLoaded);
         }
+
+        //Console.WriteLine("Loaded " + newObjects.Count + " new objects and " + destroyedObjects.Count + " removed objects");
         this.newObjectsLoaded.Clear();
         this.destroyedObjectsLoaded.Clear();
         return r;
@@ -482,7 +489,7 @@ public class GameLogic
         using (BinaryReader reader = new BinaryReader(ms))
         {
             long frameStamp = reader.ReadInt64();
-
+            //Console.WriteLine("Loading gamestate: " + frameStamp);
             // Loop through each group list passed in
             for (int i = 0; i < localGroups.Length; i++)
             {

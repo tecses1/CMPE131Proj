@@ -40,6 +40,8 @@ public class GameManager : RenderManager
     Stopwatch renderTimer = new Stopwatch();
     Stopwatch updateTimer = new Stopwatch();
 
+    // interpolation offset
+    private float interpolationOffset = -1; // milliseconds
 
 
     public GameManager(IJSRuntime JSRuntime,  NetworkManager nm, NavigationManager Nav) : base(JSRuntime)
@@ -164,7 +166,8 @@ void GenerateStars()
             if (go.GetType() == typeof(Player)) //the game logic class created a player.
             {
                 Player p = (Player)go;  
-                myGroup.Remove(p);
+                gl.RemovePlayer(p); //remove the player that gamelogic made, because we need to replace it with our client side player that handles rendering.
+                myGroup.Remove(go);
                 //Replace the player with our local player.
                 //The gamestate keeps making new ones until the object is confirmed.
                 //Just keep replacing it until it doesn't need to, anymore.
@@ -188,7 +191,7 @@ void GenerateStars()
                     newPlayer.playerName.text = p.playerNameString;
                     gl.AddPlayer(newPlayer);
                     clientPlayers.Add(newPlayer);
-                    RegisterObjToRender(newPlayer);
+                    //RegisterObjToRender(newPlayer);
                     continue;
                 }
                 else
@@ -245,6 +248,16 @@ void GenerateStars()
                 renderables.Remove(go);
 
             }
+
+            if (go.GetType() == typeof(ClientPlayer))
+            {
+                ClientPlayer p = (ClientPlayer)go;
+                this.gl.RemovePlayer(p);
+                this.clientPlayers.Remove(p);
+                p.Deregister();
+                gl.RemovePlayer((Player)go);
+                
+            }
         }
 
     }
@@ -275,45 +288,80 @@ void GenerateStars()
         {
             isLocal.text = "Playing Solo (No Lobby)";
         }
-        
-        double renderTime = timestamp - InterpolationDelay;
+        if (nm.StateQueue.Count > InterpolationTicksBehind + 2) 
+        {
+            Console.WriteLine($"WARNING: Time desync! Queue bloat detected ({nm.StateQueue.Count} packets). Fast-forwarding...");
+            
+            // 2. Drain the queue, but LEAVE exactly 2 packets (your interpolation buffer)
+            while(nm.StateQueue.Count > InterpolationTicksBehind) 
+            {
+                long dumpTime;
+                nm.StateQueue.TryPopState(out dumpTime); // Throwing away the past
+            }
+            
+            // 3. Forcefully recalculate the offset to the new 'oldest' packet
+            long newAnchorTime = nm.PeekArrivalTime();
+            if (newAnchorTime != -1)
+            {
+                // This instantly snaps your render time forward to match the present
+                interpolationOffset = (float)(newAnchorTime + InterpolationDelay - timestamp);
+                Console.WriteLine("Timeline forcefully resynced.");
+            }
+        }
         long nextArrivalTime = nm.PeekArrivalTime();
-        long currentArrivalTime;
-        //Console.WriteLine("Arrival time: " + nextArrivalTime + ", Rendertime: " + renderTime);
-            // While the next packet in line is "due" to be played...
-        bool updated = false;
-        while (nextArrivalTime != -1 && nextArrivalTime <= renderTime) {
-            //Console.WriteLine("loading tick: " + nm.PeekTick());
-            byte[] gameState = nm.GetGameState(out currentArrivalTime); //redundant. will fix if really truly unneccesary.
 
-            //Console.WriteLine("DEBUG: PROCESSING GAME STATE!!!!");
-            // We need to know the time gap between the state we are LEAVING
-            // and the state we just LOADED.
+        // 1. Calculate the offset FIRST if it hasn't been set yet.
+        if (interpolationOffset == -1 && nextArrivalTime != -1)
+        {
+            // Offset is the difference between the packet's time and your current Blazor time.
+            interpolationOffset = (float)(nextArrivalTime - timestamp);
+            Console.WriteLine("Setting interpolation offset to: " + interpolationOffset + " ms");
+        }
+
+        // Optional: If we still don't have an offset (no packets yet), just return early.
+        // There's nothing to interpolate yet!
+        if (interpolationOffset == -1) 
+        {
+            _timeSinceLastLoad += deltaTime;
+            return; 
+        }
+
+        // 2. NOW calculate your synced time and render time.
+        double syncedTime = timestamp + interpolationOffset;
+        double renderTime = syncedTime - InterpolationDelay;
+
+        long currentArrivalTime;
+        bool updated = false;
+        //Console.WriteLine("Next packet arrival time: " + nextArrivalTime + ", Render time: " + renderTime); 
+        // 3. Proceed with the while check...
+        while (nextArrivalTime != -1 && nextArrivalTime <= renderTime) 
+        {
+            byte[] gameState = nm.GetGameState(out currentArrivalTime);
+
             _lastTransformTime = _nextTransformTime;
             _nextTransformTime = currentArrivalTime;
 
             _currentInterpolationDuration = (float)(_nextTransformTime - _lastTransformTime);
             _timeSinceLastLoad = 0;
-            //Console.WriteLine("laoding gamestate...");
-            gl.LoadGameState(gameState, incomingObjects,destroyedObjects);
-            GameStateCheck(incomingObjects,destroyedObjects);
+            
+            gl.LoadGameState(gameState, incomingObjects, destroyedObjects);
+            GameStateCheck(incomingObjects, destroyedObjects);
 
             incomingObjects.Clear();
             destroyedObjects.Clear();
-            //CenterCameraOn(this.localPlayer.transform, false, false);
+            
             localPlayer.CenterCameraOnMe();
             updated = true;
             nextArrivalTime = nm.PeekArrivalTime();
-
         }
+
         if (!updated)
         {
             _timeSinceLastLoad += deltaTime;
         }
+        
+        
 
-        
-        
-        
 
         localPlayer.Render(deltaTime); // render local only stuff.
 
@@ -329,7 +377,7 @@ void GenerateStars()
         //localPlayer.CenterCameraOnMe((float)renderTime);
         //localPlayer.CenterCameraOnMe(deltaTime);
         base.Render(deltaTime); 
-    
+            //Console.WriteLine("Local renders");
         this.renderTime = (int)renderTimer.ElapsedMilliseconds;
     }
 

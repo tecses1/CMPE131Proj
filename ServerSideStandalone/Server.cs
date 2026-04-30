@@ -61,6 +61,11 @@ public class Server
             {
                 Console.WriteLine("Skipping tick, users modified.");
             }
+
+            catch(NullReferenceException r)
+            {
+                Console.WriteLine("Weird.... Null exception: " + r + "\n\n from: " + r.StackTrace);
+            }
         }
     }
     public  void UpdateLobbies()

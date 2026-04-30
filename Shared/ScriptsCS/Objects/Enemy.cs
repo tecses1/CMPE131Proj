@@ -97,6 +97,16 @@ public class Enemy : GameObject
                 //rotate to our target and move towards it.
             
             }else if (state == 1 && target != null){
+
+                if (target is Player p){
+                    //Console.WriteLine(uid+"Player down! Returning to wandering.");
+                    if (p.IsDead)
+                    {
+                        state = 0;
+                        target = null;
+                        return;
+                    }
+                }
                 this.transform.RotateTo(target.transform.GetPosition());
 
                 float distanceToTarget = Vector2.DistanceSquared(this.transform.GetPosition(), target.transform.GetPosition());

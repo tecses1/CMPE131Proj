@@ -14,7 +14,7 @@ public class NetworkManager
     public GameManager gm;
     public string myLobby = "";
     public bool isHost = false;
-    public StateManager StateQueue = new StateManager(8,65536);
+    public StateManager StateQueue = new StateManager(64,65536);
 
     public List<byte[]> inputsReceived = new List<byte[]>();
     public List<byte[]> objsToAdd = new List<byte[]>();

@@ -84,6 +84,7 @@ public class InGameMenu
                 {
                     this.gm.nm.client.Send("{LeaveLobby}");
                     this.gm.nm.myLobby = "";
+                    this.gm.nm.StateQueue.Clear();
                     Nav.NavigateTo("/Home");
                 }
             }

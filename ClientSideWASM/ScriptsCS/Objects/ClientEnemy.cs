@@ -55,7 +55,7 @@ public class ClientEnemy : Enemy
     public override void Render(float deltaTime)
     {
         this.UpdateHealthBarVisual();
-        Console.WriteLine("HP: " + hp);
+        //Console.WriteLine("HP: " + hp);
         //draw our healthbar.
         this.healthBarBackground.SetPosition(this.transform.rect.X, this.transform.rect.Y + this.transform.rect.Height);
         //this.healthBarBackground.Draw(gm);

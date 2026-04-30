@@ -55,7 +55,13 @@ public class ClientPlayer : Player
         playerName.Register(gm);
 
     }
+    public void Deregister()
+    {
+        gm.UnregisterDrawText(this.playerName);
+        gm.UnregisterDrawRect(healthBarBackground);
+        gm.UnregisterDrawRect(healthBarFill);
 
+    }
 
     public override void Render(float deltaTime)
     {

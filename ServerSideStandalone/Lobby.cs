@@ -54,6 +54,12 @@ public class Lobby
         users.Remove(user);
         user.myLobby = null;
         user.myInputData = null;
+        Player toRemove = gl.getPlayerWithUID(user.uid);
+        if (toRemove != null)
+        {
+            this.gl.RemovePlayer(toRemove);
+        }
+        
         Console.WriteLine("user removed: " + user.name + ", Debug: " + users.Count);
         
 

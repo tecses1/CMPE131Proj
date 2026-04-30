@@ -14,7 +14,9 @@ public class Transform
     public float rotation;
     public float rotationSpeed;
     public Vector2 velocity;
+    public Vector2 acceleration = Vector2.Zero;
 
+    public float drag = 0;
     public Transform()
     {
         this.rect = new Rect(0, 0, 0, 0);
@@ -115,6 +117,13 @@ public class Transform
         rect.X += velocity.X;
         rect.Y += velocity.Y;
         rotation += rotationSpeed;
+        this.velocity += acceleration;
+
+        if (this.velocity.LengthSquared() > 0) // if we're moving
+        {
+            //apply drag.
+        }
+
     }
     public Vector2 GetPosition() => new Vector2(rect.X, rect.Y);    
     public void SetPosition(float x, float y)

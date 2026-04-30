@@ -124,6 +124,7 @@ public class User : NetworkModel
                 case "{LeaveLobby}":
                     if (myLobby != null)
                     {
+                        this.myInputData = null;
                         myLobby.RemoveUser(this);//.Remove(this);
                         
                     }

@@ -19,6 +19,7 @@ namespace Shared;
         public Guid owner;
 
         public bool enemy = false;
+
         public Projectile( Transform transform, Vector2 velocity, int lifetime =5) : base(transform)
         {
         
@@ -29,6 +30,7 @@ namespace Shared;
         public override void Update()
         {
             this.transform.Update();
+
             LifetimeFrames--;
             if (LifetimeFrames < 0)
             {
