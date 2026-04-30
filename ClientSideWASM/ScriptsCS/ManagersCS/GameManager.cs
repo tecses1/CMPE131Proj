@@ -332,7 +332,7 @@ void GenerateStars()
 
         long currentArrivalTime;
         bool updated = false;
-        Console.WriteLine("Next packet arrival time: " + nextArrivalTime + ", Render time: " + renderTime); 
+        //Console.WriteLine("Next packet arrival time: " + nextArrivalTime + ", Render time: " + renderTime); 
         // 3. Proceed with the while check...
         while (nextArrivalTime != -1 && nextArrivalTime <= renderTime) 
         {

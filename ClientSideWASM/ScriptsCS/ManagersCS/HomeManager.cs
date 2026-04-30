@@ -319,12 +319,16 @@ public class HomeManager : RenderManager
     {
         if (settingsBack.clicked)
         {
+            Settings.name = playerNameTextBox.placeholder;
             SaveToStorage();
             SwitchScreen(0);
         }
 
         settingsBack.Update();
         settingsText.Update();
+
+        playerNameTextBox.Update();
+
 
 
 
