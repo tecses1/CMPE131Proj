@@ -196,8 +196,8 @@ public class Player : GameObject
         proj2.owner = this.uid;
 
         
-        proj.damage = 6;
-        proj2.damage = 6;
+        proj.damage = 8;
+        proj2.damage = 8;
 
         
         return new Projectile[] {proj,proj2};
@@ -221,11 +221,11 @@ public class Player : GameObject
         proj1t.RotateTo(target);
         Vector2 velocity = proj1t.Forward() * bulletSpeed / 8;
 
-        var proj = new Projectile(proj1t, velocity, lifetime: 36);
+        var proj = new Projectile(proj1t, velocity, lifetime: 24);
         
         proj.owner = this.uid;
-        proj.damage = 18;
-        proj.transform.acceleration = Vector2.Normalize(velocity) * 4f; //gradually increase speed over time for the big bullet.    
+        proj.damage = 36;
+        proj.transform.acceleration = Vector2.Normalize(velocity) * 2.85f; //gradually increase speed over time for the big bullet.    
 
         
         barrel = !barrel;

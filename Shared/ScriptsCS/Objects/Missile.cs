@@ -12,7 +12,7 @@ public class Missile : Projectile
     {
         damage = 250;
         this.transform.velocity = velocity * speed;
-        this.transform.acceleration = Vector2.Normalize(velocity) * 2f; //gradually increase speed over time for the missile.
+        this.transform.acceleration = Vector2.Normalize(velocity) * 1.5f; //gradually increase speed over time for the missile.
 
     }
     public override void Update()
@@ -49,7 +49,7 @@ public class Missile : Projectile
         float currentSpeed = this.transform.velocity.Length();
         this.transform.velocity = this.transform.Forward() * currentSpeed;
         Console.WriteLine("velocity: " + this.transform.velocity);
-        this.transform.acceleration = Vector2.Normalize(this.transform.velocity) * 2f; //gradually increase speed over time for the missile.
+        this.transform.acceleration = Vector2.Normalize(this.transform.velocity) * 1.5f; //gradually increase speed over time for the missile.
         }
         
 
