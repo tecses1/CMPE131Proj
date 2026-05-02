@@ -1,5 +1,7 @@
 # GALAX.IO
 
+Created By: Ben Schnittker, Kekoa Sarmiento, Dylan Quach, Siddarth Kota, Sofia Nguyen as part of our CMPE 131 project at San Jose State University
+
 # 🚀 The Best .io Space Shooter Game
 
 A fast-paced browser-based **.io-style multiplayer game** where you fly around, battle enemies, and compete for the highest score.
