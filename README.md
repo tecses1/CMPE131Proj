@@ -1,52 +1,103 @@
-Placeholder README for now, NEEDS TO BE UPDATED
+# 🚀 .io Space Shooter Game
 
-Overview:
-  - .io game to fly around and shoot stuff
+A fast-paced browser-based **.io-style multiplayer game** where you fly around, battle enemies, and compete for the highest score.
 
-Prerequisite Requirements for download:
-  - .NET 9 SDK  
-  https://dotnet.microsoft.com/download
-  - Windows OS (required for WPF server)
-  - A modern web browser (Google Chrome recommended)
-  - MAYBE?? vscode with C#, git
-  - BlazorEX
+---
 
+## 🧰 Prerequisites
 
-How to Build:
-  - try f5, if does not work
-  - step 1: start server
+Before running the project, make sure you have the following installed:
 
-   dotnet restore                                   
-   dotnet build
-   dotnet run --project .\ServerSideStandalone\
+* [.NET 9 SDK](https://dotnet.microsoft.com/download)
+* Windows OS *(required for WPF server support)*
+* A modern web browser (recommended: Google Chrome)
+* Visual Studio Code with C# extension
+* Blazor (BlazorEX)
 
-  - step 2 in separate terminal: start the client
+---
 
-    dotnet restore  
-    dotnet build
-    dotnet run --project .\ClientSideWASM\
+## 🛠️ Build & Run Instructions
 
-  - step 3: open browser to http://localhost:5152/
+If pressing **F5** doesn’t work, follow these steps:
 
-How to Start a game:
-- Open Settings to set your name
-- Click play to navigate to choosing lobby
-- Can either create lobby or join lobby
-   - For both options enter the desired lobby name
-   - Create will create a lobby of that name that others on the server can join by entering the same lobby name (case sensative)
-   - Join will join the lobby of that name if it exists, or say failed otherwise
-   - Launch to start the game!!
+### 1. Start the Server
 
-How to Play:
-- WASD key: Move
-- Mouse: Aim
-- Left Click: Shoot regular projectile
-- Space Bar: Missile
-- r key: switch bullet type (regular projectile, rapid fire projectiles, tracking missiles)
-- Fight other players, enemies, and aliens
-- Avoid out of bounds and taking too much damage or you will die (but respwan soon to jump back in the action)
-- Destroy asteroids to drop health packs and missile ammo!
-- Get a high score!
+```bash
+dotnet restore
+dotnet build
+dotnet run --project .\ServerSideStandalone\
+```
 
-Future TODOs:
-- 
+---
+
+### 2. Start the Client (in a separate terminal)
+
+```bash
+dotnet restore
+dotnet build
+dotnet run --project .\ClientSideWASM\
+```
+
+---
+
+### 3. Open the Game
+
+Navigate to:
+
+```
+http://localhost:5152/
+```
+
+---
+
+## 🎮 How to Start a Game
+
+1. Open **Settings** and set your player name
+2. Click **Play** to access the lobby screen
+3. Choose one of the following:
+
+   * **Create Lobby**
+
+     * Enter a lobby name *(case-sensitive)*
+     * Others can join using the same name
+   * **Join Lobby**
+
+     * Enter an existing lobby name
+     * You’ll get an error if it doesn’t exist
+4. Click **Launch** to begin!
+
+---
+
+## 🕹️ Controls
+
+* **W / A / S / D** → Move
+* **Mouse** → Aim
+* **Left Click** → Fire standard projectile
+* **Spacebar** → Launch missile
+* **R** → Switch weapon type:
+
+  * Standard projectile
+  * Rapid-fire
+  * Tracking missiles
+
+---
+
+## 💥 Gameplay Tips
+
+* Battle **players, enemies, and aliens**
+* Avoid going out of bounds
+* Manage your health — death = respawn shortly after
+* Destroy **asteroids** to collect:
+
+  * ❤️ Health packs
+  * 🚀 Missile ammo
+* Aim for the **highest score**
+
+---
+
+## 📌 Future Improvements
+
+* Add more weapon types
+* Improve matchmaking/lobby system
+* Add power-ups and abilities
+* Enhance UI/UX
