@@ -9,9 +9,11 @@ public class SCExplosion : Explosion
 
     public SCExplosion (Transform t, GameLogic gl, Vector2 velocity, float rotationSpeed = 1f) : base(t, velocity, rotationSpeed)
     {
-        this.damage = 250;
+        this.disableCollision = false;
+        this.damage = 50;
         this.force = 10f;
         this.gl = gl;
+        this.maxFrames = 9;
     }
 
 
