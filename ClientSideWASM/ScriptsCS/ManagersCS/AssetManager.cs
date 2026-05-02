@@ -33,7 +33,14 @@ public static class AssetManager
         { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
         {"MissileAmmo", new GameAsset {Name = "MissileAmmo", FrameRefs = new[] {"images/MissileAmmo.png"}}},
         {"MineAmmo", new GameAsset {Name = "MineAmmo", FrameRefs = new[] {"images/MineAmmo.png"}}},
-
+        {"SMine", new GameAsset {Name = "SMine", FrameRefs = new[] {"images/LiveScharge.png"}}},
+       /* {"SCExplosion", new GameAsset {Name = "SCExplosion", FrameRefs = new[] {"images/SCExplosion/SCExplosion0.png",
+                                                                                     "images/SCExplosion/SCExplosion1.png",
+                                                                                     "images/SCExplosion/SCExplosion2.png",
+                                                                                     "images/SCExplosion/SCExplosion3.png",
+                                                                                     "images/SCExplosion/SCExplosion4.png",
+                                                                                     "images/SCExplosion/SCExplosion5.png",
+                                                                                     "images/SCExplosion/SCExplosion6.png" } } },*/
 
         {"AlienSM", new GameAsset {Name = "AlienSM", FrameRefs = new[] {"images/AlienSmAnim/AlienSM1.png", "images/AlienSmAnim/AlienSM2.png"}}},
         {"EnemyLaser", new GameAsset {Name = "EnemyLaser", FrameRefs = new[]{"images/AlienLaser.png"}}},

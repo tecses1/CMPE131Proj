@@ -122,6 +122,7 @@ public class Player : GameObject
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
         bool canShootMissle = (DateTime.UtcNow - lastMissleTime).TotalSeconds >= missleCooldownSeconds;
+        bool canDropMine = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds && mines > 0;
 
         //this.shooting = -1;
         if (shotEdge && canShoot)
@@ -166,6 +167,17 @@ public class Player : GameObject
                 this.MissileAmmo--;
                 lastMissleTime = DateTime.UtcNow;
                 //Console.WriteLine("Missile: " + this.MissileAmmo);
+            }
+          
+        }
+
+        if (canDropMine && e.IsKeyDown("f", true)){
+            if (this.mines > 0){
+                Transform t = new Transform(transform.rect.X, transform.rect.Y, 30,30);
+                SMine m = new SMine(t, this.gl);
+                m.owner = this.uid;
+                this.gl.AddGameObject(m);
+                this.mines--;
             }
           
         }
@@ -259,6 +271,18 @@ public class Player : GameObject
         return m;
     }
 
+    public void SpawnSC()
+    {
+        float spawnX = this.transform.rect.X + (this.transform.rect.Width /2) - 15;
+        float spawnY = this.transform.rect.Y + this.transform.rect.Height +5;
+
+        Transform t = new Transform(spawnX, spawnY, 30,30);
+        SMine m  =  new SMine(t, this.gl);
+        m.owner = this.uid;
+        m.transform.velocity = this.transform.velocity * 0.05f; // drop with portion of player velocity for more natural placement.
+        this.gl.AddGameObject(m);
+
+    }
     //score
     public void AddScore(int points)
     {

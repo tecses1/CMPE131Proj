@@ -221,6 +221,36 @@ public class GameLogic
                     item.Collect(p);
                     item.Kill();
                     break;
+
+                    case (SMine , Enemy):
+                    case (Enemy , SMine):
+                    Enemy enemy3 = A is Enemy ? (Enemy)A : (Enemy)B;
+                    SMine SC = A is SMine ? (SMine)A : (SMine)B;
+                    SC.Kill(); //explode the mine
+                    break;
+
+                    case (SMine , Player):
+                    case (Player , SMine):
+                    Player P4 = A is Player ? (Player)A : (Player)B;
+                    SMine SC2 = A is SMine ? (SMine)A : (SMine)B;
+                    SC2.Kill(); //explode the mine
+                    break;
+
+                    case (SMine , Asteroid):
+                    case (Asteroid , SMine):
+                    Asteroid asteroid4 = A is Asteroid ? (Asteroid)A : (Asteroid)B;
+                    SMine SC3 = A is SMine ? (SMine)A : (SMine)B;
+                    SC3.Kill(); //explode the mine
+                    break;
+
+                    case (SMine , Projectile):
+                    case (Projectile , SMine):
+                    Projectile proj4 = A is Projectile ? (Projectile)A : (Projectile)B;
+                    SMine SC4 = A is SMine ? (SMine)A : (SMine)B;
+                    SC4.Kill(); //explode the mine
+                    proj4.Kill();
+                    break;
+                
             }   
         }
 
@@ -375,6 +405,12 @@ public class GameLogic
                 break;
             case "EnemyLaser":
                 newObj = new EnemyLaser(defaultT, new Vector2(0, 0));
+                break;
+            case "SMine":
+                newObj = new SMine(defaultT, this);
+                break;
+            case "SCExplosion":
+                newObj = new SCExplosion(defaultT, new Vector2(0,0), 0f);
                 break;
         }
         if (newObj == null)
