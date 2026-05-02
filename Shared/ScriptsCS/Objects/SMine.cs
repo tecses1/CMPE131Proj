@@ -44,8 +44,8 @@ public class SMine : GameObject
     {
         Transform t = new Transform(this.transform.rect.X, this.transform.rect.Y, 150, 150);
 
-        Explosion SC = new Explosion(t, new Vector2(0,0), 1f);
-        gl.AddGameObject(SC);
+        SCExplosion SC = new SCExplosion(t, this.gl,  new Vector2(0,0), 1f);
+        this.gl.AddGameObject(SC);
 
         base.Kill();
     }
