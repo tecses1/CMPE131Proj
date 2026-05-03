@@ -29,7 +29,7 @@ public class Explosion : GameObject
                 {
                     currentFrame = maxFrames - 1;
                     if (this.gl == null){ Console.WriteLine("GL is null in explosion!"); return; }
-                     this.Kill();
+                    this.Kill();
 
                 }
             
@@ -37,6 +37,11 @@ public class Explosion : GameObject
             cDeathAnim = deathAnimSpeed;
         }
         
+    }
+
+    public override void Kill()
+    {
+        base.Kill();
     }
 
 }

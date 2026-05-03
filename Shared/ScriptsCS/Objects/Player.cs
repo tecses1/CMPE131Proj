@@ -173,13 +173,12 @@ public class Player : GameObject
         }
 
         if (canDropMine && e.IsKeyDown("f", true)){
-            if (this.mines > 0){
+                lastShotTime = DateTime.UtcNow; // set last shot time to now to start cooldown for dropping mines.
                 Transform t = new Transform(transform.rect.X, transform.rect.Y, 30,30);
                 SMine m = new SMine(t, this.gl);
                 m.owner = this.uid;
                 this.gl.AddGameObject(m);
                 this.mines--;
-            }
           
         }
 
