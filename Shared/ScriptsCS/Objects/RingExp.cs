@@ -8,7 +8,7 @@ public class RingExp : Explosion
     private float radius = 50f;
     public int ringLifetimeFrames = 100;
     int localAnimtime = 2;
-    public float growthRate = 40f;
+    public float growthRate = 50f;
 
     public HashSet<GameObject> alreadyHit = new HashSet<GameObject>(); //to prevent the same object from being calculated as hit more than once
 
@@ -45,12 +45,12 @@ public class RingExp : Explosion
         //this.transform.rect.X -= this.transform.rect.X / 2;
        // this.transform.rect.Y -= this.transform.rect.Y / 2;
 
-        if (growthRate <= 2f)
+        if (growthRate <= 10f)
         {
-            growthRate = 2f;
+            growthRate = 10f;
         }
 
-        if (ringLifetimeFrames <= 30)
+        if (ringLifetimeFrames <= 60)
         {
             this.disableCollision = true;
         }

@@ -86,7 +86,7 @@ public class GameLogic
                             MissileAmmo m = MissileAmmo.GenerateMissileAmmo(asteroid.transform);
                             AddGameObject(m);
                         }
-                        else if(dropRate > 7)   //2% chance to spawn siesmic charge
+                        else if(dropRate > 97)   //2% chance to spawn siesmic charge
                         {
                             MineAmmo Mbox = MineAmmo.GenerateMineAmmo(asteroid.transform);
                             AddGameObject(Mbox);
@@ -208,7 +208,7 @@ public class GameLogic
                             MissileAmmo box = MissileAmmo.GenerateMissileAmmo(asteroid3.transform);
                             AddGameObject(box);
                         }
-                        else if(dropRate > 97)   //5% chance to spawn siesmic charge
+                        else if(dropRate > 97)   //2% chance to spawn siesmic charge
                         {
                             MineAmmo m  = MineAmmo.GenerateMineAmmo(asteroid3.transform);
                             AddGameObject(m);
