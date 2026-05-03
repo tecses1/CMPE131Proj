@@ -4,9 +4,9 @@ using System.Numerics;
 
 public class SMine : GameObject
 {
-    private int armingFrames = 90;
+    private int armingFrames = 60;
     public int hp = 5;
-    public int lifetimeFrames = 120;
+    public int lifetimeFrames = 90;
     //public float detect = 10f;
     public Guid owner;
 
