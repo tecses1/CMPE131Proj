@@ -36,6 +36,7 @@ public class Player : GameObject
     int shooting = -1;
     [Network(4)]
     public int MissileAmmo {get; set;} = 3;
+    [Network(5)]
     public int mines{get; set;} = 1;
 
     // death animation
