@@ -28,6 +28,7 @@ public class LocalPlayer : Player
     DrawRect oobScreenFlashRect;
     DrawText scoreText;
     DrawText ammoText;
+    DrawText MinesText;
     int alpha = 0;
     int direction = 1;
 
@@ -61,11 +62,14 @@ public class LocalPlayer : Player
 
         scoreText.worldSpace = false; 
 
-        Transform ammoTransform = new Transform(0 + 50, Settings.CanvasHeight - 8, 100, 125);
+        Transform ammoTransform = new Transform(Settings.CanvasWidth - 600, Settings.CanvasHeight - 8, 100, 125);
         ammoText = new DrawText("Ammo: ",  ammoTransform);
 
         ammoText.worldSpace = false; 
 
+        Transform minesTransform = new Transform(Settings.CanvasWidth - 500, Settings.CanvasHeight - 8, 100, 125);
+        MinesText = new DrawText("Mines: ", minesTransform);
+        MinesText.worldSpace = false;
 
         // health bar in background
         Transform hbBgTransform = new Transform(
@@ -118,6 +122,7 @@ public class LocalPlayer : Player
     outOfBoundsText.Register(gm);
     scoreText.Register(gm);
     ammoText.Register(gm);
+    MinesText.Register(gm);
     }
     public void CenterCameraOnMe()
     {
@@ -227,11 +232,13 @@ public class LocalPlayer : Player
         scoreText.text = "Score: " + this.Score;
 
         ammoText.text = "Ammo: " + this.MissileAmmo;
+        MinesText.text = "Mines: " + this.mines;
+
         this.UpdateHealthBarVisual();
         healthBarBackground.disableRender = false;
         healthBarFill.disableRender = false;
 
-
+        MinesText.text = "Mines: " + this.mines;
 
 
         if(!this.CollideWith(gm.gl.worldBounds))
