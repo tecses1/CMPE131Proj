@@ -25,7 +25,7 @@ public class SCExplosion : Explosion
     public override void Kill()
     {
         Transform t = new Transform(this.transform);
-        RingExp SC = new RingExp(t, new Vector2(0,0), 1f);
+        RingExp SC = new RingExp(t, new Vector2(0,0), 0f);
         gl.AddGameObject(SC);
 
         base.Kill();

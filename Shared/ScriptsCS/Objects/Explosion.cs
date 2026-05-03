@@ -24,10 +24,10 @@ public class Explosion : GameObject
         cDeathAnim -= 1;
         if (cDeathAnim <= 0)
         {
-
                 currentFrame += 1;
-                if (currentFrame > maxFrames -1)
+                if (currentFrame >= maxFrames)
                 {
+                    currentFrame = maxFrames - 1;
                     if (this.gl == null){ Console.WriteLine("GL is null in explosion!"); return; }
                      this.Kill();
 

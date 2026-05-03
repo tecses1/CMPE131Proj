@@ -126,6 +126,66 @@ public class GameLogic
                     player3.Heal(hp.healAmount);
                     hp.Kill();
                     break;
+                    
+                    case (RingExp , Enemy):
+                    case (Enemy , RingExp):
+                    case (RingExp , Player):
+                    case (Player , RingExp):    
+                    case (RingExp , Asteroid):
+                    case (Asteroid , RingExp):
+                    RingExp ring = A is RingExp ? (RingExp)A : (RingExp)B;
+                    GameObject other2 = A is RingExp ? (GameObject)B : (GameObject)A;
+                    if (ring.alreadyHit.Contains(other2)) //if we've already calculated a
+                    {
+                        break;
+                    }
+                    ring.alreadyHit.Add(other2);
+                    
+                    if (other2 is Player PR)
+                    {
+                        PR.TakeDamage(ring.damage);
+                    }
+                    if (other2 is Asteroid AR)
+                    {
+                        AR.hp -= ring.damage;
+                        if (AR.hp <= 0)
+                        {
+                            int dropRate = Random.Shared.Next(0,100);
+                            if (dropRate < 10) //10% chance to spawn missile ammo
+                            {
+                                MissileAmmo box = MissileAmmo.GenerateMissileAmmo(AR.transform);
+                                AddGameObject(box);
+                            }
+                            else if(dropRate > 97)   //2% chance to spawn siesmic charge
+                            {
+                                MineAmmo m  = MineAmmo.GenerateMineAmmo(AR.transform);
+                                AddGameObject(m);
+                            }
+                            AR.Kill();
+                        }
+
+                    }
+                    if (other2 is Enemy ER)
+                    {
+                        ER.hp -= ring.damage;
+                        if (ER.hp <= 0)
+                        {
+                            int dropRate = Random.Shared.Next(0,100);
+                            if (dropRate < 20) //20% chance to spawn missile ammo
+                            {
+                                MissileAmmo box = MissileAmmo.GenerateMissileAmmo(ER.transform);
+                                AddGameObject(box);
+                            }
+                            else if(dropRate > 97)   //2% chance to spawn siesmic charge
+                            {
+                                MineAmmo m  = MineAmmo.GenerateMineAmmo(ER.transform);
+                                AddGameObject(m);
+                            }
+                            ER.Kill();
+                        }
+                    }
+                    break;
+
                 case (Explosion, GameObject):
                 case(GameObject, Explosion):
                     Explosion explosion = A is Explosion ? (Explosion)A : (Explosion)B;
@@ -250,6 +310,8 @@ public class GameLogic
                     SC4.Kill(); //explode the mine
                     proj4.Kill();
                     break;
+
+
                 
             }   
         }

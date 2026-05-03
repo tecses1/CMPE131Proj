@@ -14,6 +14,7 @@ public class Player : GameObject
     public InputWrapper cInput;
     private float bulletSpeed = 30f;
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
+    private double mineCoolDownSeconds = 2f;
     private double missleCooldownSeconds = 1.2f; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastMissleTime = DateTime.MinValue;    
@@ -122,7 +123,7 @@ public class Player : GameObject
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
         bool canShootMissle = (DateTime.UtcNow - lastMissleTime).TotalSeconds >= missleCooldownSeconds;
-        bool canDropMine = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds && mines > 0;
+        bool canDropMine = (DateTime.UtcNow - lastShotTime).TotalSeconds >= mineCoolDownSeconds && mines > 0;
 
         //this.shooting = -1;
         if (shotEdge && canShoot)
