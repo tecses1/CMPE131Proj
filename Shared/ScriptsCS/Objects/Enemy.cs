@@ -6,6 +6,8 @@ using System.Security.Cryptography.X509Certificates;
 
 public class Enemy : GameObject
     {
+        (string,int)[] drops = {("Healthpack",50),("MissileAmmo",25),("MineAmmo",25)};
+
         public int state = 0; // 0 = wandering, 1 = chasing, 2 = attacking
         public GameObject target;
         public Vector2 targetPos;
@@ -146,7 +148,7 @@ public class Enemy : GameObject
         }
         public override void Kill()
         {
-
+            this.gl.DropItem(this.transform,drops );
             Explosion e = new Explosion(new Transform() { rect = this.transform.rect }, this.transform.velocity / 10, 1f);
             gl.AddGameObject(e);
             base.Kill();

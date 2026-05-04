@@ -4,6 +4,8 @@ using System.Numerics;
 
 public class Asteroid : GameObject
 {
+     (string,int)[] drops = {("Healthpack",7),("MissileAmmo",5),("MineAmmo",2)};
+
     public float speed;
     bool dead = false;
 
@@ -45,13 +47,6 @@ public class Asteroid : GameObject
     {
 
                 
-        if (Random.Shared.NextInt64(0,20) == 1) //5% chance to drop health pack on death. lots of asteroids. makes sense.
-        {
-            Transform hpTrans = new Transform(this.transform.rect.X, this.transform.rect.Y, 20, 20);
-            Healthpack hp = new Healthpack(hpTrans);
-            hp.velocity = this.transform.velocity / 4; // float away from explosion a bit.
-            gl.AddGameObject(hp);
-        }
         float hypo = this.transform.GetHypotenuse();
         if (hypo > 40) // if we're big enough to split.
         {
@@ -68,7 +63,11 @@ public class Asteroid : GameObject
                 newAsteroid.SetDirection(randomDirection);
                 gl.AddGameObject(newAsteroid);
             }
-        
+
+        }
+        else
+        {
+            this.gl.DropItem(this.transform, drops); //only drop if we're too small to procreate. 
         }
         Explosion e = new Explosion(new Transform() { rect=this.transform.rect }, this.transform.velocity / 20, 1f);
         gl.AddGameObject(e);

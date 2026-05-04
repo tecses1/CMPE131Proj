@@ -18,13 +18,13 @@ public class RingExp : Explosion
         this.damage = 2000;
         this.force = 0f;
         this.maxFrames = 3;
-        this.transform.rotation = 0f; 
-        this.transform.rotationSpeed = 0f;
+        this.transform.rotationSpeed = Random.Shared.NextInt64(-20,20) / 10f;
         this.transform.velocity = new Vector2(0,0);
     }
 
     public override void Update()
     {
+        this.transform.Update();
         if (this.currentFrame < 3)
         {
             localAnimtime--;

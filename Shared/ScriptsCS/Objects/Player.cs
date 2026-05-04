@@ -311,7 +311,9 @@ public class Player : GameObject
             Kill();
         }
     }
-    public void Kill()
+    (string,int)[] drops = {("Healthpack",60),("MissileAmmo",10),("MineAmmo",30)};
+
+    public override void Kill()
     {
         if (IsDead) return;
         IsDead = true;
@@ -319,6 +321,10 @@ public class Player : GameObject
         disableCollision = true;
         transform.velocity = Vector2.Zero;
         Console.WriteLine($"{playerNameString} died!");
+
+        //only good chance for a seizmic charge!
+
+        this.gl.DropItem(this.transform, drops);
     }
     private void Respawn()
     {
