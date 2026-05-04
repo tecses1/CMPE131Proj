@@ -14,6 +14,7 @@ public class Player : GameObject
     public InputWrapper cInput;
     private float bulletSpeed = 30f;
     private double shotCooldownSeconds = 0.12; // ~8 shots/sec
+    private double mineCoolDownSeconds = 2f;
     private double missleCooldownSeconds = 1.2f; // ~8 shots/sec
     private DateTime lastShotTime = DateTime.MinValue;
     private DateTime lastMissleTime = DateTime.MinValue;    
@@ -35,7 +36,8 @@ public class Player : GameObject
     int shooting = -1;
     [Network(4)]
     public int MissileAmmo {get; set;} = 3;
-    public int mines = 0;
+    [Network(5)]
+    public int mines{get; set;} = 1;
 
     // death animation
     [Network(3)] // Add _isDead to the network.
@@ -122,6 +124,7 @@ public class Player : GameObject
         bool shotEdge = e.LeftDown;
         bool canShoot = (DateTime.UtcNow - lastShotTime).TotalSeconds >= shotCooldownSeconds;
         bool canShootMissle = (DateTime.UtcNow - lastMissleTime).TotalSeconds >= missleCooldownSeconds;
+        bool canDropMine = (DateTime.UtcNow - lastShotTime).TotalSeconds >= mineCoolDownSeconds && mines > 0;
 
         //this.shooting = -1;
         if (shotEdge && canShoot)
@@ -167,6 +170,16 @@ public class Player : GameObject
                 lastMissleTime = DateTime.UtcNow;
                 //Console.WriteLine("Missile: " + this.MissileAmmo);
             }
+          
+        }
+
+        if (canDropMine && e.IsKeyDown("f", true)){
+                lastShotTime = DateTime.UtcNow; // set last shot time to now to start cooldown for dropping mines.
+                Transform t = new Transform(transform.rect.X, transform.rect.Y, 30,30);
+                SMine m = new SMine(t, this.gl);
+                m.owner = this.uid;
+                this.gl.AddGameObject(m);
+                this.mines--;
           
         }
 
@@ -259,6 +272,18 @@ public class Player : GameObject
         return m;
     }
 
+    public void SpawnSC()
+    {
+        float spawnX = this.transform.rect.X + (this.transform.rect.Width /2) - 15;
+        float spawnY = this.transform.rect.Y + this.transform.rect.Height +5;
+
+        Transform t = new Transform(spawnX, spawnY, 30,30);
+        SMine m  =  new SMine(t, this.gl);
+        m.owner = this.uid;
+        m.transform.velocity = this.transform.velocity * 0.05f; // drop with portion of player velocity for more natural placement.
+        this.gl.AddGameObject(m);
+
+    }
     //score
     public void AddScore(int points)
     {
@@ -286,7 +311,9 @@ public class Player : GameObject
             Kill();
         }
     }
-    public void Kill()
+    (string,int)[] drops = {("Healthpack",60),("MissileAmmo",10),("MineAmmo",30)};
+
+    public override void Kill()
     {
         if (IsDead) return;
         IsDead = true;
@@ -294,6 +321,10 @@ public class Player : GameObject
         disableCollision = true;
         transform.velocity = Vector2.Zero;
         Console.WriteLine($"{playerNameString} died!");
+
+        //only good chance for a seizmic charge!
+
+        this.gl.DropItem(this.transform, drops);
     }
     private void Respawn()
     {

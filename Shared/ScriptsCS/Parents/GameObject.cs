@@ -18,6 +18,8 @@ public class GameObject : NetworkObject
     public bool disableCollision = false;
     public bool disableRender = false;
 
+    public bool dead = false;
+
     public GameObject(Transform transform, int spriteOverrideIndex = -1)
     {
         this.transform = transform;
@@ -62,6 +64,10 @@ public class GameObject : NetworkObject
 
     public virtual void Render(float deltaTime) { }
 
-    public virtual void Kill() => gl.RemoveGameObject(this);
+    public virtual void Kill() {
+        this.dead = true;
+        this.disableCollision = true;
+        gl.RemoveGameObject(this);
+    }
 
 }

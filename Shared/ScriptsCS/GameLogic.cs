@@ -70,6 +70,8 @@ public class GameLogic
         {
             GameObject A = collision.ObjectA;
             GameObject B = collision.ObjectB;
+
+            if (A.dead || B.dead) continue;//so proj don't double collide.
             switch (A, B)
             {
                 case (Projectile, Asteroid):
@@ -80,17 +82,6 @@ public class GameLogic
                     asteroid.hp -= proj.damage;
                     if (asteroid.hp <= 0)
                     {
-                        int dropRate = Random.Shared.Next(0,100);
-                        if (dropRate < 10) //10% chance to spawn missile ammo
-                        {
-                            MissileAmmo m = MissileAmmo.GenerateMissileAmmo(asteroid.transform);
-                            AddGameObject(m);
-                        }
-                        else if(dropRate > 97)   //5% chance to spawn siesmic charge
-                        {
-                            MineAmmo Mbox = MineAmmo.GenerateMineAmmo(asteroid.transform);
-                            AddGameObject(Mbox);
-                        }
                         //getPlayerWithUID(proj.owner).AddScore(10); returns null for enemies. standby.
 
                         asteroid.Kill();
@@ -126,6 +117,40 @@ public class GameLogic
                     player3.Heal(hp.healAmount);
                     hp.Kill();
                     break;
+                    
+                case (RingExp , Enemy):
+                case (Enemy , RingExp):
+                case (RingExp , Player):
+                case (Player , RingExp):    
+                case (RingExp , Asteroid):
+                case (Asteroid , RingExp):
+                    RingExp ring = A is RingExp ? (RingExp)A : (RingExp)B;
+                    GameObject other2 = A is RingExp ? (GameObject)B : (GameObject)A;
+                    if (ring.alreadyHit.Contains(other2)) //if we've already calculated a
+                    {
+                        break;
+                    }
+                    ring.alreadyHit.Add(other2);
+                    
+                    if (other2 is Player PR)
+                    {
+                        PR.TakeDamage(ring.damage);
+                    }
+                    if (other2 is Asteroid AR)
+                    {
+                        AR.hp -= ring.damage;
+                        if (AR.hp <= 0)
+                        {
+                            AR.Kill();
+                        }
+
+                    }
+                    if (other2 is Enemy ER)
+                    {
+                        ER.hp -= ring.damage;
+                    }
+                    break;
+
                 case (Explosion, GameObject):
                 case(GameObject, Explosion):
                     Explosion explosion = A is Explosion ? (Explosion)A : (Explosion)B;
@@ -142,17 +167,7 @@ public class GameLogic
                         asteroid3.hp -= explosion.damage;
                         if (asteroid3.hp <= 0)
                         {   
-                        int dropRate = Random.Shared.Next(0,100);
-                        if (dropRate < 10) //10% chance to spawn missile ammo
-                        {
-                            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(asteroid3.transform);
-                            AddGameObject(box);
-                        }
-                        else if(dropRate > 97)   //5% chance to spawn siesmic charge
-                        {
-                            MineAmmo m  = MineAmmo.GenerateMineAmmo(asteroid3.transform);
-                            AddGameObject(m);
-                        }
+
                             asteroid3.Kill();
                         }
                     }
@@ -162,17 +177,6 @@ public class GameLogic
                         enemy1.hp -= explosion.damage;
                         if (enemy1.hp <= 0)
                         {   
-                        int dropRate = Random.Shared.Next(0,100);
-                        if (dropRate < 20) //20% chance to spawn missile ammo
-                        {
-                            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(enemy1.transform);
-                            AddGameObject(box);
-                        }
-                        else if(dropRate > 97)   //5% chance to spawn siesmic charge
-                        {
-                            MineAmmo m  = MineAmmo.GenerateMineAmmo(enemy1.transform);
-                            AddGameObject(m);
-                        }
                             enemy1.Kill();
                         }
                     }
@@ -196,17 +200,7 @@ public class GameLogic
                         enemy2.hp -= proj3.damage;
                         if (enemy2.hp <= 0)
                         {
-                        int dropRate = Random.Shared.Next(0,100);
-                        if (dropRate < 20) //20% chance to spawn missile ammo
-                            {
-                            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(enemy2.transform);
-                            AddGameObject(box);
-                            }
-                        else if(dropRate > 97)   //5% chance to spawn siesmic charge
-                            {
-                            MineAmmo m  = MineAmmo.GenerateMineAmmo(enemy2.transform);
-                            AddGameObject(m);
-                            }
+
                             enemy2.Kill();
                             getPlayerWithUID(proj3.owner)?.AddScore(50); //enemies give more points. standby on null for now.
                         }
@@ -221,6 +215,38 @@ public class GameLogic
                     item.Collect(p);
                     item.Kill();
                     break;
+
+                    case (SMine , Enemy):
+                    case (Enemy , SMine):
+                    Enemy enemy3 = A is Enemy ? (Enemy)A : (Enemy)B;
+                    SMine SC = A is SMine ? (SMine)A : (SMine)B;
+                    SC.Kill(); //explode the mine
+                    break;
+
+                    case (SMine , Player):
+                    case (Player , SMine):
+                    Player P4 = A is Player ? (Player)A : (Player)B;
+                    SMine SC2 = A is SMine ? (SMine)A : (SMine)B;
+                    SC2.Kill(); //explode the mine
+                    break;
+
+                    case (SMine , Asteroid):
+                    case (Asteroid , SMine):
+                    Asteroid asteroid4 = A is Asteroid ? (Asteroid)A : (Asteroid)B;
+                    SMine SC3 = A is SMine ? (SMine)A : (SMine)B;
+                    SC3.Kill(); //explode the mine
+                    break;
+
+                    case (SMine , Projectile):
+                    case (Projectile , SMine):
+                    Projectile proj4 = A is Projectile ? (Projectile)A : (Projectile)B;
+                    SMine SC4 = A is SMine ? (SMine)A : (SMine)B;
+                    SC4.Kill(); //explode the mine
+                    proj4.Kill();
+                    break;
+
+
+                
             }   
         }
 
@@ -273,19 +299,68 @@ public class GameLogic
             counter = DateTime.Now;
         }
 
-        // Healthpack spawning
-        /*
-        if ((DateTime.Now - healthPackCounter).TotalSeconds >= HealthPackSpawnCooldownSeconds)
-        {
-            Healthpack hp = Healthpack.GenerateHealthPack();
-            AddGameObject(hp);
-
-            healthPackCounter = DateTime.Now;
-        }
-        mvoe to asteroid death! :D */
     }
 
+    public void DropItem(Transform spawnPoint, params (String className, int dropChance)[] objects)
+    {
 
+        
+        int chance =  Random.Shared.Next(0,100);
+        string debug = "Dropping item, Chance: " + chance;
+        (String,int)[] defaultDrops = { ("Healthpack",20), ("MissleAmmo",10), ("MineAmmo",3)};
+        if (objects == null)
+        {
+            objects = defaultDrops;
+        }
+        int a = 0;
+        int b = 0;
+        foreach ( (String,int) obj in objects)
+        {
+            b += obj.Item2;
+            debug += "[Trying object: " + obj.Item1 + " in " + a + "," + b +"]...";
+            if (chance > a && chance <= b)
+            {
+                GameObject go = this.CreateGameObject(obj.Item1,Guid.NewGuid().ToString());
+                if (go == null)
+                {
+                    debug += "ERROR: Couldn't find that object!";
+                    Console.WriteLine(debug);
+                    return;
+                }
+                
+
+                go.transform.SetPosition(spawnPoint.GetPosition());
+
+                this.AddGameObject(go);
+
+                debug += "... succsess!!";
+
+                break;
+            }
+            a += obj.Item2;
+
+        }
+        //Console.WriteLine(debug);
+        /*
+        if (chance < 10) //10% chance to spawn missile ammo
+        {
+            MissileAmmo box = MissileAmmo.GenerateMissileAmmo(asteroid3.transform);
+            AddGameObject(box);
+        }
+        else if(dropRate > 97)   //2% chance to spawn siesmic charge
+        {
+            MineAmmo m  = MineAmmo.GenerateMineAmmo(asteroid3.transform);
+            AddGameObject(m);
+        }
+        if (Random.Shared.NextInt64(0,20) == 1) //5% chance to drop health pack on death. lots of asteroids. makes sense.
+        {
+            Transform hpTrans = new Transform(this.transform.rect.X, this.transform.rect.Y, 20, 20);
+            Healthpack hp = new Healthpack(hpTrans);
+            hp.velocity = this.transform.velocity / 4; // float away from explosion a bit.
+            gl.AddGameObject(hp);
+        }*/
+
+    }
     public Player getPlayerWithUID(Guid uid)
     {
         foreach (Player p in players)
@@ -375,6 +450,15 @@ public class GameLogic
                 break;
             case "EnemyLaser":
                 newObj = new EnemyLaser(defaultT, new Vector2(0, 0));
+                break;
+            case "SMine":
+                newObj = new SMine(defaultT, this);
+                break;
+            case "SCExplosion":
+                newObj = new SCExplosion(defaultT, this, new Vector2(0,0), 0f);
+                break;
+            case "RingExp":
+                newObj = new RingExp(defaultT, new Vector2(0,0), 0f);
                 break;
         }
         if (newObj == null)

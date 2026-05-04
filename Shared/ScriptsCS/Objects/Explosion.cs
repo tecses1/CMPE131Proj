@@ -9,6 +9,7 @@ public class Explosion : GameObject
     int cDeathAnim = 2;
     public int damage = 0; //applies over the course of the explosion animation, so that things that stay in the explosion longer take more damage.
     public float force = 20f;
+    public int maxFrames = 6;
     public Explosion(Transform t, Vector2 velocity, float rotationSpeed = 1f) : base(t)
     {
         this.currentFrame = 0;
@@ -23,12 +24,12 @@ public class Explosion : GameObject
         cDeathAnim -= 1;
         if (cDeathAnim <= 0)
         {
-
                 currentFrame += 1;
-                if (currentFrame > 5)
+                if (currentFrame >= maxFrames)
                 {
+                    currentFrame = maxFrames - 1;
                     if (this.gl == null){ Console.WriteLine("GL is null in explosion!"); return; }
-                     base.Kill();
+                    this.Kill();
 
                 }
             
@@ -36,6 +37,11 @@ public class Explosion : GameObject
             cDeathAnim = deathAnimSpeed;
         }
         
+    }
+
+    public override void Kill()
+    {
+        base.Kill();
     }
 
 }

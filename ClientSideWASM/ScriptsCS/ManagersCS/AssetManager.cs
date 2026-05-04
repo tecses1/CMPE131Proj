@@ -33,7 +33,22 @@ public static class AssetManager
         { "Missile", new GameAsset { Name = "Missile", FrameRefs = new[] { "images/Missile.png" } } },
         {"MissileAmmo", new GameAsset {Name = "MissileAmmo", FrameRefs = new[] {"images/MissileAmmo.png"}}},
         {"MineAmmo", new GameAsset {Name = "MineAmmo", FrameRefs = new[] {"images/MineAmmo.png"}}},
-
+        {"SMine", new GameAsset {Name = "SMine", FrameRefs = new[] {"images/LiveScharge.png"}}},
+        {"SCExplosion", new GameAsset {Name = "SCExplosion", FrameRefs = new[] {"images/SCExp/ScEx0.png",
+                                                                                     "images/SCExp/ScEx1.png",
+                                                                                     "images/SCExp/ScEx2.png",
+                                                                                     "images/SCExp/ScEx3.png",
+                                                                                     "images/SCExp/ScEx4.png",
+                                                                                     "images/SCExp/ScEx5.png",
+                                                                                     "images/SCExp/ScEx6.png",
+                                                                                     "images/SCExp/ScEx7.png",
+                                                                                     "images/SCExp/ScEx8.png",
+                                                                                     "images/SCExp/ScEx9.png"}}},
+                                                                                     
+        {"RingExp", new GameAsset {Name = "RingExp", FrameRefs = new[] {"images/SCRingExp/SCRing1.png",
+                                                                                     "images/SCRingExp/SCRing2.png",
+                                                                                     "images/SCRingExp/SCRing3.png",
+                                                                                     "images/SCRingExp/SCRing4.png"} } },
 
         {"AlienSM", new GameAsset {Name = "AlienSM", FrameRefs = new[] {"images/AlienSmAnim/AlienSM1.png", "images/AlienSmAnim/AlienSM2.png"}}},
         {"EnemyLaser", new GameAsset {Name = "EnemyLaser", FrameRefs = new[]{"images/AlienLaser.png"}}},
