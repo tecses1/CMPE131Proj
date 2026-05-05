@@ -126,6 +126,17 @@ public class GameLogic
                 case (Asteroid , RingExp):
                     RingExp ring = A is RingExp ? (RingExp)A : (RingExp)B;
                     GameObject other2 = A is RingExp ? (GameObject)B : (GameObject)A;
+
+                    Vector2 other2pos = other2.transform.GetPosition();
+                    Vector2 ringPos = ring.transform.GetPosition();
+                    float r2 = (ring.transform.rect.Width / 2) * (ring.transform.rect.Width / 2);; 
+                    r2 = r2 * 0.967f; //offset to make it slightly smaller then the ring.
+                     //account for the size of the other object, so they have to be fully within the ring to be damaged. This is a band-aid for the fact that we don't have accurate collision points.
+                    if (Vector2.DistanceSquared(other2pos, ringPos) > r2)
+                    {
+                        break; //out of range, don't damage.
+                    }
+
                     if (ring.alreadyHit.Contains(other2)) //if we've already calculated a
                     {
                         break;

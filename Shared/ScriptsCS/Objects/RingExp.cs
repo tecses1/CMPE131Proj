@@ -5,10 +5,9 @@ using System.Collections.Generic;
 
 public class RingExp : Explosion
 {
-    private float radius = 50f;
-    public int ringLifetimeFrames = 100;
+    public int ringLifetimeFrames = 50;
     int localAnimtime = 2;
-    public float growthRate = 40f;
+    public float growthRate = 60f; //from 40
 
     public HashSet<GameObject> alreadyHit = new HashSet<GameObject>(); //to prevent the same object from being calculated as hit more than once
 
@@ -50,10 +49,10 @@ public class RingExp : Explosion
             growthRate = 5f;
         }
 
-        if (ringLifetimeFrames <= 60)
-        {
-            this.disableCollision = true;
-        }
+        //if (ringLifetimeFrames <= 60)
+        //{
+        //    this.disableCollision = true;
+        //}
 
         ringLifetimeFrames--;
 
